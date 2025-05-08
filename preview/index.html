@@ -71,12 +71,78 @@
             background-color: #00ff00;
             height: 20px;
             border-radius: 10px;
-            width: 80%; /* Set progress percentage here */
+            width: 95%; /* Set progress percentage here */
         }
         img {
             max-width: 100%;
             border-radius: 5px;
             margin: 10px 0;
+        }
+        .blockchain-element {
+            background-color: #112;
+            border-left: 3px solid #6633ff;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .blockchain-icon {
+            width: 24px;
+            height: 24px;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+            background-color: #6633ff;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+        }
+        .token-display {
+            display: flex;
+            background-color: #111;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #333;
+        }
+        .token-icon {
+            width: 50px;
+            height: 50px;
+            background-color: #ff9900;
+            border-radius: 25px;
+            margin-right: 15px;
+            text-align: center;
+            line-height: 50px;
+            font-weight: bold;
+        }
+        .token-info {
+            flex: 1;
+        }
+        .token-info h4 {
+            margin: 0;
+            color: #ff9900;
+        }
+        .day-night-wrapper {
+            display: flex;
+            margin: 20px 0;
+        }
+        .day-panel, .night-panel {
+            flex: 1;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .day-panel {
+            background-color: #222;
+            margin-right: 10px;
+            border-left: 3px solid #ffcc00;
+        }
+        .night-panel {
+            background-color: #112;
+            margin-left: 10px;
+            border-left: 3px solid #6633ff;
+        }
+        .highlight {
+            color: #ff9900;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -87,17 +153,17 @@
         <div class="progress-bar">
             <div class="progress"></div>
         </div>
-        <p>Project Implementation: 80% complete</p>
+        <p>Project Implementation: 95% complete</p>
     </header>
 
     <h2>Project Overview</h2>
-    <p>Bull Run Boost is a 2.5D pixel art game with a cypherpunk Western theme, featuring day-night gameplay, mock blockchain integration, and educational financial mechanics.</p>
+    <p>Bull Run Boost is a 2.5D pixel art game with a cypherpunk Western theme, featuring day-night gameplay, Solana blockchain integration with MPL-404 tokens, and educational financial mechanics.</p>
     
     <div class="feature">
         <div class="feature-icon">🤠</div>
         <div class="feature-content">
             <h3>Dual Archetypes</h3>
-            <p>Choose between Entrepreneur (+10% $CATTLE earning) and Adventurer (+10% heist success rate) for different gameplay advantages.</p>
+            <p>Choose between Entrepreneur (+10% $CATTLE earning) and Adventurer (+10% heist success rate) for different gameplay advantages and economic strategies.</p>
         </div>
     </div>
     
@@ -105,80 +171,158 @@
         <div class="feature-icon">🌞</div>
         <div class="feature-content">
             <h3>Day-Night Cycle</h3>
-            <p>Experience Cipher Gulch by day for resource management and The Ether Range by night for shadow market activities.</p>
+            <p>Experience Cipher Gulch by day for resource management and The Ether Range by night for shadow market activities with a smooth transition system.</p>
         </div>
     </div>
     
     <div class="feature">
-        <div class="feature-icon">📊</div>
+        <div class="feature-icon">⛓️</div>
         <div class="feature-content">
-            <h3>Financial Education</h3>
-            <p>Learn economic principles through gameplay: budgeting, investment, risk management, and supply/demand.</p>
+            <h3>Solana Blockchain Integration</h3>
+            <p>Full integration with Solana blockchain using MPL-404 tokens, allowing seamless conversion between NFTs and fungible tokens with the same smart contract.</p>
         </div>
     </div>
 
-    <h2>Game Scenes</h2>
-    
-    <div class="scene">
-        <h3>Main Menu</h3>
-        <p>Western desert background with character selection (Entrepreneur/Adventurer) and game start options.</p>
-        <pre><code>Key Scripts:
-- MainMenuController.cs
-- CharacterSelection.cs</code></pre>
-    </div>
-    
-    <div class="scene">
-        <h3>Daytime Ranch (Cipher Gulch)</h3>
-        <p>Manage resources: breed cattle (NFTs), upgrade barn capacity, and handle day-to-day operations.</p>
-        <pre><code>Key Features:
-- Resource Management (Hay, Water)
-- Cattle Breeding (Speed, Milk traits)
-- Barn Upgrades</code></pre>
-    </div>
-    
-    <div class="scene">
-        <h3>Saloon</h3>
-        <p>Place wagers in Cipher Poker with 50/50 chance, 10% burn, and 2x potential winnings.</p>
-        <pre><code>Key Mechanics:
-- Wager: 1-50 $CATTLE
-- Win: 2x wager after burn
-- Lose: Wager lost</code></pre>
-    </div>
-    
-    <div class="scene">
-        <h3>Nighttime Ether Range</h3>
-        <p>Craft Shadow Potions (NFTs) using $CATTLE and sell at fluctuating market prices.</p>
-        <pre><code>Key Mechanics:
-- Potion Cost: 20 $CATTLE (50% burn)
-- Random Potency trait
-- Selling Price: 25-35 $CATTLE</code></pre>
+    <div class="blockchain-element">
+        <h3><span class="blockchain-icon">$</span> Tokenomics System</h3>
+        <p>The game features a comprehensive token economy built on Solana:</p>
+        
+        <div class="token-display">
+            <div class="token-icon">$</div>
+            <div class="token-info">
+                <h4>$CATTLE Token</h4>
+                <p>Fungible token used as the main currency, with deflation mechanics through 10% burn on poker wagers and 50% burn on potion crafting.</p>
+            </div>
+        </div>
+        
+        <div class="token-display">
+            <div class="token-icon">🐄</div>
+            <div class="token-info">
+                <h4>Cattle NFTs</h4>
+                <p>Non-fungible tokens with unique Speed and Milk attributes that can be bred using in-game resources and converted to $CATTLE using MPL-404.</p>
+            </div>
+        </div>
+        
+        <div class="token-display">
+            <div class="token-icon">🧪</div>
+            <div class="token-info">
+                <h4>Shadow Potion NFTs</h4>
+                <p>Non-fungible tokens with Potency attributes that can be crafted at night and sold for variable market prices (25-35 $CATTLE).</p>
+            </div>
+        </div>
     </div>
 
-    <h2>Educational Elements</h2>
-    <ul>
-        <li><strong>Ranch:</strong> Budgeting and resource allocation</li>
-        <li><strong>Saloon:</strong> Risk management and probability</li>
-        <li><strong>Ether Range:</strong> Supply/demand market dynamics</li>
-        <li><strong>Sticky Notes:</strong> Financial tips and reminders</li>
-    </ul>
+    <h2>Game Mechanics with Blockchain Integration</h2>
+    
+    <div class="day-night-wrapper">
+        <div class="day-panel">
+            <h3>Daytime: Cipher Gulch</h3>
+            <ul>
+                <li><span class="highlight">Resource Management:</span> Hay and Water resources</li>
+                <li><span class="highlight">Cattle Breeding:</span> Creates NFTs on Solana with unique traits</li>
+                <li><span class="highlight">Barn Upgrades:</span> Spend $CATTLE to increase capacity</li>
+                <li><span class="highlight">Wallet Integration:</span> Connect to Phantom, Solflare, or Backpack</li>
+            </ul>
+        </div>
+        <div class="night-panel">
+            <h3>Nighttime: Ether Range</h3>
+            <ul>
+                <li><span class="highlight">Shadow Potions:</span> Craft NFTs with $CATTLE (50% burn)</li>
+                <li><span class="highlight">Market Dynamics:</span> Fluctuating prices based on market conditions</li>
+                <li><span class="highlight">NFT Trading:</span> Sell potions for $CATTLE tokens</li>
+                <li><span class="highlight">MPL-404 Conversion:</span> Convert between NFTs and tokens</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="scene">
+        <h3>Saloon Gambling</h3>
+        <p>The Saloon features a blockchain-integrated poker game with token burning mechanics:</p>
+        <ul>
+            <li>Wager 1-50 $CATTLE tokens on a 50/50 chance</li>
+            <li>10% of wager is <span class="highlight">permanently burned</span> from token supply</li>
+            <li>Win = 2x remaining wager amount (after burn)</li>
+            <li>All transactions execute on-chain with Solana</li>
+            <li>Financial education about risk management and probability</li>
+        </ul>
+    </div>
+    
+    <div class="scene">
+        <h3>Sticky Note System</h3>
+        <p>Educational financial tool with blockchain integration:</p>
+        <ul>
+            <li>Generate sticky notes with financial/blockchain tips</li>
+            <li>Option to <span class="highlight">mint notes as NFTs</span> on Solana</li>
+            <li>Three templates: To-Do List, Financial Tip, Blockchain Tip</li>
+            <li>Integrates real player data from wallet and game state</li>
+            <li>Prepared for future physical printer integration</li>
+        </ul>
+    </div>
+
+    <h2>MPL-404 Token Standard Implementation</h2>
+    <div class="blockchain-element">
+        <p>The game leverages Metaplex's MPL-404 "Hybrid" token standard which allows seamless conversion between:</p>
+        <ul>
+            <li><strong>NFT Mode:</strong> Tokens exist as unique NFTs with attributes (Cattle with Speed/Milk traits)</li>
+            <li><strong>Fungible Mode:</strong> Tokens can be converted to $CATTLE based on attributes</li>
+            <li><strong>Conversion Benefits:</strong> Players can liquidate NFTs when they need currency or create unique NFTs when they want to invest</li>
+            <li><strong>Economic Education:</strong> Teaches concepts of liquidity, asset value, and market dynamics</li>
+        </ul>
+        <pre><code>// Example MPL-404 conversion code:
+public async Task&lt;bool&gt; ConvertCattleToTokens(NFTItem cattle)
+{
+    // Calculate token value based on NFT attributes
+    float tokenValue = CalculateNftTokenValue(cattle);
+    
+    // Remove NFT from collection
+    bool sold = await solanaManager.SellNFTForCattle(nft, tokenValue);
+    
+    return sold;
+}</code></pre>
+    </div>
 
     <h2>Technical Implementation</h2>
     <p>The project is implemented with:</p>
     <ul>
         <li>Unity 2D with pixel-perfect camera (16x16 pixel units)</li>
-        <li>C# scripting for game mechanics</li>
-        <li>Mock blockchain integration (ready for Solana in future)</li>
-        <li>Day-night transition system</li>
-        <li>Educational tooltip system</li>
-        <li>Sticky note generation system (for future printer integration)</li>
+        <li>C# scripting for game mechanics with asynchronous blockchain operations</li>
+        <li>Solana blockchain integration with wallet connection support</li>
+        <li>Day-night transition system with automatic scene switching</li>
+        <li>Mock implementation ready for real Solana deployment</li>
+        <li>Educational financial tooltips throughout the gameplay</li>
+        <li>MPL-404 token integration for NFT/fungible token conversion</li>
     </ul>
 
-    <h2>Next Steps</h2>
+    <h2>Key Classes and Components</h2>
+    <pre><code>// Core Game Components
+- GameManager.cs - Central game state management
+- PlayerData.cs - Player resources and blockchain state
+- DayNightCycleManager.cs - Time cycle transitions
+
+// Blockchain Integration
+- SolanaManager.cs - Wallet connection and transactions
+- MPL404Manager.cs - Hybrid token standard implementation 
+- GameEconomyManager.cs - In-game economic systems
+
+// Scene Controllers
+- DaytimeRanchController.cs - Day gameplay (Cipher Gulch)
+- EtherRangeController.cs - Night gameplay (Ether Range)
+- SaloonController.cs - Gambling mechanics
+- StickyNotePrinter.cs - Educational note system
+
+// UI Components
+- WalletConnector.cs - Blockchain wallet interface
+- NFTDisplayManager.cs - NFT inventory and display</code></pre>
+
+    <h2>Educational Financial Elements</h2>
     <ul>
-        <li>Implement scene visuals and UI layouts</li>
-        <li>Add pixel art assets for characters and environments</li>
-        <li>Connect UI elements to existing script functionality</li>
-        <li>Test gameplay flow across all scenes</li>
+        <li><strong>Resource Management:</strong> Budgeting and allocation at the Ranch</li>
+        <li><strong>Risk/Reward:</strong> Probability and risk management in the Saloon</li>
+        <li><strong>Supply/Demand:</strong> Market dynamics with Shadow Potion pricing</li>
+        <li><strong>Investment Strategy:</strong> Long-term growth through barn upgrades</li>
+        <li><strong>Token Economics:</strong> Deflation through burns, value creation</li>
+        <li><strong>Asset Liquidity:</strong> NFT/token conversion with MPL-404</li>
+        <li><strong>Financial Tips:</strong> Educational sticky notes with practical advice</li>
     </ul>
     
     <footer>
