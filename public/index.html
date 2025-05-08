@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bull Run Boost - Shadow Markets of the Cyber-West</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Game will be rendered here by Phaser -->
+    </div>
+
+    <!-- UI Elements that will appear over the game -->
+    <div id="ui-container">
+        <!-- Main Menu -->
+        <div id="main-menu" class="screen">
+            <h1>Bull Run Boost</h1>
+            <h2>Shadow Markets of the Cyber-West</h2>
+            
+            <div class="input-group">
+                <label for="player-name">Your Name:</label>
+                <input type="text" id="player-name" placeholder="Enter your name" value="Cowboy">
+            </div>
+            
+            <div class="archetype-selection">
+                <h3>Choose Your Archetype:</h3>
+                <div class="archetype-options">
+                    <div class="archetype-card selected" data-archetype="Entrepreneur">
+                        <h4>Entrepreneur</h4>
+                        <div class="archetype-icon">💼</div>
+                        <p>+10% $CATTLE earning rate</p>
+                    </div>
+                    <div class="archetype-card" data-archetype="Adventurer">
+                        <h4>Adventurer</h4>
+                        <div class="archetype-icon">🤠</div>
+                        <p>+10% heist success rate</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button id="start-game" class="primary-button">Start Game</button>
+        </div>
+        
+        <!-- Ranch Scene UI -->
+        <div id="ranch-ui" class="screen hidden">
+            <div class="header">
+                <div class="time-indicator day">
+                    <div class="icon">☀️</div>
+                    <div class="label">Cipher Gulch - Day</div>
+                </div>
+                <div class="resources">
+                    <div class="resource">
+                        <span class="resource-label">$CATTLE:</span>
+                        <span class="resource-value" id="cattle-balance">100</span>
+                    </div>
+                    <div class="resource">
+                        <span class="resource-label">Hay:</span>
+                        <span class="resource-value" id="hay">100</span>/<span id="barn-capacity">100</span>
+                    </div>
+                    <div class="resource">
+                        <span class="resource-label">Water:</span>
+                        <span class="resource-value" id="water">100</span>/<span id="barn-capacity-2">100</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="action-panel">
+                <h3>Ranch Operations</h3>
+                <div class="action-buttons">
+                    <button id="breed-cattle" class="action-button">
+                        <span class="icon">🐄</span>
+                        <span class="label">Breed Cattle</span>
+                        <span class="cost">10 Hay, 10 Water</span>
+                    </button>
+                    <button id="upgrade-barn" class="action-button">
+                        <span class="icon">🏠</span>
+                        <span class="label">Upgrade Barn</span>
+                        <span class="cost">50 $CATTLE</span>
+                    </button>
+                </div>
+                
+                <h3>Travel</h3>
+                <div class="action-buttons">
+                    <button id="go-to-saloon" class="action-button">
+                        <span class="icon">🎰</span>
+                        <span class="label">Go to Saloon</span>
+                    </button>
+                    <button id="go-to-night" class="action-button">
+                        <span class="icon">🌙</span>
+                        <span class="label">Enter Ether Range</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="inventory-panel">
+                <h3>Your Cattle</h3>
+                <div id="cattle-inventory" class="inventory-list">
+                    <!-- Cattle inventory will be populated dynamically -->
+                    <div class="empty-message">No cattle yet. Start breeding!</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Saloon Scene UI -->
+        <div id="saloon-ui" class="screen hidden">
+            <div class="header">
+                <div class="time-indicator day">
+                    <div class="icon">🎰</div>
+                    <div class="label">Cipher Gulch - Saloon</div>
+                </div>
+                <div class="resources">
+                    <div class="resource">
+                        <span class="resource-label">$CATTLE:</span>
+                        <span class="resource-value" id="saloon-cattle-balance">100</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="action-panel">
+                <h3>Cipher Poker</h3>
+                <div class="poker-controls">
+                    <div class="wager-control">
+                        <label for="wager-amount">Wager Amount:</label>
+                        <input type="range" id="wager-slider" min="1" max="50" value="10">
+                        <div class="wager-display">
+                            <span id="wager-amount">10</span> $CATTLE
+                        </div>
+                        <div class="burn-info">
+                            10% (<span id="burn-amount">1</span> $CATTLE) will be burned
+                        </div>
+                    </div>
+                    <button id="play-poker" class="action-button large">
+                        <span class="icon">🎮</span>
+                        <span class="label">Play Poker</span>
+                    </button>
+                </div>
+                
+                <div class="education-tip">
+                    <div class="icon">📚</div>
+                    <div class="tip-content">
+                        <strong>Risk Management:</strong> This game has a 50% chance of winning. 
+                        10% of your wager is burned from the total supply, which creates deflationary pressure 
+                        on the token economy.
+                    </div>
+                </div>
+                
+                <button id="back-to-ranch" class="secondary-button">
+                    <span class="icon">🏠</span>
+                    <span class="label">Back to Ranch</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Night Market Scene UI -->
+        <div id="night-ui" class="screen hidden">
+            <div class="header">
+                <div class="time-indicator night">
+                    <div class="icon">🌙</div>
+                    <div class="label">Ether Range - Night</div>
+                </div>
+                <div class="resources">
+                    <div class="resource">
+                        <span class="resource-label">$CATTLE:</span>
+                        <span class="resource-value" id="night-cattle-balance">100</span>
+                    </div>
+                    <div class="resource">
+                        <span class="resource-label">Market:</span>
+                        <span class="resource-value" id="market-multiplier">1.0</span>x
+                    </div>
+                </div>
+            </div>
+            
+            <div class="action-panel">
+                <h3>Shadow Market</h3>
+                <div class="action-buttons">
+                    <button id="craft-potion" class="action-button">
+                        <span class="icon">🧪</span>
+                        <span class="label">Craft Shadow Potion</span>
+                        <span class="cost">20 $CATTLE (50% burn)</span>
+                    </button>
+                </div>
+                
+                <div class="education-tip">
+                    <div class="icon">📚</div>
+                    <div class="tip-content">
+                        <strong>Market Economics:</strong> Shadow Potion prices vary based on market conditions. 
+                        Crafting burns 50% of the cost, reducing overall $CATTLE supply. 
+                        Timing your sales during high market periods maximizes profits.
+                    </div>
+                </div>
+                
+                <button id="back-to-ranch-night" class="secondary-button">
+                    <span class="icon">🏠</span>
+                    <span class="label">Back to Ranch</span>
+                </button>
+            </div>
+            
+            <div class="inventory-panel">
+                <h3>Your Potions</h3>
+                <div id="potion-inventory" class="inventory-list">
+                    <!-- Potion inventory will be populated dynamically -->
+                    <div class="empty-message">No potions yet. Start crafting!</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Notifications -->
+        <div id="notification" class="hidden">
+            <div class="content"></div>
+        </div>
+        
+        <!-- Result Modal -->
+        <div id="result-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="result-header">
+                    <h3 id="result-title">Result</h3>
+                </div>
+                <div class="result-body">
+                    <p id="result-message"></p>
+                </div>
+                <div class="result-footer">
+                    <button id="close-result" class="primary-button">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
