@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Threading.Tasks;
 
 public class EtherRangeController : MonoBehaviour
 {
@@ -14,229 +15,482 @@ public class EtherRangeController : MonoBehaviour
     [SerializeField] private GameObject errorMessagePanel;
     [SerializeField] private TextMeshProUGUI errorMessageText;
     [SerializeField] private Button closeErrorButton;
-    [SerializeField] private GameObject potionListPanel;
-    [SerializeField] private Transform potionListContent;
-    [SerializeField] private GameObject potionListItemPrefab;
-    [SerializeField] private Button showPotionsButton;
-    [SerializeField] private Button closePotionsButton;
-    [SerializeField] private GameObject tooltipPanel;
-    [SerializeField] private TextMeshProUGUI tooltipText;
-
+    
+    // NFT Management
+    [SerializeField] private Button showNFTsButton;
+    [SerializeField] private Button connectWalletButton;
+    
+    // Market display
+    [SerializeField] private TextMeshProUGUI marketPriceText;
+    
     // Night indicator
     [SerializeField] private Image dayCycleIndicator;
     [SerializeField] private Sprite moonSprite;
-
-    private int selectedPotionIndex = -1;
+    
+    // Educational elements
+    [SerializeField] private GameObject tooltipPanel;
+    [SerializeField] private TextMeshProUGUI tooltipText;
+    
+    // Time display
+    [SerializeField] private TextMeshProUGUI dayNightText;
+    
+    // References
+    private PlayerData playerData;
+    private NFTDisplayManager nftDisplayManager;
+    private WalletConnector walletConnector;
+    private DayNightCycleManager dayNightManager;
+    private GameEconomyManager economyManager;
+    
+    // Selected NFT for selling
+    private NFTItem selectedPotion;
+    
+    // Button states
+    private bool isCraftingPotion = false;
+    private bool isSellingPotion = false;
 
     private void Start()
     {
+        // Get references
+        playerData = GameManager.Instance.PlayerData;
+        dayNightManager = DayNightCycleManager.Instance;
+        economyManager = GameEconomyManager.Instance;
+        
+        // Find UI managers
+        nftDisplayManager = FindObjectOfType<NFTDisplayManager>();
+        walletConnector = FindObjectOfType<WalletConnector>();
+        
         // Initialize UI and setup listeners
         InitializeUI();
         
-        // Initially hide error panel and potion list
-        errorMessagePanel.SetActive(false);
-        potionListPanel.SetActive(false);
+        // Initially hide error panel
+        if (errorMessagePanel != null)
+        {
+            errorMessagePanel.SetActive(false);
+        }
         
         // Set tooltip text
-        tooltipText.text = "Supply/Demand: Potion prices vary between 25-35 $CATTLE!";
+        if (tooltipText != null)
+        {
+            tooltipText.text = "Supply/Demand: Potion prices vary between 25-35 $CATTLE based on market conditions!";
+        }
         
         // Update UI with current player data
         UpdateUI();
+        
+        // Subscribe to events
+        if (playerData != null)
+        {
+            playerData.OnResourcesChanged += UpdateUI;
+            playerData.OnCattleBalanceChanged += UpdateCattleBalance;
+        }
+        
+        if (dayNightManager != null)
+        {
+            dayNightManager.OnTimeStateChanged += OnTimeStateChanged;
+            dayNightManager.OnTimeProgressed += UpdateTimeDisplay;
+        }
+        
+        if (economyManager != null)
+        {
+            economyManager.OnMarketPriceChanged += UpdateMarketPrice;
+        }
+        
+        // Initially disable sell button until a potion is selected
+        if (sellPotionButton != null)
+        {
+            sellPotionButton.interactable = false;
+        }
     }
 
     private void InitializeUI()
     {
         // Setup button listeners
-        craftPotionButton.onClick.AddListener(CraftShadowPotion);
-        sellPotionButton.onClick.AddListener(SellSelectedPotion);
-        backToRanchButton.onClick.AddListener(BackToRanch);
-        closeErrorButton.onClick.AddListener(CloseErrorPanel);
-        showPotionsButton.onClick.AddListener(ShowPotionList);
-        closePotionsButton.onClick.AddListener(ClosePotionList);
+        if (craftPotionButton != null)
+        {
+            craftPotionButton.onClick.AddListener(CraftShadowPotion);
+        }
         
-        // Initially disable sell button until a potion is selected
-        sellPotionButton.interactable = false;
+        if (sellPotionButton != null)
+        {
+            sellPotionButton.onClick.AddListener(SellSelectedPotion);
+        }
+        
+        if (backToRanchButton != null)
+        {
+            backToRanchButton.onClick.AddListener(BackToRanch);
+        }
+        
+        if (closeErrorButton != null)
+        {
+            closeErrorButton.onClick.AddListener(CloseErrorPanel);
+        }
+        
+        if (showNFTsButton != null)
+        {
+            showNFTsButton.onClick.AddListener(ShowNFTs);
+        }
+        
+        if (connectWalletButton != null)
+        {
+            connectWalletButton.onClick.AddListener(ShowWalletConnect);
+        }
         
         // Set night indicator
-        dayCycleIndicator.sprite = moonSprite;
+        if (dayCycleIndicator != null && moonSprite != null)
+        {
+            dayCycleIndicator.sprite = moonSprite;
+        }
     }
 
     private void Update()
     {
-        // Continuously update UI to reflect current player data
-        UpdateUI();
+        // Update time display
+        UpdateTimeDisplay();
     }
 
+    /// <summary>
+    /// Update all UI elements based on player data
+    /// </summary>
     private void UpdateUI()
     {
-        // Get player data
-        PlayerData playerData = GameManager.Instance.PlayerData;
+        if (playerData == null) return;
         
         // Update balance display
-        cattleBalanceText.text = $"$CATTLE: {playerData.CattleBalance:F2}";
-        
-        // Update craft button interactability
-        craftPotionButton.interactable = playerData.CattleBalance >= 20f;
-        
-        // Update sell button interactability
-        sellPotionButton.interactable = selectedPotionIndex >= 0 && 
-                                         selectedPotionIndex < playerData.PotionCollection.Count;
-    }
-
-    private void CraftShadowPotion()
-    {
-        // Try to craft a shadow potion
-        PlayerData playerData = GameManager.Instance.PlayerData;
-        
-        if (playerData.CraftShadowPotion())
+        if (cattleBalanceText != null)
         {
-            // Success - play sound effect
-            GameManager.Instance.SoundManager.PlayPositiveFeedback();
-            
-            // Show the newly crafted potion's stats
-            int lastIndex = playerData.PotionCollection.Count - 1;
-            if (lastIndex >= 0)
-            {
-                ShadowPotion newPotion = playerData.PotionCollection[lastIndex];
-                ShowMessage($"New shadow potion crafted! Potion #{newPotion.Id}: Potency {newPotion.Potency}");
-                
-                // Show potion list
-                ShowPotionList();
-            }
+            cattleBalanceText.text = $"$CATTLE: {playerData.GetCattleBalance():F2}";
+        }
+        
+        // Update button states
+        UpdateButtonStates();
+    }
+    
+    /// <summary>
+    /// Update the time display
+    /// </summary>
+    private void UpdateTimeDisplay(float progress = -1)
+    {
+        if (dayNightManager == null || dayNightText == null) return;
+        
+        // Get time string from day/night manager
+        string timeString = dayNightManager.GetTimeString();
+        dayNightText.text = timeString;
+    }
+    
+    /// <summary>
+    /// Update market price display
+    /// </summary>
+    private void UpdateMarketPrice(float priceMultiplier)
+    {
+        if (marketPriceText == null) return;
+        
+        // Calculate and display price range
+        float minPrice = 25f * priceMultiplier;
+        float maxPrice = 35f * priceMultiplier;
+        
+        marketPriceText.text = $"Market Prices: {minPrice:F1}-{maxPrice:F1} $CATTLE";
+        
+        // Add color based on whether prices are high or low
+        if (priceMultiplier > 1.1f)
+        {
+            marketPriceText.color = Color.green; // High prices
+        }
+        else if (priceMultiplier < 0.9f)
+        {
+            marketPriceText.color = Color.red; // Low prices
         }
         else
         {
-            // Failed - show error
-            GameManager.Instance.SoundManager.PlayNegativeFeedback();
-            ShowError("Not enough $CATTLE! Crafting requires 20 $CATTLE.");
+            marketPriceText.color = Color.white; // Normal prices
+        }
+    }
+    
+    /// <summary>
+    /// Handle time state changes
+    /// </summary>
+    private void OnTimeStateChanged(DayNightCycleManager.TimeState newState)
+    {
+        if (newState == DayNightCycleManager.TimeState.Day)
+        {
+            // We're switching to day - this controller should trigger navigation to Ranch
+            // The transition is handled by DayNightCycleManager
+        }
+    }
+    
+    /// <summary>
+    /// Update button enabled states based on resources
+    /// </summary>
+    private void UpdateButtonStates()
+    {
+        if (playerData == null) return;
+        
+        // Craft potion button
+        if (craftPotionButton != null)
+        {
+            bool canCraft = playerData.GetCattleBalance() >= 20f && !isCraftingPotion;
+            craftPotionButton.interactable = canCraft;
+        }
+        
+        // Sell potion button
+        if (sellPotionButton != null)
+        {
+            bool canSell = selectedPotion != null && !isSellingPotion;
+            sellPotionButton.interactable = canSell;
+        }
+    }
+    
+    /// <summary>
+    /// Update CATTLE balance display
+    /// </summary>
+    private void UpdateCattleBalance(float balance)
+    {
+        if (cattleBalanceText != null)
+        {
+            cattleBalanceText.text = $"$CATTLE: {balance:F2}";
+        }
+        
+        // Update button states
+        UpdateButtonStates();
+    }
+
+    /// <summary>
+    /// Craft a new shadow potion NFT
+    /// </summary>
+    private async void CraftShadowPotion()
+    {
+        if (playerData == null) return;
+        
+        // Disable button during operation
+        isCraftingPotion = true;
+        if (craftPotionButton != null)
+        {
+            craftPotionButton.interactable = false;
+        }
+        
+        // Show processing message
+        ShowMessage("Crafting shadow potion...");
+        
+        try
+        {
+            // Attempt to craft potion
+            NFTItem newPotion = await playerData.CraftShadowPotion();
+            
+            if (newPotion != null)
+            {
+                // Success
+                GameManager.Instance.SoundManager.PlayPositiveFeedback();
+                
+                // Show success message with NFT details
+                string potencyValue = "0";
+                
+                if (newPotion.Attributes.TryGetValue("Potency", out int potency))
+                {
+                    potencyValue = potency.ToString();
+                }
+                
+                ShowMessage($"New shadow potion crafted! {newPotion.Name}: Potency {potencyValue}");
+                
+                // Show NFT list with the new potion
+                if (nftDisplayManager != null)
+                {
+                    nftDisplayManager.ShowNFTList("potion");
+                }
+            }
+            else
+            {
+                // Failed
+                GameManager.Instance.SoundManager.PlayNegativeFeedback();
+                ShowError("Failed to craft potion. Check your $CATTLE balance.");
+            }
+        }
+        catch (System.Exception e)
+        {
+            // Error
+            Debug.LogError($"Error crafting potion: {e.Message}");
+            ShowError("An error occurred while crafting the potion.");
+        }
+        finally
+        {
+            // Re-enable button
+            isCraftingPotion = false;
+            UpdateButtonStates();
         }
     }
 
-    private void SellSelectedPotion()
+    /// <summary>
+    /// Sell the selected shadow potion
+    /// </summary>
+    private async void SellSelectedPotion()
     {
-        // Try to sell the selected potion
-        PlayerData playerData = GameManager.Instance.PlayerData;
+        if (playerData == null || selectedPotion == null) return;
         
-        if (selectedPotionIndex >= 0 && selectedPotionIndex < playerData.PotionCollection.Count)
+        // Disable button during operation
+        isSellingPotion = true;
+        if (sellPotionButton != null)
         {
-            // Remember the potion index and potency before selling
-            int potionId = playerData.PotionCollection[selectedPotionIndex].Id;
+            sellPotionButton.interactable = false;
+        }
+        
+        // Show processing message
+        ShowMessage($"Selling {selectedPotion.Name}...");
+        
+        try
+        {
+            // Attempt to sell potion
+            float amount = await playerData.SellShadowPotion(selectedPotion);
             
-            // Attempt to sell the potion
-            if (playerData.SellShadowPotion(selectedPotionIndex))
+            if (amount > 0)
             {
-                // Success - play sound effect
+                // Success
                 GameManager.Instance.SoundManager.PlayCoinsSound();
                 
                 // Show success message
-                ShowMessage($"Potion #{potionId} sold successfully!");
+                ShowMessage($"{selectedPotion.Name} sold for {amount:F2} $CATTLE!");
                 
-                // Reset selected potion and refresh list
-                selectedPotionIndex = -1;
-                ShowPotionList();
+                // Reset selected potion
+                selectedPotion = null;
+                
+                // Refresh NFT list if open
+                if (nftDisplayManager != null)
+                {
+                    nftDisplayManager.RefreshNFTList();
+                }
+            }
+            else
+            {
+                // Failed
+                GameManager.Instance.SoundManager.PlayNegativeFeedback();
+                ShowError("Failed to sell potion.");
             }
         }
-        else
+        catch (System.Exception e)
         {
-            // No potion selected - show error
-            GameManager.Instance.SoundManager.PlayNegativeFeedback();
-            ShowError("No potion selected!");
+            // Error
+            Debug.LogError($"Error selling potion: {e.Message}");
+            ShowError("An error occurred while selling the potion.");
+        }
+        finally
+        {
+            // Re-enable button
+            isSellingPotion = false;
+            UpdateButtonStates();
         }
     }
 
+    /// <summary>
+    /// Navigate back to the Ranch
+    /// </summary>
     private void BackToRanch()
     {
         // Play UI sound
         GameManager.Instance.SoundManager.PlayButtonClick();
         
-        // Go back to ranch scene
-        GameManager.Instance.GoToRanch();
+        // Force a transition to day
+        if (dayNightManager != null)
+        {
+            dayNightManager.SetTimeState(DayNightCycleManager.TimeState.Day);
+        }
+        else
+        {
+            // Fallback if day/night manager not found
+            GameManager.Instance.GoToRanch();
+        }
     }
 
+    /// <summary>
+    /// Show NFT inventory
+    /// </summary>
+    private void ShowNFTs()
+    {
+        // Play UI sound
+        GameManager.Instance.SoundManager.PlayButtonClick();
+        
+        // Show NFT list
+        if (nftDisplayManager != null)
+        {
+            nftDisplayManager.ShowNFTList("potion");
+            
+            // Set up callback for selection
+            // This would typically be done with an event system
+            // but for this MVP we'll use a custom method
+            // to be called from the NFT display manager
+            SetNFTSelectionCallback();
+        }
+    }
+    
+    /// <summary>
+    /// Set up callback for NFT selection
+    /// </summary>
+    private void SetNFTSelectionCallback()
+    {
+        // This is a placeholder for setting up a more sophisticated event system
+        // In a real implementation, we would subscribe to events from the NFT display manager
+        // For now, we'll rely on the NFT display manager to call SelectNFT directly
+    }
+    
+    /// <summary>
+    /// Select an NFT for selling
+    /// </summary>
+    public void SelectNFT(NFTItem nft)
+    {
+        // Only allow selecting potions
+        if (nft != null && nft.Name.Contains("Potion"))
+        {
+            selectedPotion = nft;
+            UpdateButtonStates();
+        }
+    }
+    
+    /// <summary>
+    /// Show wallet connection UI
+    /// </summary>
+    private void ShowWalletConnect()
+    {
+        // Play UI sound
+        GameManager.Instance.SoundManager.PlayButtonClick();
+        
+        // Show wallet panel
+        if (walletConnector != null)
+        {
+            walletConnector.ShowWalletPanel();
+        }
+    }
+
+    /// <summary>
+    /// Show error message
+    /// </summary>
     private void ShowError(string errorMessage)
     {
+        if (errorMessagePanel == null || errorMessageText == null) return;
+        
         errorMessageText.text = errorMessage;
         errorMessageText.color = Color.red;
         errorMessagePanel.SetActive(true);
     }
 
+    /// <summary>
+    /// Show success/info message
+    /// </summary>
     private void ShowMessage(string message)
     {
+        if (errorMessagePanel == null || errorMessageText == null) return;
+        
         errorMessageText.text = message;
         errorMessageText.color = Color.green;
         errorMessagePanel.SetActive(true);
     }
 
+    /// <summary>
+    /// Close message panel
+    /// </summary>
     private void CloseErrorPanel()
     {
         // Play UI sound
         GameManager.Instance.SoundManager.PlayButtonClick();
         
-        errorMessagePanel.SetActive(false);
-    }
-
-    private void ShowPotionList()
-    {
-        // Play UI sound
-        GameManager.Instance.SoundManager.PlayButtonClick();
-        
-        // Clear existing items
-        foreach (Transform child in potionListContent)
+        if (errorMessagePanel != null)
         {
-            Destroy(child.gameObject);
+            errorMessagePanel.SetActive(false);
         }
-        
-        // Create list items for each potion
-        PlayerData playerData = GameManager.Instance.PlayerData;
-        for (int i = 0; i < playerData.PotionCollection.Count; i++)
-        {
-            ShadowPotion potion = playerData.PotionCollection[i];
-            GameObject listItem = Instantiate(potionListItemPrefab, potionListContent);
-            
-            // Setup text
-            TextMeshProUGUI itemText = listItem.GetComponentInChildren<TextMeshProUGUI>();
-            if (itemText != null)
-            {
-                itemText.text = $"Potion #{potion.Id}: Potency {potion.Potency}";
-            }
-            
-            // Setup selection
-            int index = i; // Capture the index for the closure
-            Button itemButton = listItem.GetComponent<Button>();
-            if (itemButton != null)
-            {
-                itemButton.onClick.AddListener(() => SelectPotion(index));
-            }
-            
-            // Highlight the selected potion
-            if (i == selectedPotionIndex)
-            {
-                itemButton.GetComponent<Image>().color = Color.yellow;
-            }
-        }
-        
-        potionListPanel.SetActive(true);
-    }
-
-    private void SelectPotion(int index)
-    {
-        // Play UI sound
-        GameManager.Instance.SoundManager.PlayButtonClick();
-        
-        selectedPotionIndex = index;
-        
-        // Refresh the list to update highlighting
-        ShowPotionList();
-        
-        // Enable sell button
-        sellPotionButton.interactable = true;
-    }
-
-    private void ClosePotionList()
-    {
-        // Play UI sound
-        GameManager.Instance.SoundManager.PlayButtonClick();
-        
-        potionListPanel.SetActive(false);
     }
 }

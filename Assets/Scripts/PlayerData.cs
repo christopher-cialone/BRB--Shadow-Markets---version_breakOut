@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class PlayerData : MonoBehaviour
@@ -11,16 +12,144 @@ public class PlayerData : MonoBehaviour
     // Player name
     public string PlayerName { get; private set; } = "Cowboy";
 
-    // Resources
+    // Resources - these are stored locally for gameplay
     public int Cattle { get; private set; } = 0;
-    public float CattleBalance { get; private set; } = 100f; // Initial $CATTLE
     public int Hay { get; private set; } = 100;
     public int Water { get; private set; } = 100;
     public int BarnCapacity { get; private set; } = 100;
 
-    // Collections
-    public List<Cattle> CattleCollection { get; private set; } = new List<Cattle>();
-    public List<ShadowPotion> PotionCollection { get; private set; } = new List<ShadowPotion>();
+    // On-chain resources - these are tracked on the blockchain through SolanaManager
+    // We'll cache them locally for faster access but sync with blockchain regularly
+    private float cachedCattleBalance = 100f; // Initial $CATTLE
+    private List<NFTItem> cachedCattleNFTs = new List<NFTItem>();
+    private List<NFTItem> cachedPotionNFTs = new List<NFTItem>();
+
+    // Blockchain managers
+    private SolanaManager solanaManager;
+    private GameEconomyManager economyManager;
+
+    // Sync status
+    public bool IsSyncing { get; private set; } = false;
+    private float lastSyncTime = 0f;
+    private float syncInterval = 30f; // Sync with blockchain every 30 seconds
+
+    // Events
+    public event System.Action OnResourcesChanged;
+    public event System.Action<float> OnCattleBalanceChanged;
+
+    private void Start()
+    {
+        // Get references to managers
+        solanaManager = SolanaManager.Instance;
+        economyManager = GameEconomyManager.Instance;
+        
+        // Subscribe to blockchain events
+        if (solanaManager != null)
+        {
+            solanaManager.OnCattleBalanceUpdated += UpdateCachedCattleBalance;
+            solanaManager.OnNFTMinted += HandleNewNFT;
+            solanaManager.OnWalletConnected += (_) => SyncWithBlockchain();
+        }
+        
+        // Initial sync
+        SyncWithBlockchain();
+    }
+
+    private void Update()
+    {
+        // Periodic sync with blockchain
+        if (Time.time - lastSyncTime > syncInterval && solanaManager != null && solanaManager.IsWalletConnected)
+        {
+            SyncWithBlockchain();
+        }
+    }
+
+    /// <summary>
+    /// Sync local player data with blockchain state
+    /// </summary>
+    public async void SyncWithBlockchain()
+    {
+        if (IsSyncing || solanaManager == null || !solanaManager.IsWalletConnected) return;
+        
+        IsSyncing = true;
+        lastSyncTime = Time.time;
+        
+        try
+        {
+            // Sync CATTLE balance
+            float blockchainBalance = await solanaManager.GetCattleBalance();
+            UpdateCachedCattleBalance(blockchainBalance);
+            
+            // Sync NFTs
+            List<NFTItem> allNFTs = solanaManager.GetAllNFTs();
+            
+            // Process cattle NFTs
+            cachedCattleNFTs.Clear();
+            foreach (var nft in allNFTs)
+            {
+                if (nft.Name.Contains("Cattle"))
+                {
+                    cachedCattleNFTs.Add(nft);
+                }
+            }
+            
+            // Process potion NFTs
+            cachedPotionNFTs.Clear();
+            foreach (var nft in allNFTs)
+            {
+                if (nft.Name.Contains("Potion"))
+                {
+                    cachedPotionNFTs.Add(nft);
+                }
+            }
+            
+            // Update cattle count
+            Cattle = cachedCattleNFTs.Count;
+            
+            Debug.Log("Synced with blockchain: " +
+                     $"{cachedCattleBalance} CATTLE, " +
+                     $"{cachedCattleNFTs.Count} cattle NFTs, " +
+                     $"{cachedPotionNFTs.Count} potion NFTs");
+                     
+            OnResourcesChanged?.Invoke();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Error syncing with blockchain: {e.Message}");
+        }
+        finally
+        {
+            IsSyncing = false;
+        }
+    }
+
+    /// <summary>
+    /// Update the cached CATTLE balance
+    /// </summary>
+    private void UpdateCachedCattleBalance(float newBalance)
+    {
+        cachedCattleBalance = newBalance;
+        OnCattleBalanceChanged?.Invoke(cachedCattleBalance);
+        OnResourcesChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// Handle new NFT minted event
+    /// </summary>
+    private void HandleNewNFT(NFTItem nft)
+    {
+        if (nft.Name.Contains("Cattle"))
+        {
+            cachedCattleNFTs.Add(nft);
+            Cattle = cachedCattleNFTs.Count;
+        }
+        else if (nft.Name.Contains("Potion"))
+        {
+            cachedPotionNFTs.Add(nft);
+        }
+        
+        OnResourcesChanged?.Invoke();
+    }
 
     // Initialize player data
     public void InitializePlayer(string name, Archetype archetype)
@@ -28,174 +157,255 @@ public class PlayerData : MonoBehaviour
         PlayerName = name;
         SelectedArchetype = archetype;
         
-        // Apply archetype bonuses
-        switch (archetype)
-        {
-            case Archetype.Entrepreneur:
-                // +10% $CATTLE earning rate will be applied in earning functions
-                break;
-            case Archetype.Adventurer:
-                // +10% heist success rate (for future implementation)
-                break;
-        }
+        // Initial resources are set in the constructor
+        // The blockchain account will be created/connected separately
+
+        // Save player preferences
+        PlayerPrefs.SetString("PlayerName", name);
+        PlayerPrefs.SetInt("PlayerArchetype", (int)archetype);
+        PlayerPrefs.Save();
     }
 
-    // Resource management functions
-    public bool SpendCattle(float amount)
+    // CATTLE token methods (on-chain)
+    
+    /// <summary>
+    /// Get the current CATTLE balance from blockchain or cache
+    /// </summary>
+    public float GetCattleBalance()
     {
-        if (CattleBalance >= amount)
-        {
-            CattleBalance -= amount;
-            return true;
-        }
-        return false;
+        return cachedCattleBalance;
     }
 
-    public void EarnCattle(float amount)
+    /// <summary>
+    /// Get all cattle NFTs from blockchain or cache
+    /// </summary>
+    public List<NFTItem> GetCattleNFTs()
     {
-        // Apply entrepreneur bonus if applicable
-        if (SelectedArchetype == Archetype.Entrepreneur)
-        {
-            amount *= 1.1f; // 10% bonus
-        }
-        
-        CattleBalance += amount;
+        return new List<NFTItem>(cachedCattleNFTs);
     }
 
+    /// <summary>
+    /// Get all potion NFTs from blockchain or cache
+    /// </summary>
+    public List<NFTItem> GetPotionNFTs()
+    {
+        return new List<NFTItem>(cachedPotionNFTs);
+    }
+
+    // Resource management functions (off-chain)
+    
+    /// <summary>
+    /// Use hay resource
+    /// </summary>
     public bool UseHay(int amount)
     {
         if (Hay >= amount)
         {
             Hay -= amount;
+            OnResourcesChanged?.Invoke();
             return true;
         }
         return false;
     }
 
+    /// <summary>
+    /// Use water resource
+    /// </summary>
     public bool UseWater(int amount)
     {
         if (Water >= amount)
         {
             Water -= amount;
+            OnResourcesChanged?.Invoke();
             return true;
         }
         return false;
     }
 
+    /// <summary>
+    /// Add hay resource
+    /// </summary>
     public void AddHay(int amount)
     {
         Hay = Mathf.Min(Hay + amount, BarnCapacity);
+        OnResourcesChanged?.Invoke();
     }
 
+    /// <summary>
+    /// Add water resource
+    /// </summary>
     public void AddWater(int amount)
     {
         Water = Mathf.Min(Water + amount, BarnCapacity);
+        OnResourcesChanged?.Invoke();
     }
 
-    public bool UpgradeBarn()
+    /// <summary>
+    /// Increase barn capacity
+    /// </summary>
+    public void IncreaseBarnCapacity(int amount)
     {
-        float cost = 50f;
-        if (SpendCattle(cost))
-        {
-            BarnCapacity += 50;
-            return true;
-        }
-        return false;
+        BarnCapacity += amount;
+        OnResourcesChanged?.Invoke();
     }
 
-    // Cattle management
-    public bool BreedCattle()
+    /// <summary>
+    /// Increment cattle count
+    /// </summary>
+    public void IncrementCattle()
     {
-        int hayNeeded = 10;
-        int waterNeeded = 10;
-        
-        if (UseHay(hayNeeded) && UseWater(waterNeeded))
-        {
-            // Generate new cattle with random traits
-            int speed = Random.Range(1, 10);
-            int milk = Random.Range(1, 10);
-            
-            Cattle newCattle = new Cattle(CattleCollection.Count + 1, speed, milk);
-            CattleCollection.Add(newCattle);
-            Cattle++;
-            
-            return true;
-        }
-        
-        return false;
+        Cattle++;
+        OnResourcesChanged?.Invoke();
     }
 
-    // Shadow potion management
-    public bool CraftShadowPotion()
+    // On-chain operations (these use the blockchain)
+
+    /// <summary>
+    /// Upgrade the barn using CATTLE tokens on the blockchain
+    /// </summary>
+    public async Task<bool> UpgradeBarn()
     {
-        float cost = 20f;
+        if (economyManager == null) return false;
         
-        if (SpendCattle(cost))
+        bool success = await economyManager.UpgradeBarn(this);
+        
+        if (success)
         {
-            // 50% burn mechanic
-            float burnAmount = cost * 0.5f;
-            // The rest is just taken from the player's balance already
-            
-            // Create a new shadow potion with random potency
-            int potency = Random.Range(1, 10);
-            ShadowPotion newPotion = new ShadowPotion(PotionCollection.Count + 1, potency);
-            PotionCollection.Add(newPotion);
-            
-            return true;
+            // The barn capacity is updated by the economy manager
+            Debug.Log("Barn upgraded successfully");
         }
         
-        return false;
+        return success;
     }
 
-    public bool SellShadowPotion(int index)
+    /// <summary>
+    /// Breed a new cattle NFT using hay and water resources
+    /// This creates a new NFT on the blockchain
+    /// </summary>
+    public async Task<NFTItem> BreedCattle()
     {
-        if (index >= 0 && index < PotionCollection.Count)
+        if (economyManager == null) return null;
+        
+        NFTItem newCattle = await economyManager.BreedCattle(this);
+        
+        if (newCattle != null)
         {
-            // Random price between 25-35 $CATTLE
-            float sellingPrice = Random.Range(25f, 35f);
+            Debug.Log($"New cattle bred: {newCattle.Name}");
+        }
+        
+        return newCattle;
+    }
+
+    /// <summary>
+    /// Craft a new shadow potion NFT using CATTLE tokens
+    /// This creates a new NFT on the blockchain
+    /// </summary>
+    public async Task<NFTItem> CraftShadowPotion()
+    {
+        if (economyManager == null) return null;
+        
+        NFTItem newPotion = await economyManager.CraftShadowPotion(this);
+        
+        if (newPotion != null)
+        {
+            Debug.Log($"New shadow potion crafted: {newPotion.Name}");
+        }
+        
+        return newPotion;
+    }
+
+    /// <summary>
+    /// Sell a shadow potion NFT for CATTLE tokens
+    /// </summary>
+    public async Task<float> SellShadowPotion(NFTItem potion)
+    {
+        if (economyManager == null) return 0;
+        
+        // Get entrepreneur bonus
+        float bonusMultiplier = SelectedArchetype == Archetype.Entrepreneur ? 1.1f : 1.0f;
+        
+        // Sell the potion
+        float baseAmount = await economyManager.SellShadowPotion(potion);
+        
+        // Apply entrepreneur bonus to the proceeds
+        float totalAmount = baseAmount * bonusMultiplier;
+        
+        if (totalAmount > 0)
+        {
+            // If we got a bonus, add the extra amount separately
+            if (bonusMultiplier > 1.0f)
+            {
+                float bonusAmount = baseAmount * (bonusMultiplier - 1.0f);
+                solanaManager.UpdateCattleBalance(bonusAmount);
+            }
             
-            // Apply entrepreneur bonus if applicable
+            Debug.Log($"Sold potion for {totalAmount} CATTLE tokens (includes {bonusMultiplier}x bonus)");
+        }
+        
+        return totalAmount;
+    }
+
+    /// <summary>
+    /// Play poker in the saloon with a wager
+    /// </summary>
+    public async Task<float> PlayPoker(float wager)
+    {
+        if (economyManager == null) return 0;
+        
+        float result = await economyManager.PlayPoker(wager);
+        
+        if (result > 0)
+        {
+            // Apply entrepreneur bonus to winnings if needed
             if (SelectedArchetype == Archetype.Entrepreneur)
             {
-                sellingPrice *= 1.1f; // 10% bonus
+                float bonus = result * 0.1f; // 10% bonus
+                solanaManager.UpdateCattleBalance(bonus);
+                result += bonus;
             }
             
-            EarnCattle(sellingPrice);
-            PotionCollection.RemoveAt(index);
-            
-            return true;
+            Debug.Log($"Won {result} CATTLE tokens in poker");
+        }
+        else if (result < 0)
+        {
+            Debug.Log($"Lost {-result} CATTLE tokens in poker");
         }
         
-        return false;
+        return result;
     }
 
-    // Saloon poker game
-    public float PlayPoker(float wager)
+    /// <summary>
+    /// Convert a cattle NFT to CATTLE tokens using MPL-404
+    /// </summary>
+    public async Task<bool> ConvertCattleToTokens(NFTItem cattle)
     {
-        if (SpendCattle(wager))
+        if (economyManager == null) return false;
+        
+        bool success = await economyManager.ConvertCattleToTokens(cattle);
+        
+        if (success)
         {
-            // 10% burn
-            float burnAmount = wager * 0.1f;
-            float playableAmount = wager - burnAmount;
-            
-            // 50/50 chance of winning
-            bool win = Random.value >= 0.5f;
-            
-            if (win)
-            {
-                // Win = 2x wager after burn
-                float winnings = playableAmount * 2f;
-                EarnCattle(winnings);
-                return winnings;
-            }
-            else
-            {
-                // Lose = wager lost (already spent)
-                return -wager;
-            }
+            Debug.Log($"Converted {cattle.Name} to CATTLE tokens");
         }
         
-        return 0f; // No game played
+        return success;
+    }
+
+    /// <summary>
+    /// Convert CATTLE tokens to a new cattle NFT using MPL-404
+    /// </summary>
+    public async Task<NFTItem> ConvertTokensToCattle(float amount)
+    {
+        if (economyManager == null) return null;
+        
+        NFTItem newCattle = await economyManager.ConvertTokensToCattle(amount);
+        
+        if (newCattle != null)
+        {
+            Debug.Log($"Converted {amount} CATTLE tokens to new cattle: {newCattle.Name}");
+        }
+        
+        return newCattle;
     }
 
     // Get player stats for sticky note printing
@@ -203,9 +413,9 @@ public class PlayerData : MonoBehaviour
     {
         return $"Player: {PlayerName}\n" +
                $"Archetype: {SelectedArchetype}\n" +
-               $"$CATTLE: {CattleBalance:F2}\n" +
+               $"$CATTLE: {cachedCattleBalance:F2}\n" +
                $"Cattle: {Cattle}\n" +
-               $"Potions: {PotionCollection.Count}\n" +
+               $"Potions: {cachedPotionNFTs.Count}\n" +
                $"Hay: {Hay}/{BarnCapacity}\n" +
                $"Water: {Water}/{BarnCapacity}";
     }
