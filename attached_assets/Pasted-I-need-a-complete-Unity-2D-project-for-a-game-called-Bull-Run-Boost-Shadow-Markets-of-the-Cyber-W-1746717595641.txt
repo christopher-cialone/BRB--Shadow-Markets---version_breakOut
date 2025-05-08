@@ -1,0 +1,61 @@
+I need a complete Unity 2D project for a game called "Bull Run Boost – Shadow Markets of the Cyber-West", a 2.5D pixel art game with a cypherpunk Western theme, built for the Solana blockchain (mock integration for MVP). The game features a day-night cycle with Cipher Gulch (Western town) by day and the Ether Range (fantasy MMORPG world) by night, targeting 17–mid-40s players with an educational focus on financial literacy and economics. The MVP should include core gameplay, with an optional sticky note printing mechanic inspired by the nemonic app for future expansion. Here’s the breakdown:
+
+1. **Project Setup**:
+   - Use Unity 2D with a pixel art style (16x16 pixel units, pixel-perfect camera).
+   - Source free assets from the Unity Asset Store (e.g., "Pixel Art Top Down - Basic" for sprites, backgrounds).
+
+2. **Main Menu Scene**:
+   - Display a Western desert background and a placeholder title logo.
+   - Include a character selection screen with two archetypes:
+     - Entrepreneur: +10% $CATTLE earning rate, sprite with cowboy hat and suit.
+     - Adventurer: +10% heist success rate, sprite with cowboy hat and leather jacket.
+   - Show stats UI (name, archetype bonus, $CATTLE: 100 initial).
+   - Add a "Start Game" button to transition to the Daytime Ranch Scene.
+
+3. **Daytime Ranch Scene (Cipher Gulch)**:
+   - Background: Western plains with barn and fences (2.5D pixel art).
+   - UI Overlay: Display Hay (100 units), Water (100 units), $CATTLE balance.
+   - Buttons: "Breed Cattle" (consume 10 Hay/Water to mint mock MPL-404 NFT with Speed/Milk traits, e.g., "Cattle #1: Speed 5, Milk 6"), "Upgrade Barn" (cost 50 $CATTLE, increase capacity by 50), "Go to Saloon", "Enter Ether Range".
+   - Error handling: "Not enough resources!" or "Not enough $CATTLE!" if conditions fail.
+   - Day cycle indicator (sun icon).
+
+4. **Saloon Scene**:
+   - Background: Wooden interior with poker table (2.5D pixel art).
+   - UI Overlay: $CATTLE balance, "Wager" button, slider (1–50 $CATTLE), "Play Poker" button, result display.
+   - Cipher Poker: 10% $CATTLE burn, 50/50 win/loss (win = 2x wager after burn, e.g., 20 $CATTLE wager → 2 burned, 36 won; lose = wager lost). Display outcome (e.g., "You won 36 $CATTLE!").
+   - "Back to Ranch" button.
+
+5. **Nighttime Ether Range Scene**:
+   - Background: Dark forest with neon market and workshop (2.5D pixel art).
+   - UI Overlay: $CATTLE balance, "Craft Shadow Potion" (cost 20 $CATTLE, 50% burn, add mock MPL-404 NFT, e.g., "Shadow Potion #1: Potency 8"), "Sell Potion" (sell for 25–35 $CATTLE, random price), "Back to Ranch".
+   - Inventory list for crafted items.
+   - Error handling: "Not enough $CATTLE!" if < 20.
+   - Night cycle indicator (moon icon).
+
+6. **Animations and Transitions**:
+   - Animate character sprites: Idle (2-frame bobbing, 0.5s each) using Animator.
+   - Animate UI buttons: Hover (10% scale up), Click (play free click sound).
+   - Scene transitions: 1s fade to black between scenes using SceneManager and CanvasGroup.
+   - Day-night transition: 1s darken/lighten effect.
+
+7. **Sticky Note Printing Mechanic (Prototype Feature)**:
+   - Add an optional "Print Progress" button in the UI (available in all scenes).
+   - When clicked, generate a mock sticky note (e.g., 3x3-inch digital preview) with player stats (e.g., "$CATTLE: 150, Cattle: 2, Potions: 1") and a financial tip (e.g., "Tip: Balance Hay/Water to avoid shortages!").
+   - Simulate printing by displaying a 5-second "Printing..." animation, then show a success message (e.g., "Note printed! Use with a nemonic-inspired printer.").
+   - Include a template selection (e.g., To-Do List, Tip) with basic designs (e.g., dotted lines, bold headers), inspired by nemonic’s customizable templates.
+   - Note: This is a prototype; actual Bluetooth printing to a physical device (like nemonic) is out of scope for MVP but should be placeholder-ready.
+
+8. **C# Scripts**:
+   - Manage character selection, resource stats, $CATTLE balance, cattle/MPL-404 data, wager logic (Random.Range for 50/50), crafting/trading mechanics, animations, and sticky note generation.
+   - Include detailed comments for a non-game-developer (e.g., "// This handles $CATTLE burning in the Saloon").
+
+9. **Educational Elements**:
+   - Add tooltips in each scene (e.g., "Budgeting: Balance Hay/Water!" in Ranch, "Risk Management: 50% win chance!" in Saloon, "Supply/Demand: Prices vary!" in Ether Range).
+   - Sticky note tips reinforce learning (e.g., "Invest wisely in upgrades!").
+
+10. **Deliverables**:
+    - Full Unity project with scenes, scripts, and UI.
+    - Instructions to run the MVP (e.g., open Unity, build, test scenes).
+    - Notes on next steps (e.g., expand to more archetypes, integrate real Solana blockchain, enable Bluetooth printing with nemonic hardware).
+
+Assume the developer has no prior Unity knowledge. Generate all necessary code, assets (using placeholders if needed), and configurations. Keep the design simple but functional for an MVP, with placeholders for future features (e.g., heists, full sticky note printing via Bluetooth). Ensure the project is scalable for later additions like additional scenes and real-world printing integration.
