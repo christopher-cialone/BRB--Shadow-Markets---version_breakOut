@@ -1,0 +1,32 @@
+modules = ["csharp", "python-3.11"]
+
+[nix]
+channel = "stable-24_05"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "PreviewServer"
+
+[[workflows.workflow]]
+name = "PreviewServer"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd preview && python -m http.server 5000"
+waitForPort = 5000
+
+[deployment]
+run = ["sh", "-c", "pip install unity-downloader-cli && unity-downloader-cli -u 2020.3.48f1 -c editor -c WebGL --wait && unity-editor -projectPath . -batchmode -buildTarget WebGL -executeMethod WebGLBuilder.Build -logFile unity.log -quit && cd WebGLBuild && python3 -m http.server 5000"]
+
+[[ports]]
+localPort = 5000
+externalPort = 80

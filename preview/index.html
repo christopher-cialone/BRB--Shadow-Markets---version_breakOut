@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bull Run Boost – Shadow Markets of the Cyber-West</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background-color: #0a0a0a;
+            color: #00ff00;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 5px;
+            text-shadow: 0 0 5px #00ff00;
+        }
+        h2 {
+            color: #ff9900;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+            margin-top: 30px;
+        }
+        h3 {
+            color: #cc66ff;
+        }
+        pre {
+            background-color: #111;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        code {
+            font-family: 'Courier New', monospace;
+        }
+        .scene {
+            background-color: #111;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 3px solid #ff9900;
+        }
+        .feature {
+            display: flex;
+            margin: 15px 0;
+        }
+        .feature-icon {
+            flex: 0 0 50px;
+            text-align: center;
+            font-size: 24px;
+        }
+        .feature-content {
+            flex: 1;
+        }
+        .progress-bar {
+            background-color: #333;
+            height: 20px;
+            width: 100%;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        .progress {
+            background-color: #00ff00;
+            height: 20px;
+            border-radius: 10px;
+            width: 80%; /* Set progress percentage here */
+        }
+        img {
+            max-width: 100%;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Bull Run Boost</h1>
+        <p>Shadow Markets of the Cyber-West</p>
+        <div class="progress-bar">
+            <div class="progress"></div>
+        </div>
+        <p>Project Implementation: 80% complete</p>
+    </header>
+
+    <h2>Project Overview</h2>
+    <p>Bull Run Boost is a 2.5D pixel art game with a cypherpunk Western theme, featuring day-night gameplay, mock blockchain integration, and educational financial mechanics.</p>
+    
+    <div class="feature">
+        <div class="feature-icon">🤠</div>
+        <div class="feature-content">
+            <h3>Dual Archetypes</h3>
+            <p>Choose between Entrepreneur (+10% $CATTLE earning) and Adventurer (+10% heist success rate) for different gameplay advantages.</p>
+        </div>
+    </div>
+    
+    <div class="feature">
+        <div class="feature-icon">🌞</div>
+        <div class="feature-content">
+            <h3>Day-Night Cycle</h3>
+            <p>Experience Cipher Gulch by day for resource management and The Ether Range by night for shadow market activities.</p>
+        </div>
+    </div>
+    
+    <div class="feature">
+        <div class="feature-icon">📊</div>
+        <div class="feature-content">
+            <h3>Financial Education</h3>
+            <p>Learn economic principles through gameplay: budgeting, investment, risk management, and supply/demand.</p>
+        </div>
+    </div>
+
+    <h2>Game Scenes</h2>
+    
+    <div class="scene">
+        <h3>Main Menu</h3>
+        <p>Western desert background with character selection (Entrepreneur/Adventurer) and game start options.</p>
+        <pre><code>Key Scripts:
+- MainMenuController.cs
+- CharacterSelection.cs</code></pre>
+    </div>
+    
+    <div class="scene">
+        <h3>Daytime Ranch (Cipher Gulch)</h3>
+        <p>Manage resources: breed cattle (NFTs), upgrade barn capacity, and handle day-to-day operations.</p>
+        <pre><code>Key Features:
+- Resource Management (Hay, Water)
+- Cattle Breeding (Speed, Milk traits)
+- Barn Upgrades</code></pre>
+    </div>
+    
+    <div class="scene">
+        <h3>Saloon</h3>
+        <p>Place wagers in Cipher Poker with 50/50 chance, 10% burn, and 2x potential winnings.</p>
+        <pre><code>Key Mechanics:
+- Wager: 1-50 $CATTLE
+- Win: 2x wager after burn
+- Lose: Wager lost</code></pre>
+    </div>
+    
+    <div class="scene">
+        <h3>Nighttime Ether Range</h3>
+        <p>Craft Shadow Potions (NFTs) using $CATTLE and sell at fluctuating market prices.</p>
+        <pre><code>Key Mechanics:
+- Potion Cost: 20 $CATTLE (50% burn)
+- Random Potency trait
+- Selling Price: 25-35 $CATTLE</code></pre>
+    </div>
+
+    <h2>Educational Elements</h2>
+    <ul>
+        <li><strong>Ranch:</strong> Budgeting and resource allocation</li>
+        <li><strong>Saloon:</strong> Risk management and probability</li>
+        <li><strong>Ether Range:</strong> Supply/demand market dynamics</li>
+        <li><strong>Sticky Notes:</strong> Financial tips and reminders</li>
+    </ul>
+
+    <h2>Technical Implementation</h2>
+    <p>The project is implemented with:</p>
+    <ul>
+        <li>Unity 2D with pixel-perfect camera (16x16 pixel units)</li>
+        <li>C# scripting for game mechanics</li>
+        <li>Mock blockchain integration (ready for Solana in future)</li>
+        <li>Day-night transition system</li>
+        <li>Educational tooltip system</li>
+        <li>Sticky note generation system (for future printer integration)</li>
+    </ul>
+
+    <h2>Next Steps</h2>
+    <ul>
+        <li>Implement scene visuals and UI layouts</li>
+        <li>Add pixel art assets for characters and environments</li>
+        <li>Connect UI elements to existing script functionality</li>
+        <li>Test gameplay flow across all scenes</li>
+    </ul>
+    
+    <footer>
+        <p>&copy; 2025 - Bull Run Boost: Shadow Markets of the Cyber-West</p>
+    </footer>
+</body>
+</html>
