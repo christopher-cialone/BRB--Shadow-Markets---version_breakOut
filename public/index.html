@@ -114,59 +114,126 @@
                         <span class="resource-label">$CATTLE:</span>
                         <span class="resource-value" id="saloon-cattle-balance">100</span>
                     </div>
+                    <div class="resource bonus-display hidden">
+                        <span class="resource-label">Bonus:</span>
+                        <span class="resource-value" id="bonus-amount">+0</span> $CATTLE
+                    </div>
                 </div>
             </div>
             
             <div class="saloon-layout">
-                <div class="poker-table">
-                    <div class="dealer-area">
-                        <div class="dealer-label">Dealer</div>
-                        <div id="dealer-cards" class="cards-container">
-                            <!-- Dealer cards will be placed here -->
+                <div class="race-track">
+                    <h3>Horse Race</h3>
+                    
+                    <div class="track-container">
+                        <div class="starting-line"></div>
+                        <div class="finish-line"></div>
+                        
+                        <div id="track-hearts" class="track">
+                            <div class="horse-label">♥</div>
+                            <div class="progress-bar">
+                                <div id="hearts-progress" class="progress" style="width: 0%"></div>
+                            </div>
                         </div>
-                        <div id="dealer-score" class="score">Score: 0</div>
+                        
+                        <div id="track-diamonds" class="track">
+                            <div class="horse-label">♦</div>
+                            <div class="progress-bar">
+                                <div id="diamonds-progress" class="progress" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <div id="track-clubs" class="track">
+                            <div class="horse-label">♣</div>
+                            <div class="progress-bar">
+                                <div id="clubs-progress" class="progress" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <div id="track-spades" class="track">
+                            <div class="horse-label">♠</div>
+                            <div class="progress-bar">
+                                <div id="spades-progress" class="progress" style="width: 0%"></div>
+                            </div>
+                        </div>
                     </div>
                     
-                    <div class="player-area">
-                        <div class="player-label">Your Hand</div>
-                        <div id="player-cards" class="cards-container">
-                            <!-- Player cards will be placed here -->
-                        </div>
-                        <div id="player-score" class="score">Score: 0</div>
-                        
-                        <div class="game-controls">
-                            <button id="hit-button" class="game-button" disabled>Hit</button>
-                            <button id="stand-button" class="game-button" disabled>Stand</button>
-                        </div>
+                    <div class="race-controls">
+                        <button id="start-race" class="action-button large">
+                            <span class="icon">🏁</span>
+                            <span class="label">Start Race</span>
+                        </button>
+                        <button id="draw-card" class="action-button large" disabled>
+                            <span class="icon">🃏</span>
+                            <span class="label">Draw Card</span>
+                        </button>
+                    </div>
+                    
+                    <div id="drawn-card" class="drawn-card">
+                        <div class="card-placeholder">Draw a card to advance a horse</div>
                     </div>
                 </div>
                 
-                <div class="action-panel">
-                    <h3>Cipher Blackjack</h3>
-                    <p class="game-description">A blockchain-based card game where players try to get closer to 21 than the dealer without going over.</p>
+                <div class="betting-panel">
+                    <h3>Place Your Bets</h3>
                     
-                    <div class="poker-controls">
-                        <div class="wager-control">
-                            <label for="wager-amount">Wager Amount:</label>
-                            <input type="range" id="wager-slider" min="1" max="50" value="10">
-                            <div class="wager-display">
-                                <span id="wager-amount">10</span> $CATTLE
-                            </div>
-                            <div class="burn-info">
-                                10% (<span id="burn-amount">1</span> $CATTLE) will be burned
+                    <div class="bet-options">
+                        <div class="bet-option" data-suit="hearts">
+                            <div class="suit-label red">♥</div>
+                            <div class="bet-controls">
+                                <input type="number" id="bet-hearts" class="bet-input" min="0" max="50" value="0">
+                                <div class="bet-odds">Odds: <span id="odds-hearts">4.0</span>x</div>
                             </div>
                         </div>
-                        <button id="play-poker" class="action-button large">
-                            <span class="icon">🎮</span>
-                            <span class="label">Deal Cards</span>
+                        
+                        <div class="bet-option" data-suit="diamonds">
+                            <div class="suit-label red">♦</div>
+                            <div class="bet-controls">
+                                <input type="number" id="bet-diamonds" class="bet-input" min="0" max="50" value="0">
+                                <div class="bet-odds">Odds: <span id="odds-diamonds">4.0</span>x</div>
+                            </div>
+                        </div>
+                        
+                        <div class="bet-option" data-suit="clubs">
+                            <div class="suit-label black">♣</div>
+                            <div class="bet-controls">
+                                <input type="number" id="bet-clubs" class="bet-input" min="0" max="50" value="0">
+                                <div class="bet-odds">Odds: <span id="odds-clubs">4.0</span>x</div>
+                            </div>
+                        </div>
+                        
+                        <div class="bet-option" data-suit="spades">
+                            <div class="suit-label black">♠</div>
+                            <div class="bet-controls">
+                                <input type="number" id="bet-spades" class="bet-input" min="0" max="50" value="0">
+                                <div class="bet-odds">Odds: <span id="odds-spades">4.0</span>x</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bet-summary">
+                        <div class="total-bet">
+                            Total Bet: <span id="total-bet-amount">0</span> $CATTLE
+                        </div>
+                        <div class="burn-info">
+                            10% (<span id="burn-amount">0</span> $CATTLE) will be burned
+                        </div>
+                    </div>
+                    
+                    <div class="claim-bonus">
+                        <button id="claim-bonus" class="secondary-button">
+                            <span class="icon">🎁</span>
+                            <span class="label">Claim Bonus Tokens</span>
                         </button>
+                        <div class="bonus-info">Claim 50 $CATTLE once per game session!</div>
                     </div>
                     
                     <div class="education-tip">
                         <div class="icon">📚</div>
                         <div class="tip-content">
-                            <strong>Risk Management:</strong> Each hand allows you to manage your risk by deciding when to hit or stand.
-                            10% of your wager is burned from the total supply, creating deflationary pressure on the token economy.
+                            <strong>Risk/Reward:</strong> Each suit has different odds based on how many cards remain in the deck.
+                            Betting on multiple horses lowers your risk but also your potential reward.
+                            10% of your wager is burned, creating deflationary pressure on the token economy.
                         </div>
                     </div>
                     

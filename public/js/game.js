@@ -234,35 +234,66 @@ document.addEventListener('DOMContentLoaded', () => {
         burnAmountDisplay.textContent = burnAmount;
     });
     
-    // Blackjack game controls
-    const hitButton = document.getElementById('hit-button');
-    const standButton = document.getElementById('stand-button');
-    const playPokerButton = document.getElementById('play-poker');
+    // Horse Race game controls
+    const startRaceButton = document.getElementById('start-race');
+    const drawCardButton = document.getElementById('draw-card');
+    const claimBonusButton = document.getElementById('claim-bonus');
     
-    playPokerButton.addEventListener('click', () => {
-        // Clear previous cards
-        document.getElementById('player-cards').innerHTML = '';
-        document.getElementById('dealer-cards').innerHTML = '';
-        document.getElementById('results-history').innerHTML = '';
-        
-        // Reset scores
-        document.getElementById('player-score').textContent = 'Score: 0';
-        document.getElementById('dealer-score').textContent = 'Score: 0';
-        
-        // Disable game buttons initially
-        hitButton.disabled = true;
-        standButton.disabled = true;
-        
-        // Start new game
-        socket.emit('play-poker', { wager: wagerAmount });
+    // Bet inputs for each suit
+    const betInputs = {
+        hearts: document.getElementById('bet-hearts'),
+        diamonds: document.getElementById('bet-diamonds'),
+        clubs: document.getElementById('bet-clubs'),
+        spades: document.getElementById('bet-spades')
+    };
+    
+    // Update total bet when any bet input changes
+    Object.values(betInputs).forEach(input => {
+        input.addEventListener('input', updateTotalBet);
     });
     
-    hitButton.addEventListener('click', () => {
-        socket.emit('poker-hit');
+    function updateTotalBet() {
+        let total = 0;
+        Object.values(betInputs).forEach(input => {
+            const value = parseInt(input.value) || 0;
+            total += value;
+        });
+        
+        document.getElementById('total-bet-amount').textContent = total;
+        document.getElementById('burn-amount').textContent = (total * 0.1).toFixed(1);
+    }
+    
+    // Claim bonus button
+    claimBonusButton.addEventListener('click', () => {
+        socket.emit('claim-bonus');
     });
     
-    standButton.addEventListener('click', () => {
-        socket.emit('poker-stand');
+    // Start race button
+    startRaceButton.addEventListener('click', () => {
+        // Get bets from inputs
+        const bets = {
+            hearts: parseInt(betInputs.hearts.value) || 0,
+            diamonds: parseInt(betInputs.diamonds.value) || 0,
+            clubs: parseInt(betInputs.clubs.value) || 0,
+            spades: parseInt(betInputs.spades.value) || 0
+        };
+        
+        // Clear drawn card
+        document.getElementById('drawn-card').innerHTML = '<div class="card-placeholder">Race starting...</div>';
+        
+        // Reset progress bars
+        document.getElementById('hearts-progress').style.width = '0%';
+        document.getElementById('diamonds-progress').style.width = '0%';
+        document.getElementById('clubs-progress').style.width = '0%';
+        document.getElementById('spades-progress').style.width = '0%';
+        
+        // Start the race
+        socket.emit('start-race', bets);
+    });
+    
+    // Draw card button
+    drawCardButton.addEventListener('click', () => {
+        socket.emit('draw-card');
     });
     
     document.getElementById('back-to-ranch').addEventListener('click', () => {
@@ -484,6 +515,103 @@ socket.on('market-update', data => {
     // Show notification
     const trend = marketPrice > 1.0 ? 'up' : 'down';
     showNotification(`Market prices are trending ${trend}! Current multiplier: ${marketPrice.toFixed(2)}x`, 'info');
+    
+    // Update UI
+    updateUI();
+});
+
+// Horse Race Game Event Handlers
+socket.on('bonus-claimed', data => {
+    // Update player data
+    playerData = data.player;
+    
+    // Show bonus notification
+    showNotification(`Bonus claimed! You received ${data.amount} $CATTLE!`, 'success');
+    
+    // Display bonus animation
+    document.getElementById('bonus-amount').textContent = `+${data.amount}`;
+    document.querySelector('.bonus-display').classList.remove('hidden');
+    
+    // Hide bonus after 5 seconds
+    setTimeout(() => {
+        document.querySelector('.bonus-display').classList.add('hidden');
+    }, 5000);
+    
+    // Disable claim button
+    document.getElementById('claim-bonus').disabled = true;
+    
+    // Update UI
+    updateUI();
+});
+
+socket.on('race-started', data => {
+    // Update player data
+    playerData = data.player;
+    
+    // Enable draw card button
+    document.getElementById('draw-card').disabled = false;
+    
+    // Disable start race button
+    document.getElementById('start-race').disabled = true;
+    
+    // Update odds display
+    for (const suit in data.odds) {
+        document.getElementById(`odds-${suit}`).textContent = data.odds[suit].toFixed(1);
+    }
+    
+    // Show notification
+    showNotification(`Race started! 10% (${data.burnAmount.toFixed(1)} $CATTLE) burned. Draw cards to advance horses.`, 'info');
+    
+    // Update UI
+    updateUI();
+});
+
+socket.on('card-drawn', data => {
+    // Get the card and progress data
+    const card = data.card;
+    const progress = data.progress;
+    
+    // Create and display the card
+    const drawnCardContainer = document.getElementById('drawn-card');
+    drawnCardContainer.innerHTML = '';
+    
+    const cardElement = createCardElement(card);
+    drawnCardContainer.appendChild(cardElement);
+    
+    // Update progress bars
+    for (const suit in progress) {
+        document.getElementById(`${suit}-progress`).style.width = `${progress[suit]}%`;
+    }
+    
+    // Update odds
+    for (const suit in data.odds) {
+        document.getElementById(`odds-${suit}`).textContent = data.odds[suit].toFixed(1);
+    }
+});
+
+socket.on('race-finished', data => {
+    // Update player data
+    playerData = data.player;
+    
+    // Disable draw card button
+    document.getElementById('draw-card').disabled = true;
+    
+    // Enable start race button
+    document.getElementById('start-race').disabled = false;
+    
+    // Display result
+    if (data.bet > 0) {
+        showResult('Race Finished', `${data.message}`, 'success');
+    } else {
+        showResult('Race Finished', `${data.message}`, 'error');
+    }
+    
+    // Add to history
+    const historyContainer = document.getElementById('results-history');
+    const historyItem = document.createElement('div');
+    historyItem.className = `history-item ${data.winner} ${data.bet > 0 ? 'win' : 'loss'}`;
+    historyItem.textContent = data.winner.charAt(0).toUpperCase();
+    historyContainer.appendChild(historyItem);
     
     // Update UI
     updateUI();

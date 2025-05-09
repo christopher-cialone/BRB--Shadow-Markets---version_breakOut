@@ -383,9 +383,9 @@ body {
     gap: 20px;
 }
 
-/* Poker Table */
-.poker-table {
-    background-color: #006600;
+/* Race Track */
+.race-track {
+    background-color: #222;
     border-radius: 15px;
     border: 8px solid #664400;
     padding: 20px;
@@ -396,31 +396,108 @@ body {
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
 }
 
-.dealer-area, .player-area {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 15px;
-    border-radius: 10px;
-    background-color: rgba(0, 0, 0, 0.2);
-}
-
-.dealer-label, .player-label {
-    font-size: 1.2em;
-    margin-bottom: 10px;
+.race-track h3 {
     color: #ffcc00;
+    text-align: center;
+    margin-bottom: 15px;
     text-shadow: 1px 1px 2px black;
 }
 
-.cards-container {
-    display: flex;
-    gap: 15px;
-    min-height: 130px;
-    align-items: center;
-    justify-content: center;
-    margin: 10px 0;
+.track-container {
+    position: relative;
+    height: 200px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 20px;
 }
 
+.starting-line, .finish-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: rgba(255, 255, 255, 0.5);
+}
+
+.starting-line {
+    left: 40px;
+}
+
+.finish-line {
+    right: 40px;
+}
+
+.track {
+    display: flex;
+    align-items: center;
+    height: 40px;
+    margin-bottom: 10px;
+}
+
+.horse-label {
+    width: 40px;
+    font-size: 1.8em;
+    text-align: center;
+    margin-right: 10px;
+}
+
+.track:nth-child(3) .horse-label,
+.track:nth-child(4) .horse-label {
+    color: #ff0000;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 20px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress {
+    height: 100%;
+    background-color: #ffcc00;
+    border-radius: 10px;
+    transition: width 0.3s ease;
+}
+
+#hearts-progress {
+    background-color: #ff6666;
+}
+
+#diamonds-progress {
+    background-color: #ff9966;
+}
+
+#clubs-progress {
+    background-color: #66cc66;
+}
+
+#spades-progress {
+    background-color: #6699ff;
+}
+
+.race-controls {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 15px;
+}
+
+.drawn-card {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 130px;
+}
+
+.card-placeholder {
+    color: #999;
+    font-style: italic;
+}
+
+/* Card Styling */
 .card {
     width: 80px;
     height: 120px;
@@ -477,74 +554,85 @@ body {
     color: transparent;
 }
 
-.score {
-    font-size: 1.2em;
+/* Betting Panel */
+.betting-panel {
+    background-color: rgba(34, 34, 34, 0.8);
+    border-radius: 10px;
+    padding: 20px;
+    flex: 1;
+    overflow: auto;
+}
+
+.betting-panel h3 {
     color: #ffcc00;
-    margin-top: 10px;
-}
-
-.game-controls {
-    display: flex;
-    gap: 20px;
-    margin-top: 15px;
-}
-
-.game-button {
-    padding: 10px 25px;
-    background-color: #664400;
-    color: #ffcc00;
-    border: 2px solid #ffcc00;
-    border-radius: 5px;
-    font-family: 'Courier New', monospace;
-    font-size: 1.1em;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.game-button:hover:not(:disabled) {
-    background-color: #886600;
-    box-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
-}
-
-.game-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.game-description {
-    color: #ccc;
     margin-bottom: 15px;
-    font-size: 0.9em;
+    border-bottom: 1px solid #333;
+    padding-bottom: 5px;
 }
 
-/* Poker Game Controls */
-.poker-controls {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
+.bet-options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
     margin-bottom: 20px;
 }
 
-.wager-control {
+.bet-option {
     display: flex;
-    flex-direction: column;
     align-items: center;
+    background-color: #333;
+    border-radius: 5px;
+    padding: 10px;
+    border: 1px solid #444;
+}
+
+.suit-label {
+    width: 40px;
+    height: 40px;
+    font-size: 1.8em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+}
+
+.suit-label.red {
+    color: #ff6666;
+}
+
+.suit-label.black {
+    color: #ffffff;
+}
+
+.bet-controls {
+    flex: 1;
+}
+
+.bet-input {
     width: 100%;
-    max-width: 400px;
+    padding: 5px;
+    background-color: #222;
+    border: 1px solid #444;
+    color: #00ff00;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    border-radius: 3px;
+    margin-bottom: 5px;
 }
 
-.wager-control label {
-    margin-bottom: 10px;
-    color: #00ffff;
+.bet-odds {
+    font-size: 0.8em;
+    color: #ccc;
 }
 
-.wager-control input[type="range"] {
-    width: 100%;
-    margin-bottom: 10px;
+.bet-summary {
+    background-color: #333;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 20px;
 }
 
-.wager-display {
+.total-bet {
     font-size: 1.2em;
     color: #00ff00;
     margin-bottom: 5px;
@@ -553,6 +641,35 @@ body {
 .burn-info {
     font-size: 0.9em;
     color: #ff6666;
+}
+
+.claim-bonus {
+    margin-bottom: 20px;
+    background-color: rgba(102, 51, 153, 0.3);
+    border-radius: 5px;
+    padding: 15px;
+    text-align: center;
+}
+
+.bonus-info {
+    font-size: 0.9em;
+    color: #cc99ff;
+    margin-top: 10px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.bonus-display {
+    background-color: rgba(102, 51, 153, 0.5);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.8; }
+    50% { opacity: 1; }
+    100% { opacity: 0.8; }
 }
 
 /* Game History */
@@ -582,14 +699,32 @@ body {
     font-size: 0.8em;
 }
 
+.history-item.hearts {
+    background-color: rgba(255, 102, 102, 0.3);
+    color: #ff6666;
+}
+
+.history-item.diamonds {
+    background-color: rgba(255, 153, 102, 0.3);
+    color: #ff9966;
+}
+
+.history-item.clubs {
+    background-color: rgba(102, 204, 102, 0.3);
+    color: #66cc66;
+}
+
+.history-item.spades {
+    background-color: rgba(102, 153, 255, 0.3);
+    color: #6699ff;
+}
+
 .history-item.win {
-    background-color: rgba(0, 100, 0, 0.5);
-    color: #00ff00;
+    border: 1px solid #00ff00;
 }
 
 .history-item.loss {
-    background-color: rgba(100, 0, 0, 0.5);
-    color: #ff6666;
+    border: 1px solid transparent;
 }
 
 /* Education Tip Box */
