@@ -671,41 +671,58 @@ socket.on('error-message', data => {
 
 // Helper Functions
 function switchScene(scene) {
-    // Hide all UI screens
-    mainMenu.classList.add('hidden');
-    ranchUI.classList.add('hidden');
-    saloonUI.classList.add('hidden');
-    nightUI.classList.add('hidden');
-    profileUI.classList.add('hidden');
+    // Add null checks for UI screens
+    const screens = {
+        'main-menu': mainMenu,
+        'ranch': ranchUI,
+        'saloon': saloonUI,
+        'night': nightUI,
+        'profile': profileUI
+    };
     
-    // Hide all game scenes
-    game.scene.scenes[0].ranchScene.visible = false;
-    game.scene.scenes[0].saloonScene.visible = false;
-    game.scene.scenes[0].nightScene.visible = false;
+    // Hide all UI screens that exist
+    Object.values(screens).forEach(screen => {
+        if (screen) screen.classList.add('hidden');
+    });
+    
+    // Check if game is initialized before accessing scenes
+    if (game && game.scene && game.scene.scenes && game.scene.scenes[0]) {
+        // Hide all game scenes with null checks
+        const gameScene = game.scene.scenes[0];
+        if (gameScene.ranchScene) gameScene.ranchScene.visible = false;
+        if (gameScene.saloonScene) gameScene.saloonScene.visible = false;
+        if (gameScene.nightScene) gameScene.nightScene.visible = false;
+    }
     
     // Show selected scene
     switch (scene) {
         case 'main-menu':
-            mainMenu.classList.remove('hidden');
+            if (screens['main-menu']) screens['main-menu'].classList.remove('hidden');
             break;
         case 'ranch':
-            ranchUI.classList.remove('hidden');
-            game.scene.scenes[0].ranchScene.visible = true;
+            if (screens['ranch']) screens['ranch'].classList.remove('hidden');
+            if (game && game.scene && game.scene.scenes && game.scene.scenes[0] && game.scene.scenes[0].ranchScene) {
+                game.scene.scenes[0].ranchScene.visible = true;
+            }
             break;
         case 'saloon':
-            saloonUI.classList.remove('hidden');
-            game.scene.scenes[0].saloonScene.visible = true;
+            if (screens['saloon']) screens['saloon'].classList.remove('hidden');
+            if (game && game.scene && game.scene.scenes && game.scene.scenes[0] && game.scene.scenes[0].saloonScene) {
+                game.scene.scenes[0].saloonScene.visible = true;
+            }
             
             // Initialize saloon-specific elements
             initSaloonScene();
             break;
         case 'profile':
-            profileUI.classList.remove('hidden');
+            if (screens['profile']) screens['profile'].classList.remove('hidden');
             updateProfileUI();
             break;
         case 'night':
-            nightUI.classList.remove('hidden');
-            game.scene.scenes[0].nightScene.visible = true;
+            if (screens['night']) screens['night'].classList.remove('hidden');
+            if (game && game.scene && game.scene.scenes && game.scene.scenes[0] && game.scene.scenes[0].nightScene) {
+                game.scene.scenes[0].nightScene.visible = true;
+            }
             break;
     }
     
@@ -714,31 +731,52 @@ function switchScene(scene) {
     
     // Update UI for new scene
     updateUI();
+    
+    console.log(`Switched to scene: ${scene}`);
 }
 
 // Initialize the saloon scene when it becomes visible
 function initSaloonScene() {
-    // Clear drawn card
-    document.getElementById('drawn-card').innerHTML = '<div class="card-placeholder">Draw a card to advance a horse</div>';
+    // Safely get elements with null checks
+    const elements = {
+        drawnCard: document.getElementById('drawn-card'),
+        heartsProgress: document.getElementById('hearts-progress'),
+        diamondsProgress: document.getElementById('diamonds-progress'),
+        clubsProgress: document.getElementById('clubs-progress'),
+        spadesProgress: document.getElementById('spades-progress'),
+        totalBetAmount: document.getElementById('total-bet-amount'),
+        burnAmount: document.getElementById('burn-amount'),
+        startRaceButton: document.getElementById('start-race'),
+        drawCardButton: document.getElementById('draw-card'),
+        claimBonusButton: document.getElementById('claim-bonus')
+    };
     
-    // Reset progress bars
-    document.getElementById('hearts-progress').style.width = '0%';
-    document.getElementById('diamonds-progress').style.width = '0%';
-    document.getElementById('clubs-progress').style.width = '0%';
-    document.getElementById('spades-progress').style.width = '0%';
-    
-    // Get references to race game controls
-    const startRaceButton = document.getElementById('start-race');
-    const drawCardButton = document.getElementById('draw-card');
-    const claimBonusButton = document.getElementById('claim-bonus');
-    
-    // Get references to bet inputs
+    // Get references to bet inputs with null checks
     const betInputs = {
         hearts: document.getElementById('bet-hearts'),
         diamonds: document.getElementById('bet-diamonds'),
         clubs: document.getElementById('bet-clubs'),
         spades: document.getElementById('bet-spades')
     };
+    
+    // Skip initialization if we're not in the saloon
+    if (currentScene !== 'saloon') {
+        console.log('Not initializing saloon scene - not in saloon');
+        return;
+    }
+    
+    console.log('Initializing saloon scene');
+    
+    // Clear drawn card
+    if (elements.drawnCard) {
+        elements.drawnCard.innerHTML = '<div class="card-placeholder">Draw a card to advance a horse</div>';
+    }
+    
+    // Reset progress bars
+    if (elements.heartsProgress) elements.heartsProgress.style.width = '0%';
+    if (elements.diamondsProgress) elements.diamondsProgress.style.width = '0%';
+    if (elements.clubsProgress) elements.clubsProgress.style.width = '0%';
+    if (elements.spadesProgress) elements.spadesProgress.style.width = '0%';
     
     // Make sure all inputs are properly initialized
     Object.values(betInputs).forEach(input => {
@@ -752,95 +790,134 @@ function initSaloonScene() {
     });
     
     // Reset total bet display
-    document.getElementById('total-bet-amount').textContent = '0';
-    document.getElementById('burn-amount').textContent = '0';
+    if (elements.totalBetAmount) elements.totalBetAmount.textContent = '0';
+    if (elements.burnAmount) elements.burnAmount.textContent = '0';
     
     // Initialize button states
-    if (startRaceButton) {
-        startRaceButton.disabled = false;
+    if (elements.startRaceButton) {
+        elements.startRaceButton.disabled = false;
         
         // Remove any existing event listeners to avoid duplicates
-        startRaceButton.replaceWith(startRaceButton.cloneNode(true));
+        elements.startRaceButton.replaceWith(elements.startRaceButton.cloneNode(true));
         
         // Re-get the button after replacing it
-        document.getElementById('start-race').addEventListener('click', () => {
-            // Get bets from inputs
-            const bets = {
-                hearts: parseInt(betInputs.hearts.value) || 0,
-                diamonds: parseInt(betInputs.diamonds.value) || 0,
-                clubs: parseInt(betInputs.clubs.value) || 0,
-                spades: parseInt(betInputs.spades.value) || 0
-            };
-            
-            // Calculate total bet
-            const totalBet = bets.hearts + bets.diamonds + bets.clubs + bets.spades;
-            
-            if (totalBet <= 0) {
-                showNotification('Please place at least one bet to start the race!', 'error');
-                return;
-            }
-            
-            if (totalBet > playerData.cattleBalance) {
-                showNotification('Not enough $CATTLE for your total bet!', 'error');
-                return;
-            }
-            
-            // Clear drawn card
-            document.getElementById('drawn-card').innerHTML = '<div class="card-placeholder">Race starting...</div>';
-            
-            // Reset progress bars
-            document.getElementById('hearts-progress').style.width = '0%';
-            document.getElementById('diamonds-progress').style.width = '0%';
-            document.getElementById('clubs-progress').style.width = '0%';
-            document.getElementById('spades-progress').style.width = '0%';
-            
-            // Start the race
-            socket.emit('start-race', bets);
-        });
+        const newStartRaceButton = document.getElementById('start-race');
+        if (newStartRaceButton) {
+            newStartRaceButton.addEventListener('click', () => {
+                // Get bets from inputs with null checks
+                const bets = {
+                    hearts: betInputs.hearts ? (parseInt(betInputs.hearts.value) || 0) : 0,
+                    diamonds: betInputs.diamonds ? (parseInt(betInputs.diamonds.value) || 0) : 0,
+                    clubs: betInputs.clubs ? (parseInt(betInputs.clubs.value) || 0) : 0,
+                    spades: betInputs.spades ? (parseInt(betInputs.spades.value) || 0) : 0
+                };
+                
+                // Calculate total bet
+                const totalBet = bets.hearts + bets.diamonds + bets.clubs + bets.spades;
+                
+                if (totalBet <= 0) {
+                    showNotification('Please place at least one bet to start the race!', 'error');
+                    return;
+                }
+                
+                if (totalBet > playerData.cattleBalance) {
+                    showNotification('Not enough $CATTLE for your total bet!', 'error');
+                    return;
+                }
+                
+                // Clear drawn card with null check
+                const drawnCard = document.getElementById('drawn-card');
+                if (drawnCard) {
+                    drawnCard.innerHTML = '<div class="card-placeholder">Race starting...</div>';
+                }
+                
+                // Reset progress bars with null checks
+                const progressBars = {
+                    hearts: document.getElementById('hearts-progress'),
+                    diamonds: document.getElementById('diamonds-progress'),
+                    clubs: document.getElementById('clubs-progress'),
+                    spades: document.getElementById('spades-progress')
+                };
+                
+                if (progressBars.hearts) progressBars.hearts.style.width = '0%';
+                if (progressBars.diamonds) progressBars.diamonds.style.width = '0%';
+                if (progressBars.clubs) progressBars.clubs.style.width = '0%';
+                if (progressBars.spades) progressBars.spades.style.width = '0%';
+                
+                // Start the race
+                socket.emit('start-race', bets);
+            });
+        }
     }
     
-    if (drawCardButton) {
-        drawCardButton.disabled = true;
+    if (elements.drawCardButton) {
+        elements.drawCardButton.disabled = true;
         
         // Remove any existing event listeners to avoid duplicates
-        drawCardButton.replaceWith(drawCardButton.cloneNode(true));
+        elements.drawCardButton.replaceWith(elements.drawCardButton.cloneNode(true));
         
         // Re-get the button after replacing it
-        document.getElementById('draw-card').addEventListener('click', () => {
-            socket.emit('draw-card');
-        });
+        const newDrawCardButton = document.getElementById('draw-card');
+        if (newDrawCardButton) {
+            newDrawCardButton.addEventListener('click', () => {
+                socket.emit('draw-card');
+            });
+        }
     }
     
-    if (claimBonusButton) {
+    if (elements.claimBonusButton) {
         // Remove any existing event listeners to avoid duplicates
-        claimBonusButton.replaceWith(claimBonusButton.cloneNode(true));
+        elements.claimBonusButton.replaceWith(elements.claimBonusButton.cloneNode(true));
         
         // Re-get the button after replacing it
-        document.getElementById('claim-bonus').addEventListener('click', () => {
-            socket.emit('claim-bonus');
-        });
+        const newClaimBonusButton = document.getElementById('claim-bonus');
+        if (newClaimBonusButton) {
+            newClaimBonusButton.addEventListener('click', () => {
+                socket.emit('claim-bonus');
+            });
+        }
     }
 }
 
 function updateUI() {
-    // Update resources in Ranch UI
-    document.getElementById('cattle-balance').textContent = playerData.cattleBalance.toFixed(2);
-    document.getElementById('hay').textContent = playerData.hay;
-    document.getElementById('water').textContent = playerData.water;
-    document.getElementById('barn-capacity').textContent = playerData.barnCapacity;
-    document.getElementById('barn-capacity-2').textContent = playerData.barnCapacity;
+    // Get resource elements with null checks
+    const ranchElements = {
+        cattleBalance: document.getElementById('cattle-balance'),
+        hay: document.getElementById('hay'),
+        water: document.getElementById('water'),
+        barnCapacity: document.getElementById('barn-capacity'),
+        barnCapacity2: document.getElementById('barn-capacity-2')
+    };
     
-    // Update resources in Saloon UI
-    document.getElementById('saloon-cattle-balance').textContent = playerData.cattleBalance.toFixed(2);
+    const saloonElements = {
+        cattleBalance: document.getElementById('saloon-cattle-balance')
+    };
     
-    // Update resources in Night UI
-    document.getElementById('night-cattle-balance').textContent = playerData.cattleBalance.toFixed(2);
-    document.getElementById('market-multiplier').textContent = marketPrice.toFixed(2);
+    const nightElements = {
+        cattleBalance: document.getElementById('night-cattle-balance'),
+        marketMultiplier: document.getElementById('market-multiplier')
+    };
+    
+    // Update Ranch UI elements if they exist
+    if (ranchElements.cattleBalance) ranchElements.cattleBalance.textContent = playerData.cattleBalance.toFixed(2);
+    if (ranchElements.hay) ranchElements.hay.textContent = playerData.hay;
+    if (ranchElements.water) ranchElements.water.textContent = playerData.water;
+    if (ranchElements.barnCapacity) ranchElements.barnCapacity.textContent = playerData.barnCapacity;
+    if (ranchElements.barnCapacity2) ranchElements.barnCapacity2.textContent = playerData.barnCapacity;
+    
+    // Update Saloon UI elements if they exist
+    if (saloonElements.cattleBalance) saloonElements.cattleBalance.textContent = playerData.cattleBalance.toFixed(2);
+    
+    // Update Night UI elements if they exist
+    if (nightElements.cattleBalance) nightElements.cattleBalance.textContent = playerData.cattleBalance.toFixed(2);
+    if (nightElements.marketMultiplier) nightElements.marketMultiplier.textContent = marketPrice.toFixed(2);
     
     // Update profile UI (only if profile scene is visible)
     if (currentScene === 'profile') {
         updateProfileUI();
     }
+    
+    console.log("UI updated for scene: " + currentScene);
     
     // Update wager slider max value (only if in saloon)
     const wagerSlider = document.getElementById('wager-slider');
@@ -1025,26 +1102,54 @@ function showResult(title, message, type = 'info', autoClose = false) {
 }
 
 function addCattleToScene(cattle) {
-    // Add a cattle sprite to the ranch scene
-    const scene = game.scene.scenes[0];
-    
-    // Random position near the barn
-    const x = scene.barn.x + (Math.random() * 200 - 100);
-    const y = scene.barn.y + (Math.random() * 200);
-    
-    const cattleSprite = scene.add.image(x, y, 'cattle');
-    cattleSprite.setScale(0.1);
-    scene.ranchScene.add(cattleSprite);
-    
-    // Simple animation
-    scene.tweens.add({
-        targets: cattleSprite,
-        y: '+=20',
-        duration: 1500,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut'
-    });
+    try {
+        // Check if game is initialized
+        if (!game || !game.scene || !game.scene.scenes || !game.scene.scenes[0]) {
+            console.log('Cannot add cattle - game scene not initialized');
+            return;
+        }
+        
+        const scene = game.scene.scenes[0];
+        
+        // Check if barn exists
+        if (!scene.barn) {
+            console.log('Cannot add cattle - barn not found in scene');
+            return;
+        }
+        
+        // Check if ranchScene exists
+        if (!scene.ranchScene) {
+            console.log('Cannot add cattle - ranch scene not found');
+            return;
+        }
+        
+        // Random position near the barn
+        const x = scene.barn.x + (Math.random() * 200 - 100);
+        const y = scene.barn.y + (Math.random() * 200);
+        
+        // Add cattle sprite with error handling
+        try {
+            const cattleSprite = scene.add.image(x, y, 'cattle');
+            cattleSprite.setScale(0.1);
+            scene.ranchScene.add(cattleSprite);
+            
+            // Simple animation
+            scene.tweens.add({
+                targets: cattleSprite,
+                y: '+=20',
+                duration: 1500,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+            
+            console.log(`Added cattle #${cattle.id} to scene`);
+        } catch (err) {
+            console.error('Error adding cattle sprite:', err);
+        }
+    } catch (err) {
+        console.error('Error in addCattleToScene:', err);
+    }
 }
 
 function updateProfileUI() {
@@ -1097,24 +1202,52 @@ function updateProfileUI() {
 }
 
 function addPotionEffect() {
-    // Add a potion visual effect to the night scene
-    const scene = game.scene.scenes[0];
-    
-    const potion = scene.add.image(scene.nightCharacter.x + 50, scene.nightCharacter.y - 50, 'potion');
-    potion.setScale(0.05);
-    scene.nightScene.add(potion);
-    
-    // Potion animation
-    scene.tweens.add({
-        targets: potion,
-        alpha: { from: 1, to: 0 },
-        y: '-=100',
-        duration: 2000,
-        ease: 'Power1',
-        onComplete: () => {
-            potion.destroy();
+    try {
+        // Check if game is initialized
+        if (!game || !game.scene || !game.scene.scenes || !game.scene.scenes[0]) {
+            console.log('Cannot add potion effect - game scene not initialized');
+            return;
         }
-    });
+        
+        const scene = game.scene.scenes[0];
+        
+        // Check if night character exists
+        if (!scene.nightCharacter) {
+            console.log('Cannot add potion effect - night character not found in scene');
+            return;
+        }
+        
+        // Check if night scene exists
+        if (!scene.nightScene) {
+            console.log('Cannot add potion effect - night scene not found');
+            return;
+        }
+        
+        // Add potion effect with error handling
+        try {
+            const potion = scene.add.image(scene.nightCharacter.x + 50, scene.nightCharacter.y - 50, 'potion');
+            potion.setScale(0.05);
+            scene.nightScene.add(potion);
+            
+            // Potion animation
+            scene.tweens.add({
+                targets: potion,
+                alpha: { from: 1, to: 0 },
+                y: '-=100',
+                duration: 2000,
+                ease: 'Power1',
+                onComplete: () => {
+                    potion.destroy();
+                }
+            });
+            
+            console.log('Added potion effect to night scene');
+        } catch (err) {
+            console.error('Error adding potion effect:', err);
+        }
+    } catch (err) {
+        console.error('Error in addPotionEffect:', err);
+    }
 }
 
 // Update total bet display - global function used by event listeners
