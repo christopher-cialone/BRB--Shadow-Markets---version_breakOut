@@ -2280,14 +2280,16 @@ body {
     margin: 20px auto;
     width: 100%;
     position: relative;
-    padding-bottom: 20px; /* Extra padding at bottom to prevent overlap */
+    padding-bottom: 40px; /* Increased padding at bottom to prevent overlap */
+    margin-bottom: 30px; /* Add space between track container and card area */
 }
 
 .track {
     display: flex;
     align-items: center;
-    margin-bottom: 15px;
+    margin-bottom: 22px; /* Increased spacing between tracks */
     position: relative;
+    padding: 0 5px; /* Add some padding on sides */
 }
 
 .horse-label {
@@ -2330,13 +2332,14 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin: 20px 0;
-    padding: 25px 20px; /* Increased padding */
+    margin: 20px 0 40px 0; /* Increased bottom margin */
+    padding: 30px 25px; /* Further increased padding */
     background-color: rgba(20, 10, 40, 0.3);
     border-radius: 10px;
     border: 1px solid var(--ui-border);
     position: relative; /* Required for absolute positioning of children */
-    overflow: visible; /* Allow contents to overflow */
+    min-height: 200px; /* Ensure minimum height to fit all content */
+    box-sizing: border-box; /* Include padding in height calculation */
 }
 
 .drawn-card {
