@@ -156,6 +156,12 @@ io.on('connection', (socket) => {
       // Add to player's collection
       player.potionCollection.push(newPotion);
       
+      // Update statistics
+      if (player.stats) {
+        player.stats.potionsCrafted++;
+        player.stats.totalBurned += burnAmount;
+      }
+      
       // Notify player
       socket.emit('potion-crafted', { 
         potion: newPotion,
@@ -380,6 +386,11 @@ io.on('connection', (socket) => {
     // Calculate burn amount (10%)
     const burnAmount = totalBet * 0.1;
     
+    // Update burn statistics
+    if (player.stats) {
+      player.stats.totalBurned += burnAmount;
+    }
+    
     // Change game status to racing
     game.status = 'racing';
     
@@ -456,6 +467,12 @@ io.on('connection', (socket) => {
       if (bet > 0) {
         player.cattleBalance += winnings;
         
+        // Update player statistics
+        if (player.stats) {
+          player.stats.racesWon++;
+          player.stats.totalEarned += winnings;
+        }
+        
         // Send race finished event with win
         socket.emit('race-finished', {
           winner: winner,
@@ -466,6 +483,11 @@ io.on('connection', (socket) => {
           player: player
         });
       } else {
+        // Update player statistics for loss
+        if (player.stats) {
+          player.stats.racesLost++;
+        }
+        
         // Send race finished event with loss
         socket.emit('race-finished', {
           winner: winner,

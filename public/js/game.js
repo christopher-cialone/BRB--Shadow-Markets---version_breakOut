@@ -837,6 +837,11 @@ function updateUI() {
     document.getElementById('night-cattle-balance').textContent = playerData.cattleBalance.toFixed(2);
     document.getElementById('market-multiplier').textContent = marketPrice.toFixed(2);
     
+    // Update profile UI (only if profile scene is visible)
+    if (currentScene === 'profile') {
+        updateProfileUI();
+    }
+    
     // Update wager slider max value
     const wagerSlider = document.getElementById('wager-slider');
     wagerSlider.max = Math.min(50, Math.floor(playerData.cattleBalance));
