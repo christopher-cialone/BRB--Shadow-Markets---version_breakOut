@@ -6,23 +6,64 @@
 }
 
 :root {
-    /* Main color palette based on character artwork */
-    --primary-color: #6a2ca0;     /* Purple from scientist's hair */
-    --secondary-color: #00ccff;   /* Cyan from glasses and elements */
-    --accent-color: #ff9900;      /* Orange/gold accents */
-    --dark-bg: #0a0a0a;           /* Dark background */
-    --light-text: #e0e0e0;        /* Light text color */
-    --highlight: #ff00ff;         /* Bright magenta highlights */
+    /* Main color palette inspired by character artwork - modern Web3/Solana style */
+    --primary-color: #6a2ca0;          /* Deep purple */
+    --primary-light: #8a4cbf;          /* Light purple */
+    --primary-dark: #4a1a80;           /* Dark purple */
+    
+    --secondary-color: #00ccff;        /* Cyan blue */
+    --secondary-light: #33daff;        /* Light cyan */
+    --secondary-dark: #0099cc;         /* Dark cyan */
+    
+    --accent-color: #ff5acd;           /* Hot pink accent */
+    --accent-light: #ff85dd;           /* Light pink */
+    --accent-dark: #d24aad;            /* Dark pink */
+    
+    /* Background colors */
+    --dark-bg: #0c0c16;                /* Deep space blue-black */
+    --dark-bg-gradient: linear-gradient(135deg, #0c0c16 0%, #1a1a2e 100%);
+    --card-bg: rgba(26, 26, 46, 0.8);  /* Card background with transparency */
+    --card-bg-hover: rgba(30, 30, 60, 0.9); /* Card hover state */
+    
+    /* Text colors */
+    --light-text: #e8e8f8;             /* Light blue-white text */
+    --muted-text: #9090b0;             /* Muted text for less important items */
+    --highlight: #ff7aed;              /* Bright pink highlight */
     
     /* UI component colors */
-    --ui-bg: rgba(10, 10, 10, 0.85);
-    --ui-border: #444;
-    --ui-element-bg: #222;
-    --ui-element-active: #333;
-    --ui-success: #00cc66;
-    --ui-error: #ff3366;
-    --ui-warning: #ffcc00;
-    --ui-info: #0099ff;
+    --ui-bg: rgba(12, 12, 22, 0.85);   /* UI background with transparency */
+    --ui-border: rgba(100, 100, 200, 0.3); /* Subtle blue borders */
+    --ui-element-bg: rgba(20, 20, 40, 0.7); /* Element background */
+    --ui-element-active: rgba(30, 30, 60, 0.8); /* Active element state */
+    
+    /* Functional colors */
+    --ui-success: #00cc99;             /* Success green */
+    --ui-error: #ff2266;               /* Error red */
+    --ui-warning: #ffbb33;             /* Warning orange */
+    --ui-info: #00aaff;                /* Info blue */
+    
+    /* Card suits colors */
+    --hearts-color: #ff5f5f;           /* Hearts red */
+    --diamonds-color: #ff9f5f;         /* Diamonds orange */
+    --clubs-color: #5fff7f;            /* Clubs green */
+    --spades-color: #5f9fff;           /* Spades blue */
+    
+    /* Animation timing */
+    --transition-quick: 0.2s;
+    --transition-medium: 0.3s;
+    --transition-slow: 0.5s;
+    
+    /* Box shadows */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.2);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.25);
+    --shadow-neon: 0 0 10px rgba(255, 90, 205, 0.5);
+    
+    /* Border radius */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 24px;
 }
 
 body {
