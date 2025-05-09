@@ -943,6 +943,17 @@ function initSaloonScene() {
     if (elements.totalBetAmount) elements.totalBetAmount.textContent = '0';
     if (elements.burnAmount) elements.burnAmount.textContent = '0';
     
+    // Initialize bet display values
+    ['hearts', 'diamonds', 'clubs', 'spades'].forEach(suit => {
+        const betDisplay = document.getElementById(`${suit}-bet-display`);
+        if (betDisplay) {
+            betDisplay.textContent = '0';
+        }
+    });
+    
+    // Set up betting slider functionality
+    setupBettingSliders();
+    
     // Initialize button states and confirm buttons exist
     if (elements.startRaceButton) {
         elements.startRaceButton.disabled = false;
@@ -954,20 +965,12 @@ function initSaloonScene() {
         // Attach event listener to the new button
         newStartRaceButton.addEventListener('click', function() {
             console.log("Start race button clicked");
-            // Re-get bet inputs to ensure we have the latest values
-            const currentBetInputs = {
-                hearts: document.getElementById('bet-hearts'),
-                diamonds: document.getElementById('bet-diamonds'),
-                clubs: document.getElementById('bet-clubs'),
-                spades: document.getElementById('bet-spades')
-            };
-            
-            // Get bets from inputs with null checks
+            // Get bets from bet display elements
             const bets = {
-                hearts: currentBetInputs.hearts ? (parseInt(currentBetInputs.hearts.value) || 0) : 0,
-                diamonds: currentBetInputs.diamonds ? (parseInt(currentBetInputs.diamonds.value) || 0) : 0,
-                clubs: currentBetInputs.clubs ? (parseInt(currentBetInputs.clubs.value) || 0) : 0,
-                spades: currentBetInputs.spades ? (parseInt(currentBetInputs.spades.value) || 0) : 0
+                hearts: parseInt(document.getElementById('hearts-bet-display').textContent) || 0,
+                diamonds: parseInt(document.getElementById('diamonds-bet-display').textContent) || 0,
+                clubs: parseInt(document.getElementById('clubs-bet-display').textContent) || 0,
+                spades: parseInt(document.getElementById('spades-bet-display').textContent) || 0
             };
             
             console.log("Bets:", bets);
@@ -2020,4 +2023,81 @@ function createCardElement(card) {
     cardElement.appendChild(suitBottom);
     
     return cardElement;
+}
+
+// Setup betting sliders functionality
+function setupBettingSliders() {
+    // Get elements
+    const betButtons = document.querySelectorAll('.bet-button');
+    const betSliderOverlay = document.getElementById('bet-slider-overlay');
+    if (!betButtons.length || !betSliderOverlay) return; // Skip if elements not found
+    
+    const betSlider = document.getElementById('bet-slider');
+    const betSliderValue = document.getElementById('bet-slider-value');
+    const confirmBetBtn = document.getElementById('confirm-bet');
+    const cancelBetBtn = document.getElementById('cancel-bet');
+    let currentSuit = '';
+    
+    console.log("Setting up betting sliders for " + betButtons.length + " bet buttons");
+    
+    // Set up bet button clicks
+    betButtons.forEach(button => {
+        // Remove any existing listeners
+        const newButton = button.cloneNode(true);
+        button.parentNode.replaceChild(newButton, button);
+        
+        newButton.addEventListener('click', function() {
+            const suit = this.getAttribute('data-suit');
+            currentSuit = suit;
+            console.log("Bet button clicked for suit:", suit);
+            
+            // Set slider title with capitalized suit name
+            const capitalizedSuit = suit.charAt(0).toUpperCase() + suit.slice(1);
+            document.getElementById('bet-slider-title').textContent = `Place Bet on ${capitalizedSuit}`;
+            
+            // Get current bet value for this suit
+            const currentBet = parseInt(document.getElementById(`${suit}-bet-display`).textContent) || 0;
+            betSlider.value = currentBet;
+            betSliderValue.textContent = currentBet;
+            
+            // Set max value based on player balance
+            betSlider.max = Math.min(50, Math.floor(playerData.cattleBalance));
+            
+            // Show the slider overlay
+            betSliderOverlay.classList.remove('hidden');
+        });
+    });
+    
+    // Update slider value display as it changes
+    if (betSlider) {
+        betSlider.addEventListener('input', function() {
+            betSliderValue.textContent = this.value;
+        });
+    }
+    
+    // Handle confirm bet
+    if (confirmBetBtn) {
+        confirmBetBtn.addEventListener('click', function() {
+            if (currentSuit) {
+                console.log(`Confirming bet of ${betSlider.value} on ${currentSuit}`);
+                
+                // Update bet display
+                document.getElementById(`${currentSuit}-bet-display`).textContent = betSlider.value;
+                
+                // Update total bet
+                updateTotalBet();
+                
+                // Hide the slider overlay
+                betSliderOverlay.classList.add('hidden');
+            }
+        });
+    }
+    
+    // Handle cancel bet
+    if (cancelBetBtn) {
+        cancelBetBtn.addEventListener('click', function() {
+            console.log("Canceling bet");
+            betSliderOverlay.classList.add('hidden');
+        });
+    }
 }
