@@ -1915,15 +1915,18 @@ body {
 }
 
 .ranch-grid-panel, .shadow-market-panel {
-    padding: 20px;
+    padding: 25px;
     background-color: var(--ui-element-bg);
-    border-radius: 10px;
+    border-radius: 15px;
     border: 2px solid var(--ui-border);
     overflow-y: auto;
     height: 100%;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 0 30px rgba(80, 20, 120, 0.2);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    position: relative;
+    display: flex;
+    flex-direction: column;
 }
 
 .ranch-grid-panel h3, .shadow-market-panel h3 {
@@ -1984,20 +1987,21 @@ body {
 
 .grid-container {
     display: grid;
-    gap: 10px;
+    gap: 12px;
     margin: 15px 0;
     justify-content: center;
+    flex: 1;
 }
 
 #ranch-grid {
-    grid-template-columns: repeat(5, 90px);
-    grid-template-rows: repeat(5, 90px);
+    grid-template-columns: repeat(5, 100px);
+    grid-template-rows: repeat(5, 100px);
     margin: 25px auto;
 }
 
 #shadow-grid {
-    grid-template-columns: repeat(4, 95px);
-    grid-template-rows: repeat(4, 95px);
+    grid-template-columns: repeat(4, 105px);
+    grid-template-rows: repeat(4, 105px);
     margin: 25px auto;
 }
 
@@ -2120,4 +2124,111 @@ body {
     0% { transform: scale(1); }
     50% { transform: scale(1.2); }
     100% { transform: scale(1); }
+}
+
+/* New Layout Styles */
+.main-content-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 4fr) minmax(0, 1fr);
+    gap: 20px;
+    height: calc(100vh - 180px);
+    position: relative;
+}
+
+.main-section {
+    position: relative;
+}
+
+.side-section {
+    position: relative;
+}
+
+.ranch-operations-bar {
+    margin-top: 25px;
+    background-color: rgba(20, 10, 40, 0.7);
+    border-radius: 10px;
+    padding: 15px;
+    border: 1px solid var(--ui-border);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.operations-section h4,
+.travel-section h4 {
+    color: var(--secondary-color);
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-family: var(--font-title);
+    font-weight: normal;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+.compact-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+
+.compact-button {
+    background: linear-gradient(45deg, rgba(60, 20, 120, 0.8), rgba(100, 50, 180, 0.6));
+    color: white;
+    border: 1px solid rgba(140, 100, 255, 0.4);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 80px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+}
+
+.compact-button:hover {
+    transform: translateY(-3px);
+    background: linear-gradient(45deg, rgba(80, 40, 140, 0.8), rgba(120, 70, 200, 0.6));
+    box-shadow: 0 5px 12px rgba(100, 50, 200, 0.3);
+}
+
+.compact-button .icon {
+    font-size: 1.3rem;
+    margin-bottom: 4px;
+}
+
+.compact-button .label {
+    font-size: 0.8rem;
+    font-weight: normal;
+}
+
+.compact-button .cost {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: 3px;
+}
+
+/* Mobile responsive updates */
+@media (max-width: 768px) {
+    .main-content-layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 200px;
+        height: auto;
+        gap: 15px;
+    }
+    
+    .ranch-operations-bar {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .compact-button {
+        min-width: 70px;
+        padding: 6px 10px;
+    }
 }
