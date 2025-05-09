@@ -167,144 +167,186 @@
                 </div>
             </div>
             
-            <div class="saloon-layout">
-                <div class="race-track">
-                    <h3>Horse Race</h3>
-                    
-                    <div class="track-container">
-                        <div class="starting-line"></div>
-                        <div class="finish-line"></div>
+            <div class="main-content-layout">
+                <!-- Main Race Track Section -->
+                <div class="main-section">
+                    <div class="race-panel">
+                        <h3>Horse Race</h3>
                         
-                        <div id="track-hearts" class="track">
-                            <div class="horse-label">♥</div>
-                            <div class="progress-bar">
-                                <div id="hearts-progress" class="progress" style="width: 0%"></div>
+                        <div class="track-container">
+                            <div class="starting-line"></div>
+                            <div class="finish-line"></div>
+                            
+                            <div id="track-hearts" class="track">
+                                <div class="horse-label">
+                                    <img src="img/suits/heart.png" alt="Hearts" class="suit-icon">
+                                </div>
+                                <div class="progress-bar">
+                                    <div id="hearts-progress" class="progress" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            
+                            <div id="track-diamonds" class="track">
+                                <div class="horse-label">
+                                    <img src="img/suits/diamond.png" alt="Diamonds" class="suit-icon">
+                                </div>
+                                <div class="progress-bar">
+                                    <div id="diamonds-progress" class="progress" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            
+                            <div id="track-clubs" class="track">
+                                <div class="horse-label">
+                                    <img src="img/suits/club.png" alt="Clubs" class="suit-icon">
+                                </div>
+                                <div class="progress-bar">
+                                    <div id="clubs-progress" class="progress" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            
+                            <div id="track-spades" class="track">
+                                <div class="horse-label">
+                                    <img src="img/suits/spade.png" alt="Spades" class="suit-icon">
+                                </div>
+                                <div class="progress-bar">
+                                    <div id="spades-progress" class="progress" style="width: 0%"></div>
+                                </div>
                             </div>
                         </div>
                         
-                        <div id="track-diamonds" class="track">
-                            <div class="horse-label">♦</div>
-                            <div class="progress-bar">
-                                <div id="diamonds-progress" class="progress" style="width: 0%"></div>
+                        <div class="race-card-area">
+                            <div id="drawn-card" class="drawn-card">
+                                <div class="card-placeholder">Draw a card to advance a horse</div>
+                            </div>
+                            
+                            <div class="race-controls">
+                                <button id="start-race" class="action-button large">
+                                    <span class="icon">🏁</span>
+                                    <span class="label">Start Race</span>
+                                </button>
+                                <button id="draw-card" class="action-button large" disabled>
+                                    <span class="icon">🃏</span>
+                                    <span class="label">Draw Card</span>
+                                </button>
                             </div>
                         </div>
                         
-                        <div id="track-clubs" class="track">
-                            <div class="horse-label">♣</div>
-                            <div class="progress-bar">
-                                <div id="clubs-progress" class="progress" style="width: 0%"></div>
+                        <!-- Betting Controls Bar -->
+                        <div class="ranch-operations-bar">
+                            <div class="operations-section betting-section">
+                                <h4>Place Your Bets</h4>
+                                <div class="bet-buttons">
+                                    <button id="bet-hearts-btn" class="bet-button" data-suit="hearts">
+                                        <img src="img/suits/heart.png" alt="Hearts" class="bet-icon">
+                                        <span class="odds">Odds: <span id="odds-hearts">4.0</span>x</span>
+                                    </button>
+                                    <button id="bet-diamonds-btn" class="bet-button" data-suit="diamonds">
+                                        <img src="img/suits/diamond.png" alt="Diamonds" class="bet-icon">
+                                        <span class="odds">Odds: <span id="odds-diamonds">4.0</span>x</span>
+                                    </button>
+                                    <button id="bet-clubs-btn" class="bet-button" data-suit="clubs">
+                                        <img src="img/suits/club.png" alt="Clubs" class="bet-icon">
+                                        <span class="odds">Odds: <span id="odds-clubs">4.0</span>x</span>
+                                    </button>
+                                    <button id="bet-spades-btn" class="bet-button" data-suit="spades">
+                                        <img src="img/suits/spade.png" alt="Spades" class="bet-icon">
+                                        <span class="odds">Odds: <span id="odds-spades">4.0</span>x</span>
+                                    </button>
+                                </div>
+                                
+                                <!-- Hidden bet inputs that will be shown in slider form -->
+                                <div class="bet-slider-overlay hidden" id="bet-slider-overlay">
+                                    <div id="bet-slider-container" class="bet-slider-container">
+                                        <h5 id="bet-slider-title">Place Bet on Hearts</h5>
+                                        <input type="range" id="bet-slider" class="bet-slider" min="0" max="50" value="0" step="5">
+                                        <div class="bet-slider-value">
+                                            <span id="bet-slider-value">0</span> $CATTLE
+                                        </div>
+                                        <div class="bet-slider-buttons">
+                                            <button id="confirm-bet" class="confirm-bet">OK</button>
+                                            <button id="cancel-bet" class="cancel-bet">Cancel</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="bet-summary">
+                                    <div class="total-bet">
+                                        Total Bet: <span id="total-bet-amount">0</span> $CATTLE
+                                    </div>
+                                    <div class="burn-info">
+                                        10% (<span id="burn-amount">0</span> $CATTLE) will be burned
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="travel-section">
+                                <div class="bonus-and-education">
+                                    <button id="claim-bonus" class="compact-button">
+                                        <span class="icon">🎁</span>
+                                        <span class="label">Claim 50 $CATTLE Bonus</span>
+                                    </button>
+                                    
+                                    <div class="education-tip mini">
+                                        <div class="icon">📚</div>
+                                        <div class="tip-content">
+                                            <strong>Risk/Reward:</strong> Horses that are behind have better odds!
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <h4>Travel</h4>
+                                <div class="compact-buttons">
+                                    <button id="back-to-ranch" class="compact-button">
+                                        <span class="icon">🏠</span>
+                                        <span class="label">Ranch</span>
+                                    </button>
+                                    <button id="go-to-night-from-saloon" class="compact-button">
+                                        <span class="icon">🌙</span>
+                                        <span class="label">Ether Range</span>
+                                    </button>
+                                    <button id="go-to-profile" class="compact-button">
+                                        <span class="icon">👤</span>
+                                        <span class="label">Profile</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        
-                        <div id="track-spades" class="track">
-                            <div class="horse-label">♠</div>
-                            <div class="progress-bar">
-                                <div id="spades-progress" class="progress" style="width: 0%"></div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="race-controls">
-                        <button id="start-race" class="action-button large">
-                            <span class="icon">🏁</span>
-                            <span class="label">Start Race</span>
-                        </button>
-                        <button id="draw-card" class="action-button large" disabled>
-                            <span class="icon">🃏</span>
-                            <span class="label">Draw Card</span>
-                        </button>
-                    </div>
-                    
-                    <div id="drawn-card" class="drawn-card">
-                        <div class="card-placeholder">Draw a card to advance a horse</div>
                     </div>
                 </div>
                 
-                <div class="betting-panel">
-                    <h3>Place Your Bets</h3>
-                    
-                    <div class="bet-options">
-                        <div class="bet-option" data-suit="hearts">
-                            <div class="suit-label red">♥</div>
-                            <div class="bet-controls">
-                                <input type="number" id="bet-hearts" class="bet-input" min="0" max="50" value="0">
-                                <div class="bet-odds">Odds: <span id="odds-hearts">4.0</span>x</div>
+                <!-- Side Panel for Current Bets & History -->
+                <div class="side-section">
+                    <div class="inventory-panel">
+                        <h3>
+                            Your Bets
+                            <button class="toggle-panel" title="Toggle bets panel">
+                                <span class="toggle-icon">◀</span>
+                            </button>
+                        </h3>
+                        <div id="current-bets" class="inventory-list">
+                            <!-- Current bets will be populated dynamically -->
+                            <div id="bets-hearts" class="bet-record" data-suit="hearts">
+                                <img src="img/suits/heart.png" alt="Hearts" class="bet-record-icon">
+                                <span class="bet-amount" id="hearts-bet-display">0</span> $CATTLE
+                            </div>
+                            <div id="bets-diamonds" class="bet-record" data-suit="diamonds">
+                                <img src="img/suits/diamond.png" alt="Diamonds" class="bet-record-icon">
+                                <span class="bet-amount" id="diamonds-bet-display">0</span> $CATTLE
+                            </div>
+                            <div id="bets-clubs" class="bet-record" data-suit="clubs">
+                                <img src="img/suits/club.png" alt="Clubs" class="bet-record-icon">
+                                <span class="bet-amount" id="clubs-bet-display">0</span> $CATTLE
+                            </div>
+                            <div id="bets-spades" class="bet-record" data-suit="spades">
+                                <img src="img/suits/spade.png" alt="Spades" class="bet-record-icon">
+                                <span class="bet-amount" id="spades-bet-display">0</span> $CATTLE
                             </div>
                         </div>
                         
-                        <div class="bet-option" data-suit="diamonds">
-                            <div class="suit-label red">♦</div>
-                            <div class="bet-controls">
-                                <input type="number" id="bet-diamonds" class="bet-input" min="0" max="50" value="0">
-                                <div class="bet-odds">Odds: <span id="odds-diamonds">4.0</span>x</div>
-                            </div>
-                        </div>
-                        
-                        <div class="bet-option" data-suit="clubs">
-                            <div class="suit-label black">♣</div>
-                            <div class="bet-controls">
-                                <input type="number" id="bet-clubs" class="bet-input" min="0" max="50" value="0">
-                                <div class="bet-odds">Odds: <span id="odds-clubs">4.0</span>x</div>
-                            </div>
-                        </div>
-                        
-                        <div class="bet-option" data-suit="spades">
-                            <div class="suit-label black">♠</div>
-                            <div class="bet-controls">
-                                <input type="number" id="bet-spades" class="bet-input" min="0" max="50" value="0">
-                                <div class="bet-odds">Odds: <span id="odds-spades">4.0</span>x</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="bet-summary">
-                        <div class="total-bet">
-                            Total Bet: <span id="total-bet-amount">0</span> $CATTLE
-                        </div>
-                        <div class="burn-info">
-                            10% (<span id="burn-amount">0</span> $CATTLE) will be burned
-                        </div>
-                    </div>
-                    
-                    <div class="claim-bonus">
-                        <button id="claim-bonus" class="secondary-button">
-                            <span class="icon">🎁</span>
-                            <span class="label">Claim Bonus Tokens</span>
-                        </button>
-                        <div class="bonus-info">Claim 50 $CATTLE once per game session!</div>
-                    </div>
-                    
-                    <div class="education-tip">
-                        <div class="icon">📚</div>
-                        <div class="tip-content">
-                            <strong>Risk/Reward:</strong> Each suit has different odds based on how many cards remain in the deck.
-                            Betting on multiple horses lowers your risk but also your potential reward.
-                            10% of your wager is burned, creating deflationary pressure on the token economy.
-                        </div>
-                    </div>
-                    
-                    <div class="last-results">
-                        <h4>Recent Results</h4>
-                        <div id="results-history" class="history-container">
+                        <h3>Recent Results</h3>
+                        <div id="results-history" class="results-list">
                             <!-- Results will be added here -->
-                        </div>
-                    </div>
-                    
-                    <div class="navigation-menu">
-                        <h4>Navigation</h4>
-                        <div class="nav-buttons">
-                            <button id="back-to-ranch" class="secondary-button">
-                                <span class="icon">🏠</span>
-                                <span class="label">Ranch</span>
-                            </button>
-                            <button id="go-to-night-from-saloon" class="secondary-button">
-                                <span class="icon">🌙</span>
-                                <span class="label">Ether Range</span>
-                            </button>
-                            <button id="go-to-profile" class="secondary-button">
-                                <span class="icon">👤</span>
-                                <span class="label">Profile</span>
-                            </button>
+                            <div class="empty-message">No race results yet.</div>
                         </div>
                     </div>
                 </div>

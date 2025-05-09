@@ -2143,6 +2143,46 @@ body {
     position: relative;
 }
 
+/* Race Panel Styles */
+.race-panel {
+    padding: 25px;
+    background-color: var(--ui-element-bg);
+    border-radius: 15px;
+    border: 2px solid var(--ui-border);
+    overflow-y: auto;
+    height: 100%;
+    box-shadow: 0 0 30px rgba(80, 20, 120, 0.2);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.race-panel h3 {
+    font-family: var(--font-title);
+    color: var(--secondary-color);
+    margin-bottom: 18px;
+    font-weight: normal;
+    position: relative;
+    padding-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+}
+
+.race-panel h3::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    border-radius: 3px;
+}
+
 .ranch-operations-bar {
     margin-top: 25px;
     background-color: rgba(20, 10, 40, 0.7);
@@ -2213,6 +2253,260 @@ body {
     margin-top: 3px;
 }
 
+/* Horse Race and Betting UI Styles */
+.track-container {
+    margin: 20px auto;
+    width: 100%;
+    position: relative;
+}
+
+.track {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    position: relative;
+}
+
+.horse-label {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 15px;
+    font-size: 24px;
+}
+
+.suit-icon {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 30px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 15px;
+    overflow: hidden;
+    border: 1px solid var(--ui-border);
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+    position: relative;
+}
+
+.progress {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    border-radius: 15px;
+    transition: width 0.5s ease;
+    box-shadow: 0 0 8px rgba(120, 60, 220, 0.5);
+}
+
+.race-card-area {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px 0;
+    padding: 15px;
+    background-color: rgba(20, 10, 40, 0.3);
+    border-radius: 10px;
+    border: 1px solid var(--ui-border);
+}
+
+.drawn-card {
+    width: 120px;
+    height: 170px;
+    background-color: rgba(30, 10, 60, 0.5);
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border: 2px solid var(--ui-border);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    margin-right: 20px;
+}
+
+.card-placeholder {
+    color: var(--light-text);
+    font-size: 14px;
+    padding: 10px;
+}
+
+.race-controls {
+    display: flex;
+    gap: 15px;
+}
+
+.race-controls .action-button.large {
+    padding: 10px 20px;
+    font-size: 1.1rem;
+    min-width: 150px;
+}
+
+/* Betting UI Styles */
+.betting-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.bet-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.bet-button {
+    background: linear-gradient(45deg, rgba(40, 10, 80, 0.8), rgba(60, 20, 120, 0.7));
+    border: 2px solid rgba(100, 50, 180, 0.6);
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    min-width: 65px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.bet-button:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(100, 50, 200, 0.3);
+    border-color: var(--accent-color);
+}
+
+.bet-icon {
+    width: 35px;
+    height: 35px;
+    margin-bottom: 5px;
+    object-fit: contain;
+}
+
+.bet-button .odds {
+    font-size: 0.8rem;
+    color: var(--accent-color);
+}
+
+.bet-slider-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+.bet-slider-container {
+    background: linear-gradient(135deg, rgba(40, 10, 80, 0.9), rgba(60, 20, 120, 0.8));
+    border: 2px solid var(--accent-color);
+    border-radius: 15px;
+    padding: 20px;
+    width: 300px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+}
+
+.bet-slider-container h5 {
+    color: var(--secondary-color);
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-family: var(--font-title);
+    font-size: 1.1rem;
+}
+
+.bet-slider {
+    width: 100%;
+    margin: 20px 0;
+    height: 10px;
+    appearance: none;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 5px;
+    outline: none;
+}
+
+.bet-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    cursor: pointer;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
+
+.bet-slider-value {
+    font-size: 1.2rem;
+    color: white;
+    margin-bottom: 20px;
+}
+
+.bet-slider-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.confirm-bet, .cancel-bet {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.confirm-bet {
+    background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+    color: white;
+}
+
+.cancel-bet {
+    background: rgba(60, 60, 80, 0.3);
+    color: white;
+    border: 1px solid rgba(100, 100, 140, 0.3);
+}
+
+.confirm-bet:hover, .cancel-bet:hover {
+    transform: translateY(-2px);
+}
+
+.bet-record {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background: rgba(30, 15, 60, 0.3);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    border: 1px solid rgba(80, 40, 160, 0.3);
+}
+
+.bet-record-icon {
+    width: 25px;
+    height: 25px;
+    margin-right: 10px;
+}
+
+.education-tip.mini {
+    padding: 8px;
+    margin: 10px 0;
+    font-size: 0.85rem;
+}
+
+.bonus-and-education {
+    margin-bottom: 15px;
+}
+
+.hidden {
+    display: none !important;
+}
+
 /* Mobile responsive updates */
 @media (max-width: 768px) {
     .main-content-layout {
@@ -2230,5 +2524,23 @@ body {
     .compact-button {
         min-width: 70px;
         padding: 6px 10px;
+    }
+    
+    .bet-buttons {
+        flex-wrap: wrap;
+    }
+    
+    .bet-button {
+        min-width: 60px;
+        padding: 8px;
+    }
+    
+    .race-card-area {
+        flex-direction: column;
+    }
+    
+    .drawn-card {
+        margin-right: 0;
+        margin-bottom: 15px;
     }
 }
