@@ -197,7 +197,87 @@ io.on('connection', (socket) => {
     }
   });
   
-  // Handle poker game
+  // For Blackjack game
+  const gameRooms = {};
+
+  // Utility functions for cards
+  function createDeck() {
+    const suits = ['♥', '♦', '♠', '♣'];
+    const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+    let deck = [];
+    
+    for (const suit of suits) {
+      for (const rank of ranks) {
+        deck.push({ rank, suit });
+      }
+    }
+    
+    return shuffleDeck(deck);
+  }
+  
+  function shuffleDeck(deck) {
+    for (let i = deck.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+    return deck;
+  }
+  
+  function getCardValue(card) {
+    if (['J', 'Q', 'K'].includes(card.rank)) return 10;
+    if (card.rank === 'A') return 11;
+    return parseInt(card.rank);
+  }
+  
+  function calculateHandValue(hand) {
+    let value = 0;
+    let aces = 0;
+    
+    for (const card of hand) {
+      value += getCardValue(card);
+      if (card.rank === 'A') {
+        aces++;
+      }
+    }
+    
+    // Adjust for aces if needed
+    while (value > 21 && aces > 0) {
+      value -= 10; // Convert an Ace from 11 to 1
+      aces--;
+    }
+    
+    return value;
+  }
+  
+  function getCardColor(card) {
+    return ['♥', '♦'].includes(card.suit) ? 'red' : 'black';
+  }
+
+  // Initialize game for a player
+  function initGame(playerId, wager) {
+    const deck = createDeck();
+    
+    const playerHand = [deck.pop(), deck.pop()];
+    const dealerHand = [deck.pop(), deck.pop()];
+    
+    gameRooms[playerId] = {
+      deck,
+      playerHand,
+      dealerHand,
+      wager,
+      gameState: 'active', // 'active', 'playerBust', 'dealerBust', 'playerWin', 'dealerWin', 'push'
+      results: [] // Track game history
+    };
+    
+    return {
+      playerHand,
+      dealerHand: [dealerHand[0], { hidden: true }], // Only show one dealer card
+      playerValue: calculateHandValue(playerHand),
+      dealerValue: getCardValue(dealerHand[0]) // Only count visible card
+    };
+  }
+  
+  // Handle starting a new poker (blackjack) game
   socket.on('play-poker', (data) => {
     const player = gameState.players[socket.id];
     if (!player) return;
@@ -219,30 +299,234 @@ io.on('connection', (socket) => {
     const burnAmount = wager * 0.1;
     const playableAmount = wager - burnAmount;
     
-    // Determine outcome (50/50 chance)
-    const win = Math.random() >= 0.5;
+    // Initialize a new game
+    const gameData = initGame(socket.id, playableAmount);
     
-    if (win) {
-      // Calculate winnings (2x playable amount)
-      const winnings = playableAmount * 2;
+    // Send initial game state
+    socket.emit('poker-game-started', {
+      playerHand: gameData.playerHand.map(card => ({ 
+        rank: card.rank, 
+        suit: card.suit,
+        color: getCardColor(card)
+      })),
+      dealerHand: [
+        { 
+          rank: gameData.dealerHand[0].rank, 
+          suit: gameData.dealerHand[0].suit,
+          color: getCardColor(gameData.dealerHand[0]) 
+        }, 
+        { hidden: true }
+      ],
+      playerValue: gameData.playerValue,
+      dealerValue: gameData.dealerValue,
+      wager: playableAmount
+    });
+    
+    // Check for natural blackjack
+    if (gameData.playerValue === 21) {
+      // Player has blackjack
+      const dealerValue = calculateHandValue(gameRooms[socket.id].dealerHand);
       
-      // Add to balance
-      player.cattleBalance += winnings;
+      if (dealerValue === 21) {
+        // Push - both have blackjack
+        gameRooms[socket.id].gameState = 'push';
+        player.cattleBalance += playableAmount; // Return wager
+        
+        // Add to game history
+        gameRooms[socket.id].results.push({
+          result: 'push',
+          playerHand: gameRooms[socket.id].playerHand,
+          dealerHand: gameRooms[socket.id].dealerHand
+        });
+        
+        socket.emit('poker-game-result', {
+          result: 'push',
+          message: 'Push! Both have Blackjack.',
+          playerHand: gameRooms[socket.id].playerHand.map(card => ({ 
+            rank: card.rank, 
+            suit: card.suit,
+            color: getCardColor(card)
+          })),
+          dealerHand: gameRooms[socket.id].dealerHand.map(card => ({ 
+            rank: card.rank, 
+            suit: card.suit,
+            color: getCardColor(card)
+          })),
+          playerValue: 21,
+          dealerValue: 21,
+          amount: playableAmount,
+          player: player
+        });
+      } else {
+        // Player wins with blackjack (pays 3:2)
+        gameRooms[socket.id].gameState = 'playerWin';
+        const winnings = playableAmount * 2.5; // 3:2 payout for blackjack
+        player.cattleBalance += winnings;
+        
+        // Add to game history
+        gameRooms[socket.id].results.push({
+          result: 'win',
+          playerHand: gameRooms[socket.id].playerHand,
+          dealerHand: gameRooms[socket.id].dealerHand
+        });
+        
+        socket.emit('poker-game-result', {
+          result: 'win',
+          message: 'Blackjack! You win 3:2 payout!',
+          playerHand: gameRooms[socket.id].playerHand.map(card => ({ 
+            rank: card.rank, 
+            suit: card.suit,
+            color: getCardColor(card)
+          })),
+          dealerHand: gameRooms[socket.id].dealerHand.map(card => ({ 
+            rank: card.rank, 
+            suit: card.suit,
+            color: getCardColor(card)
+          })),
+          playerValue: 21,
+          dealerValue: dealerValue,
+          amount: winnings,
+          player: player
+        });
+      }
+    }
+  });
+  
+  // Handle player hitting (taking another card)
+  socket.on('poker-hit', () => {
+    const player = gameState.players[socket.id];
+    const game = gameRooms[socket.id];
+    
+    if (!player || !game || game.gameState !== 'active') return;
+    
+    // Draw a card from the deck
+    const newCard = game.deck.pop();
+    game.playerHand.push(newCard);
+    
+    const playerValue = calculateHandValue(game.playerHand);
+    
+    if (playerValue > 21) {
+      // Player busts
+      game.gameState = 'playerBust';
       
-      // Notify player
-      socket.emit('poker-result', {
-        win: true,
-        amount: winnings,
+      // Add to game history
+      game.results.push({
+        result: 'loss',
+        playerHand: game.playerHand,
+        dealerHand: game.dealerHand
+      });
+      
+      socket.emit('poker-game-result', {
+        result: 'loss',
+        message: 'Bust! You went over 21.',
+        playerHand: game.playerHand.map(card => ({ 
+          rank: card.rank, 
+          suit: card.suit,
+          color: getCardColor(card)
+        })),
+        dealerHand: game.dealerHand.map(card => ({ 
+          rank: card.rank, 
+          suit: card.suit,
+          color: getCardColor(card)
+        })),
+        playerValue: playerValue,
+        dealerValue: calculateHandValue(game.dealerHand),
+        amount: game.wager,
         player: player
       });
     } else {
-      // Notify player of loss
-      socket.emit('poker-result', {
-        win: false,
-        amount: wager,
-        player: player
+      // Continue the game
+      socket.emit('poker-card-dealt', {
+        target: 'player',
+        card: {
+          rank: newCard.rank,
+          suit: newCard.suit,
+          color: getCardColor(newCard)
+        },
+        playerValue: playerValue
       });
     }
+  });
+  
+  // Handle player standing (ending their turn)
+  socket.on('poker-stand', () => {
+    const player = gameState.players[socket.id];
+    const game = gameRooms[socket.id];
+    
+    if (!player || !game || game.gameState !== 'active') return;
+    
+    const playerValue = calculateHandValue(game.playerHand);
+    let dealerValue = calculateHandValue(game.dealerHand);
+    
+    // Dealer hits until 17 or higher
+    while (dealerValue < 17) {
+      const newCard = game.deck.pop();
+      game.dealerHand.push(newCard);
+      dealerValue = calculateHandValue(game.dealerHand);
+    }
+    
+    let result;
+    let message;
+    let winnings = 0;
+    
+    if (dealerValue > 21) {
+      // Dealer busts
+      result = 'win';
+      message = 'Dealer busts! You win!';
+      winnings = game.wager * 2; // Double the wager
+      player.cattleBalance += winnings;
+      game.gameState = 'dealerBust';
+    } else if (dealerValue > playerValue) {
+      // Dealer wins
+      result = 'loss';
+      message = 'Dealer wins!';
+      game.gameState = 'dealerWin';
+    } else if (playerValue > dealerValue) {
+      // Player wins
+      result = 'win';
+      message = 'You win!';
+      winnings = game.wager * 2; // Double the wager
+      player.cattleBalance += winnings;
+      game.gameState = 'playerWin';
+    } else {
+      // Push (tie)
+      result = 'push';
+      message = 'Push! It\'s a tie.';
+      player.cattleBalance += game.wager; // Return the wager
+      game.gameState = 'push';
+    }
+    
+    // Add to game history
+    game.results.push({
+      result: result === 'win' ? 'win' : (result === 'loss' ? 'loss' : 'push'),
+      playerHand: game.playerHand,
+      dealerHand: game.dealerHand
+    });
+    
+    // Keep only the last 10 results
+    if (game.results.length > 10) {
+      game.results = game.results.slice(-10);
+    }
+    
+    socket.emit('poker-game-result', {
+      result,
+      message,
+      playerHand: game.playerHand.map(card => ({ 
+        rank: card.rank, 
+        suit: card.suit,
+        color: getCardColor(card)
+      })),
+      dealerHand: game.dealerHand.map(card => ({ 
+        rank: card.rank, 
+        suit: card.suit,
+        color: getCardColor(card)
+      })),
+      playerValue,
+      dealerValue,
+      amount: result === 'win' ? winnings : game.wager,
+      player: player,
+      history: game.results.map(item => ({ result: item.result }))
+    });
   });
   
   // Handle disconnect

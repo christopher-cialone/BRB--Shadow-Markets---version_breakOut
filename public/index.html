@@ -117,38 +117,71 @@
                 </div>
             </div>
             
-            <div class="action-panel">
-                <h3>Cipher Poker</h3>
-                <div class="poker-controls">
-                    <div class="wager-control">
-                        <label for="wager-amount">Wager Amount:</label>
-                        <input type="range" id="wager-slider" min="1" max="50" value="10">
-                        <div class="wager-display">
-                            <span id="wager-amount">10</span> $CATTLE
+            <div class="saloon-layout">
+                <div class="poker-table">
+                    <div class="dealer-area">
+                        <div class="dealer-label">Dealer</div>
+                        <div id="dealer-cards" class="cards-container">
+                            <!-- Dealer cards will be placed here -->
                         </div>
-                        <div class="burn-info">
-                            10% (<span id="burn-amount">1</span> $CATTLE) will be burned
+                        <div id="dealer-score" class="score">Score: 0</div>
+                    </div>
+                    
+                    <div class="player-area">
+                        <div class="player-label">Your Hand</div>
+                        <div id="player-cards" class="cards-container">
+                            <!-- Player cards will be placed here -->
+                        </div>
+                        <div id="player-score" class="score">Score: 0</div>
+                        
+                        <div class="game-controls">
+                            <button id="hit-button" class="game-button" disabled>Hit</button>
+                            <button id="stand-button" class="game-button" disabled>Stand</button>
                         </div>
                     </div>
-                    <button id="play-poker" class="action-button large">
-                        <span class="icon">🎮</span>
-                        <span class="label">Play Poker</span>
+                </div>
+                
+                <div class="action-panel">
+                    <h3>Cipher Blackjack</h3>
+                    <p class="game-description">A blockchain-based card game where players try to get closer to 21 than the dealer without going over.</p>
+                    
+                    <div class="poker-controls">
+                        <div class="wager-control">
+                            <label for="wager-amount">Wager Amount:</label>
+                            <input type="range" id="wager-slider" min="1" max="50" value="10">
+                            <div class="wager-display">
+                                <span id="wager-amount">10</span> $CATTLE
+                            </div>
+                            <div class="burn-info">
+                                10% (<span id="burn-amount">1</span> $CATTLE) will be burned
+                            </div>
+                        </div>
+                        <button id="play-poker" class="action-button large">
+                            <span class="icon">🎮</span>
+                            <span class="label">Deal Cards</span>
+                        </button>
+                    </div>
+                    
+                    <div class="education-tip">
+                        <div class="icon">📚</div>
+                        <div class="tip-content">
+                            <strong>Risk Management:</strong> Each hand allows you to manage your risk by deciding when to hit or stand.
+                            10% of your wager is burned from the total supply, creating deflationary pressure on the token economy.
+                        </div>
+                    </div>
+                    
+                    <div class="last-results">
+                        <h4>Recent Results</h4>
+                        <div id="results-history" class="history-container">
+                            <!-- Results will be added here -->
+                        </div>
+                    </div>
+                    
+                    <button id="back-to-ranch" class="secondary-button">
+                        <span class="icon">🏠</span>
+                        <span class="label">Back to Ranch</span>
                     </button>
                 </div>
-                
-                <div class="education-tip">
-                    <div class="icon">📚</div>
-                    <div class="tip-content">
-                        <strong>Risk Management:</strong> This game has a 50% chance of winning. 
-                        10% of your wager is burned from the total supply, which creates deflationary pressure 
-                        on the token economy.
-                    </div>
-                </div>
-                
-                <button id="back-to-ranch" class="secondary-button">
-                    <span class="icon">🏠</span>
-                    <span class="label">Back to Ranch</span>
-                </button>
             </div>
         </div>
         

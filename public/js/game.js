@@ -234,8 +234,35 @@ document.addEventListener('DOMContentLoaded', () => {
         burnAmountDisplay.textContent = burnAmount;
     });
     
-    document.getElementById('play-poker').addEventListener('click', () => {
+    // Blackjack game controls
+    const hitButton = document.getElementById('hit-button');
+    const standButton = document.getElementById('stand-button');
+    const playPokerButton = document.getElementById('play-poker');
+    
+    playPokerButton.addEventListener('click', () => {
+        // Clear previous cards
+        document.getElementById('player-cards').innerHTML = '';
+        document.getElementById('dealer-cards').innerHTML = '';
+        document.getElementById('results-history').innerHTML = '';
+        
+        // Reset scores
+        document.getElementById('player-score').textContent = 'Score: 0';
+        document.getElementById('dealer-score').textContent = 'Score: 0';
+        
+        // Disable game buttons initially
+        hitButton.disabled = true;
+        standButton.disabled = true;
+        
+        // Start new game
         socket.emit('play-poker', { wager: wagerAmount });
+    });
+    
+    hitButton.addEventListener('click', () => {
+        socket.emit('poker-hit');
+    });
+    
+    standButton.addEventListener('click', () => {
+        socket.emit('poker-stand');
     });
     
     document.getElementById('back-to-ranch').addEventListener('click', () => {
@@ -330,6 +357,111 @@ socket.on('potion-sold', data => {
     updateUI();
 });
 
+// Add the blackjack-specific event handlers
+socket.on('poker-game-started', data => {
+    // Update UI
+    const playerCardsContainer = document.getElementById('player-cards');
+    const dealerCardsContainer = document.getElementById('dealer-cards');
+    const playerScoreDisplay = document.getElementById('player-score');
+    const dealerScoreDisplay = document.getElementById('dealer-score');
+    
+    // Clear previous cards
+    playerCardsContainer.innerHTML = '';
+    dealerCardsContainer.innerHTML = '';
+    
+    // Add player cards
+    data.playerHand.forEach(card => {
+        const cardElement = createCardElement(card);
+        playerCardsContainer.appendChild(cardElement);
+    });
+    
+    // Add dealer cards (one face up, one face down)
+    data.dealerHand.forEach(card => {
+        if (card.hidden) {
+            const cardElement = createCardElement({ hidden: true });
+            dealerCardsContainer.appendChild(cardElement);
+        } else {
+            const cardElement = createCardElement(card);
+            dealerCardsContainer.appendChild(cardElement);
+        }
+    });
+    
+    // Update scores
+    playerScoreDisplay.textContent = `Score: ${data.playerValue}`;
+    dealerScoreDisplay.textContent = `Score: ${data.dealerValue}`;
+    
+    // Enable game controls if not a blackjack
+    if (data.playerValue < 21) {
+        document.getElementById('hit-button').disabled = false;
+        document.getElementById('stand-button').disabled = false;
+        document.getElementById('play-poker').disabled = true;
+    }
+});
+
+socket.on('poker-card-dealt', data => {
+    // Add new card to the appropriate container
+    const cardsContainer = document.getElementById(`${data.target}-cards`);
+    const scoreDisplay = document.getElementById(`${data.target}-score`);
+    
+    // Create card element
+    const cardElement = createCardElement(data.card);
+    cardsContainer.appendChild(cardElement);
+    
+    // Update score
+    scoreDisplay.textContent = `Score: ${data.target === 'player' ? data.playerValue : data.dealerValue}`;
+});
+
+socket.on('poker-game-result', data => {
+    // Update player data
+    playerData = data.player;
+    
+    // Reveal all dealer cards
+    const dealerCardsContainer = document.getElementById('dealer-cards');
+    dealerCardsContainer.innerHTML = '';
+    
+    data.dealerHand.forEach(card => {
+        const cardElement = createCardElement(card);
+        dealerCardsContainer.appendChild(cardElement);
+    });
+    
+    // Update scores
+    document.getElementById('player-score').textContent = `Score: ${data.playerValue}`;
+    document.getElementById('dealer-score').textContent = `Score: ${data.dealerValue}`;
+    
+    // Disable game controls
+    document.getElementById('hit-button').disabled = true;
+    document.getElementById('stand-button').disabled = true;
+    document.getElementById('play-poker').disabled = false;
+    
+    // Show result
+    let resultClass;
+    if (data.result === 'win') {
+        resultClass = 'win';
+        showResult('You Won!', `${data.message} You won ${data.amount.toFixed(2)} $CATTLE!`, 'success');
+    } else if (data.result === 'loss') {
+        resultClass = 'loss';
+        showResult('You Lost', `${data.message} You lost ${data.amount.toFixed(2)} $CATTLE.`, 'error');
+    } else { // push
+        resultClass = '';
+        showResult('Push', `${data.message}`, 'info');
+    }
+    
+    // Update game history if provided
+    if (data.history) {
+        const historyContainer = document.getElementById('results-history');
+        data.history.forEach(item => {
+            const historyItem = document.createElement('div');
+            historyItem.className = `history-item ${item.result === 'win' ? 'win' : (item.result === 'loss' ? 'loss' : '')}`;
+            historyItem.textContent = item.result === 'win' ? 'W' : (item.result === 'loss' ? 'L' : 'P');
+            historyContainer.appendChild(historyItem);
+        });
+    }
+    
+    // Update UI
+    updateUI();
+});
+
+// Original poker-result handler for backwards compatibility
 socket.on('poker-result', data => {
     // Update player data
     playerData = data.player;
@@ -588,4 +720,38 @@ function addPotionEffect() {
             potion.destroy();
         }
     });
+}
+
+// Card rendering function for blackjack game
+function createCardElement(card) {
+    const cardElement = document.createElement('div');
+    
+    if (card.hidden) {
+        // Face down card
+        cardElement.className = 'card face-down';
+        return cardElement;
+    }
+    
+    // Face up card
+    cardElement.className = `card ${card.color}`;
+    
+    // Create card content
+    const suitTop = document.createElement('div');
+    suitTop.className = 'suit top';
+    suitTop.textContent = card.suit;
+    
+    const rank = document.createElement('div');
+    rank.className = 'rank';
+    rank.textContent = card.rank;
+    
+    const suitBottom = document.createElement('div');
+    suitBottom.className = 'suit bottom';
+    suitBottom.textContent = card.suit;
+    
+    // Append content to card
+    cardElement.appendChild(suitTop);
+    cardElement.appendChild(rank);
+    cardElement.appendChild(suitBottom);
+    
+    return cardElement;
 }
