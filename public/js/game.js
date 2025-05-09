@@ -770,6 +770,7 @@ function switchScene(scene) {
             if (game && game.scene && game.scene.scenes && game.scene.scenes[0] && game.scene.scenes[0].ranchScene) {
                 game.scene.scenes[0].ranchScene.visible = true;
             }
+            initRanchGrid(); // Initialize or update ranch grid
             break;
         case 'saloon':
             if (screens['saloon']) screens['saloon'].classList.remove('hidden');
@@ -789,6 +790,7 @@ function switchScene(scene) {
             if (game && game.scene && game.scene.scenes && game.scene.scenes[0] && game.scene.scenes[0].nightScene) {
                 game.scene.scenes[0].nightScene.visible = true;
             }
+            initShadowGrid(); // Initialize or update shadow market grid
             break;
     }
     
@@ -1080,6 +1082,515 @@ function updatePotionInventory() {
     });
 }
 
+// Initialize the ranch grid
+function initRanchGrid() {
+    // Get the grid container
+    const gridContainer = document.getElementById('ranch-grid');
+    if (!gridContainer) {
+        console.error('Ranch grid container not found');
+        return;
+    }
+    
+    // Clear any existing content
+    gridContainer.innerHTML = '';
+    
+    // Initialize the cells array if it's empty
+    if (ranchGrid.cells.length === 0) {
+        for (let i = 0; i < ranchGrid.size * ranchGrid.size; i++) {
+            ranchGrid.cells.push({
+                id: i,
+                state: 'empty',
+                growthStage: 0,
+                growthMax: 3
+            });
+        }
+    }
+    
+    // Create the grid cells
+    ranchGrid.cells.forEach((cell, index) => {
+        const cellElement = document.createElement('div');
+        cellElement.className = `grid-cell ${cell.state}`;
+        cellElement.id = `ranch-cell-${index}`;
+        
+        // Add growth indicator for non-empty cells
+        if (cell.state !== 'empty') {
+            const indicator = document.createElement('div');
+            indicator.className = 'growth-indicator';
+            indicator.textContent = `${cell.growthStage}/${cell.growthMax}`;
+            cellElement.appendChild(indicator);
+        }
+        
+        // Add click handler for cell interactions
+        cellElement.addEventListener('click', () => handleRanchCellClick(index));
+        
+        // Add to grid
+        gridContainer.appendChild(cellElement);
+    });
+    
+    // Update the resources display
+    updateRanchResourceDisplay();
+    
+    // Start growth timer if not already running
+    if (!ranchGrid.growthInterval) {
+        startRanchGrowthCycle();
+    }
+    
+    // Set up the harvest all button
+    const harvestAllButton = document.getElementById('harvest-all');
+    if (harvestAllButton) {
+        // Remove any existing event listeners
+        const newButton = harvestAllButton.cloneNode(true);
+        harvestAllButton.parentNode.replaceChild(newButton, harvestAllButton);
+        
+        // Add new event listener
+        newButton.addEventListener('click', harvestAllRanchCells);
+    }
+    
+    // Update button states
+    updateButtonStates();
+}
+
+// Initialize the shadow market grid
+function initShadowGrid() {
+    // Get the grid container
+    const gridContainer = document.getElementById('shadow-grid');
+    if (!gridContainer) {
+        console.error('Shadow grid container not found');
+        return;
+    }
+    
+    // Clear any existing content
+    gridContainer.innerHTML = '';
+    
+    // Initialize the cells array if it's empty
+    if (shadowGrid.cells.length === 0) {
+        for (let i = 0; i < shadowGrid.size * shadowGrid.size; i++) {
+            shadowGrid.cells.push({
+                id: i,
+                state: 'empty',
+                stage: 0,
+                maxStage: 3
+            });
+        }
+    }
+    
+    // Create the grid cells
+    shadowGrid.cells.forEach((cell, index) => {
+        const cellElement = document.createElement('div');
+        cellElement.className = `grid-cell ${cell.state}`;
+        cellElement.id = `shadow-cell-${index}`;
+        
+        // Add stage indicator for non-empty cells
+        if (cell.state !== 'empty') {
+            const indicator = document.createElement('div');
+            indicator.className = 'growth-indicator';
+            indicator.textContent = `${cell.stage}/${cell.maxStage}`;
+            cellElement.appendChild(indicator);
+        }
+        
+        // Add click handler for cell interactions
+        cellElement.addEventListener('click', () => handleShadowCellClick(index));
+        
+        // Add to grid
+        gridContainer.appendChild(cellElement);
+    });
+    
+    // Update the resources display
+    updateShadowResourceDisplay();
+    
+    // Start market cycle if not already running
+    if (!shadowGrid.cycleInterval) {
+        startShadowMarketCycle();
+    }
+    
+    // Set up the distill all button
+    const distillAllButton = document.getElementById('distill-all');
+    if (distillAllButton) {
+        // Remove any existing event listeners
+        const newButton = distillAllButton.cloneNode(true);
+        distillAllButton.parentNode.replaceChild(newButton, distillAllButton);
+        
+        // Add new event listener
+        newButton.addEventListener('click', distillAllShadowCells);
+    }
+    
+    // Update button states
+    updateButtonStates();
+}
+
+// Handle clicking on a ranch grid cell
+function handleRanchCellClick(cellIndex) {
+    const cell = ranchGrid.cells[cellIndex];
+    const cellElement = document.getElementById(`ranch-cell-${cellIndex}`);
+    
+    if (!cellElement) return;
+    
+    switch (cell.state) {
+        case 'empty':
+            // Plant a new crop
+            if (playerData.hay >= 10) {
+                playerData.hay -= 10;
+                cell.state = 'planted';
+                cell.growthStage = 0;
+                cellElement.className = 'grid-cell planted';
+                
+                // Add growth indicator
+                const indicator = document.createElement('div');
+                indicator.className = 'growth-indicator';
+                indicator.textContent = `${cell.growthStage}/${cell.growthMax}`;
+                cellElement.appendChild(indicator);
+                
+                showNotification('Planted a new crop! -10 Hay', 'success');
+                updateRanchResourceDisplay();
+            } else {
+                showNotification('Not enough hay! Need 10 hay to plant.', 'error');
+            }
+            break;
+            
+        case 'harvestable':
+            // Harvest the crop
+            harvestRanchCell(cellIndex);
+            break;
+            
+        default:
+            // Show growth info for growing crops
+            showNotification(`Crop is growing: Stage ${cell.growthStage}/${cell.growthMax}`, 'info');
+            break;
+    }
+}
+
+// Handle clicking on a shadow market cell
+function handleShadowCellClick(cellIndex) {
+    const cell = shadowGrid.cells[cellIndex];
+    const cellElement = document.getElementById(`shadow-cell-${cellIndex}`);
+    
+    if (!cellElement) return;
+    
+    switch (cell.state) {
+        case 'empty':
+            // Start brewing a potion
+            if (playerData.water >= 15) {
+                playerData.water -= 15;
+                cell.state = 'brewing';
+                cell.stage = 0;
+                cellElement.className = 'grid-cell brewing';
+                
+                // Add stage indicator
+                const indicator = document.createElement('div');
+                indicator.className = 'growth-indicator';
+                indicator.textContent = `${cell.stage}/${cell.maxStage}`;
+                cellElement.appendChild(indicator);
+                
+                showNotification('Started brewing a potion! -15 Water', 'success');
+                updateShadowResourceDisplay();
+            } else {
+                showNotification('Not enough water! Need 15 water to brew.', 'error');
+            }
+            break;
+            
+        case 'ready':
+            // Distill the potion
+            distillShadowCell(cellIndex);
+            break;
+            
+        default:
+            // Show brewing info
+            showNotification(`Potion is brewing: Stage ${cell.stage}/${cell.maxStage}`, 'info');
+            break;
+    }
+}
+
+// Harvest a single ranch cell
+function harvestRanchCell(cellIndex) {
+    const cell = ranchGrid.cells[cellIndex];
+    const cellElement = document.getElementById(`ranch-cell-${cellIndex}`);
+    
+    if (!cellElement || cell.state !== 'harvestable') return;
+    
+    // Calculate harvest rewards
+    const hayReward = Math.floor(15 + Math.random() * 10) * ranchGrid.multiplier;
+    const waterReward = Math.floor(5 + Math.random() * 10) * ranchGrid.multiplier;
+    
+    // Add resources to player
+    playerData.hay += hayReward;
+    playerData.water += waterReward;
+    playerData.stats.plantsHarvested = (playerData.stats.plantsHarvested || 0) + 1;
+    
+    // Reset cell
+    cell.state = 'empty';
+    cell.growthStage = 0;
+    cellElement.className = 'grid-cell empty';
+    cellElement.innerHTML = '';
+    
+    // Show notification
+    showNotification(`Harvested crop! +${hayReward.toFixed(0)} Hay, +${waterReward.toFixed(0)} Water`, 'success');
+    
+    // Update UI
+    updateRanchResourceDisplay();
+    updateUI();
+}
+
+// Distill a single shadow market cell
+function distillShadowCell(cellIndex) {
+    const cell = shadowGrid.cells[cellIndex];
+    const cellElement = document.getElementById(`shadow-cell-${cellIndex}`);
+    
+    if (!cellElement || cell.state !== 'ready') return;
+    
+    // Calculate distill rewards
+    const etherReward = Math.floor(10 + Math.random() * 15) * shadowGrid.multiplier;
+    const cattleReward = Math.floor(5 + Math.random() * 10) * shadowGrid.multiplier;
+    
+    // Add resources to player
+    playerData.ether = (playerData.ether || 0) + etherReward;
+    playerData.cattleBalance += cattleReward;
+    playerData.stats.potionsDistilled = (playerData.stats.potionsDistilled || 0) + 1;
+    
+    // Reset cell
+    cell.state = 'empty';
+    cell.stage = 0;
+    cellElement.className = 'grid-cell empty';
+    cellElement.innerHTML = '';
+    
+    // Show notification
+    showNotification(`Distilled potion! +${etherReward.toFixed(0)} Ether, +${cattleReward.toFixed(2)} $CATTLE`, 'success');
+    
+    // Update UI
+    updateShadowResourceDisplay();
+    updateUI();
+    
+    // Show win celebration for bigger rewards
+    if (cattleReward > 10) {
+        showWinCelebration(cattleReward);
+    }
+}
+
+// Harvest all ready ranch cells
+function harvestAllRanchCells() {
+    let harvestedCount = 0;
+    
+    ranchGrid.cells.forEach((cell, index) => {
+        if (cell.state === 'harvestable') {
+            harvestRanchCell(index);
+            harvestedCount++;
+        }
+    });
+    
+    if (harvestedCount === 0) {
+        showNotification('No crops ready to harvest yet!', 'info');
+    } else {
+        showNotification(`Harvested ${harvestedCount} crops!`, 'success');
+    }
+}
+
+// Distill all ready shadow market cells
+function distillAllShadowCells() {
+    let distilledCount = 0;
+    
+    shadowGrid.cells.forEach((cell, index) => {
+        if (cell.state === 'ready') {
+            distillShadowCell(index);
+            distilledCount++;
+        }
+    });
+    
+    if (distilledCount === 0) {
+        showNotification('No potions ready to distill yet!', 'info');
+    } else {
+        showNotification(`Distilled ${distilledCount} potions!`, 'success');
+    }
+}
+
+// Start the growth cycle for ranch
+function startRanchGrowthCycle() {
+    // Update the growth timer display
+    const timerDisplay = document.getElementById('growth-timer');
+    if (timerDisplay) {
+        timerDisplay.textContent = ranchGrid.growthTimer;
+    }
+    
+    // Start the interval
+    ranchGrid.growthInterval = setInterval(() => {
+        // Only process if we're in the ranch scene
+        if (currentScene === 'ranch') {
+            // Decrease timer
+            ranchGrid.growthTimer--;
+            
+            // Update display
+            if (timerDisplay) {
+                timerDisplay.textContent = ranchGrid.growthTimer;
+            }
+            
+            // If timer reaches zero, grow plants and reset
+            if (ranchGrid.growthTimer <= 0) {
+                growRanchPlants();
+                ranchGrid.growthTimer = 60; // Reset to 60 seconds
+            }
+        }
+    }, 1000);
+}
+
+// Start the market cycle for shadow market
+function startShadowMarketCycle() {
+    // Update the market state display
+    const cycleDisplay = document.getElementById('market-cycle');
+    if (cycleDisplay) {
+        cycleDisplay.textContent = shadowGrid.marketState;
+    }
+    
+    // Start the interval
+    shadowGrid.cycleInterval = setInterval(() => {
+        // Only process if we're in the night scene
+        if (currentScene === 'night') {
+            // Decrease timer
+            shadowGrid.cycleTimer--;
+            
+            // If timer reaches zero, change market state and process brewing
+            if (shadowGrid.cycleTimer <= 0) {
+                updateShadowMarketState();
+                processShadowBrewing();
+                shadowGrid.cycleTimer = 30; // Reset to 30 seconds
+            }
+        }
+    }, 1000);
+}
+
+// Grow all plants in the ranch
+function growRanchPlants() {
+    let anyGrown = false;
+    
+    ranchGrid.cells.forEach((cell, index) => {
+        const cellElement = document.getElementById(`ranch-cell-${index}`);
+        if (!cellElement) return;
+        
+        // Only process cells that are planted or growing
+        if (cell.state === 'planted' || cell.state === 'growing') {
+            // Increment growth stage
+            cell.growthStage++;
+            anyGrown = true;
+            
+            // Update growth indicator
+            const indicator = cellElement.querySelector('.growth-indicator');
+            if (indicator) {
+                indicator.textContent = `${cell.growthStage}/${cell.growthMax}`;
+            }
+            
+            // Check if fully grown
+            if (cell.growthStage >= cell.growthMax) {
+                cell.state = 'harvestable';
+                cellElement.className = 'grid-cell harvestable';
+            } else if (cell.state === 'planted' && cell.growthStage >= 1) {
+                cell.state = 'growing';
+                cellElement.className = 'grid-cell growing';
+            }
+        }
+    });
+    
+    // Update button states
+    updateButtonStates();
+    
+    // Notify only if something actually grew
+    if (anyGrown) {
+        showNotification('Your crops have grown!', 'info');
+    }
+}
+
+// Process brewing in the shadow market
+function processShadowBrewing() {
+    let anyProgressed = false;
+    
+    shadowGrid.cells.forEach((cell, index) => {
+        const cellElement = document.getElementById(`shadow-cell-${index}`);
+        if (!cellElement) return;
+        
+        // Only process cells that are brewing or distilling
+        if (cell.state === 'brewing' || cell.state === 'distilling') {
+            // Increment stage
+            cell.stage++;
+            anyProgressed = true;
+            
+            // Update stage indicator
+            const indicator = cellElement.querySelector('.growth-indicator');
+            if (indicator) {
+                indicator.textContent = `${cell.stage}/${cell.maxStage}`;
+            }
+            
+            // Check if fully ready
+            if (cell.stage >= cell.maxStage) {
+                cell.state = 'ready';
+                cellElement.className = 'grid-cell ready';
+            } else if (cell.state === 'brewing' && cell.stage >= 1) {
+                cell.state = 'distilling';
+                cellElement.className = 'grid-cell distilling';
+            }
+        }
+    });
+    
+    // Update button states
+    updateButtonStates();
+    
+    // Notify only if something actually progressed
+    if (anyProgressed) {
+        showNotification('Your potions are progressing!', 'info');
+    }
+}
+
+// Update the shadow market state
+function updateShadowMarketState() {
+    // Random market state change
+    const states = ['stable', 'volatile', 'booming'];
+    const newIndex = Math.floor(Math.random() * states.length);
+    const oldState = shadowGrid.marketState;
+    shadowGrid.marketState = states[newIndex];
+    
+    // Update multiplier based on state
+    switch (shadowGrid.marketState) {
+        case 'stable':
+            shadowGrid.multiplier = 1.0;
+            break;
+        case 'volatile':
+            shadowGrid.multiplier = 1.5;
+            break;
+        case 'booming':
+            shadowGrid.multiplier = 2.0;
+            break;
+    }
+    
+    // Update display
+    const cycleDisplay = document.getElementById('market-cycle');
+    if (cycleDisplay) {
+        cycleDisplay.textContent = shadowGrid.marketState;
+    }
+    
+    const multiplierDisplay = document.getElementById('market-multiplier-value');
+    if (multiplierDisplay) {
+        multiplierDisplay.textContent = `x${shadowGrid.multiplier.toFixed(1)}`;
+    }
+    
+    // Notify of change if different from before
+    if (oldState !== shadowGrid.marketState) {
+        showNotification(`Shadow market state changed to ${shadowGrid.marketState.toUpperCase()}!`, 'info');
+    }
+}
+
+// Update resource display for ranch
+function updateRanchResourceDisplay() {
+    const hayDisplay = document.getElementById('hay-earned');
+    const waterDisplay = document.getElementById('water-earned');
+    
+    if (hayDisplay) hayDisplay.textContent = playerData.hay;
+    if (waterDisplay) waterDisplay.textContent = playerData.water;
+}
+
+// Update resource display for shadow market
+function updateShadowResourceDisplay() {
+    const etherDisplay = document.getElementById('ether-earned');
+    const multiplierDisplay = document.getElementById('market-multiplier-value');
+    
+    if (etherDisplay) etherDisplay.textContent = playerData.ether || 0;
+    if (multiplierDisplay) multiplierDisplay.textContent = `x${shadowGrid.multiplier.toFixed(1)}`;
+}
+
 function updateButtonStates() {
     // Breed Cattle button
     const breedButton = document.getElementById('breed-cattle');
@@ -1165,6 +1676,30 @@ function showResult(title, message, type = 'info', autoClose = false) {
             }
         }, 3000);
     }
+}
+
+// Show a win celebration animation
+function showWinCelebration(amount) {
+    const winCelebration = document.getElementById('win-celebration');
+    const winAmount = document.getElementById('win-amount');
+    
+    if (!winCelebration || !winAmount) return;
+    
+    // Set win amount
+    winAmount.textContent = `+${amount.toFixed(2)} $CATTLE`;
+    
+    // Show celebration
+    winCelebration.classList.remove('hidden');
+    
+    // Create confetti effect if function exists
+    if (typeof createConfetti === 'function') {
+        createConfetti();
+    }
+    
+    // Hide after 3 seconds
+    setTimeout(() => {
+        winCelebration.classList.add('hidden');
+    }, 3000);
 }
 
 function addCattleToScene(cattle) {
