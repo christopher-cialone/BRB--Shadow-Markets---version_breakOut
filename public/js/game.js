@@ -77,10 +77,8 @@ const game = new Phaser.Game(config);
 
 // Preload game assets
 function preload() {
-    // Load background images
-    this.load.image('ranch-bg', 'https://i.imgur.com/Rgd25q1.jpg'); // Western ranch background
-    this.load.image('saloon-bg', 'https://i.imgur.com/qSIOjeL.jpg'); // Western saloon background  
-    this.load.image('night-bg', 'https://i.imgur.com/n0fEUjJ.jpg'); // Night market background
+    // Load new shared background image
+    this.load.image('game-bg', 'img/game-background.jpeg'); // Shared background with tinting
     
     // Load sprites
     this.load.image('character', 'https://i.imgur.com/h5Yxbqk.png'); // Character sprite
@@ -96,10 +94,11 @@ function create() {
     this.saloonScene = this.add.container();
     this.nightScene = this.add.container();
     
-    // Set up Ranch scene
-    this.ranchBg = this.add.image(0, 0, 'ranch-bg').setOrigin(0, 0);
+    // Set up Ranch scene with tinted background
+    this.ranchBg = this.add.image(0, 0, 'game-bg').setOrigin(0, 0);
     this.ranchBg.displayWidth = window.innerWidth;
     this.ranchBg.displayHeight = window.innerHeight;
+    this.ranchBg.setTint(0xffeedd); // Warm, daylight tint
     this.ranchScene.add(this.ranchBg);
     
     // Add barn to ranch scene
@@ -112,10 +111,11 @@ function create() {
     this.character.setScale(0.15);
     this.ranchScene.add(this.character);
     
-    // Set up Saloon scene
-    this.saloonBg = this.add.image(0, 0, 'saloon-bg').setOrigin(0, 0);
+    // Set up Saloon scene with tinted background
+    this.saloonBg = this.add.image(0, 0, 'game-bg').setOrigin(0, 0);
     this.saloonBg.displayWidth = window.innerWidth;
     this.saloonBg.displayHeight = window.innerHeight;
+    this.saloonBg.setTint(0xddbb88); // Warm indoor lighting tint
     this.saloonScene.add(this.saloonBg);
     
     // Add character to saloon scene
@@ -123,10 +123,11 @@ function create() {
     this.saloonCharacter.setScale(0.15);
     this.saloonScene.add(this.saloonCharacter);
     
-    // Set up Night scene
-    this.nightBg = this.add.image(0, 0, 'night-bg').setOrigin(0, 0);
+    // Set up Night scene with tinted background
+    this.nightBg = this.add.image(0, 0, 'game-bg').setOrigin(0, 0);
     this.nightBg.displayWidth = window.innerWidth;
     this.nightBg.displayHeight = window.innerHeight;
+    this.nightBg.setTint(0x5566aa); // Cool blue night tint
     this.nightScene.add(this.nightBg);
     
     // Add character to night scene

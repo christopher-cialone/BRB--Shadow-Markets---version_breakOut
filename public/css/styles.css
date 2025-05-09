@@ -30,6 +30,10 @@ body {
     background-color: var(--dark-bg);
     color: var(--light-text);
     overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    margin: 0;
+    padding: 0;
 }
 
 #game-container {
@@ -68,6 +72,8 @@ body {
     display: flex;
     flex-direction: column;
     background-color: rgba(0, 0, 0, 0.7);
+    overflow-y: auto;
+    overscroll-behavior: contain; /* Prevents scroll chaining */
 }
 
 .hidden {
@@ -1132,6 +1138,8 @@ body {
     border-radius: 10px;
     margin-bottom: 20px;
     border: 1px solid var(--ui-border);
+    max-height: calc(100vh - 250px);
+    overflow-y: auto;
 }
 
 .pasture-info, .market-info {
