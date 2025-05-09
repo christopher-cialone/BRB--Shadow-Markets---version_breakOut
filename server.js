@@ -343,23 +343,59 @@ io.on('connection', (socket) => {
   
   // Handle player starting a new race
   socket.on('start-race', (data) => {
+    console.log('Start race event received with data:', data);
+    
     const player = gameState.players[socket.id];
     
-    if (!player) return;
+    if (!player) {
+      console.error('Player not found for socket ID:', socket.id);
+      return;
+    }
     
-    // Get bets from data
-    const bets = {
-      'hearts': parseInt(data.hearts) || 0,
-      'diamonds': parseInt(data.diamonds) || 0,
-      'clubs': parseInt(data.clubs) || 0,
-      'spades': parseInt(data.spades) || 0
-    };
+    // Get bets from data - handle both object formats
+    let bets = {};
+    
+    // Check if we received the expected format from the client
+    if (typeof data === 'object') {
+      if (data.hearts !== undefined) {
+        // Format: {hearts: 10, diamonds: 5, ...}
+        bets = {
+          'hearts': parseInt(data.hearts) || 0,
+          'diamonds': parseInt(data.diamonds) || 0,
+          'clubs': parseInt(data.clubs) || 0,
+          'spades': parseInt(data.spades) || 0
+        };
+      } else {
+        // Format from client might be {hearts: 10, diamonds: 5, ...}
+        bets = {
+          'hearts': 0,
+          'diamonds': 0,
+          'clubs': 0,
+          'spades': 0
+        };
+        
+        // Try to extract values from the data object
+        try {
+          Object.keys(data).forEach(key => {
+            if (['hearts', 'diamonds', 'clubs', 'spades'].includes(key)) {
+              bets[key] = parseInt(data[key]) || 0;
+            }
+          });
+        } catch (err) {
+          console.error('Error parsing bet data:', err);
+        }
+      }
+    }
+    
+    console.log('Parsed bets:', bets);
     
     // Calculate total bet
     const totalBet = bets.hearts + bets.diamonds + bets.clubs + bets.spades;
+    console.log('Total bet amount:', totalBet);
     
     // Validate bets
     if (totalBet <= 0) {
+      console.log('Invalid bet: Zero or negative total bet');
       socket.emit('error-message', { 
         message: 'You must place at least one bet to start the race!'
       });
@@ -367,6 +403,7 @@ io.on('connection', (socket) => {
     }
     
     if (totalBet > player.cattleBalance) {
+      console.log(`Insufficient balance: Bet ${totalBet}, Balance ${player.cattleBalance}`);
       socket.emit('error-message', { 
         message: 'Not enough $CATTLE for your total bet!'
       });
@@ -379,9 +416,11 @@ io.on('connection', (socket) => {
     
     // Set bets
     game.bets = bets;
+    console.log('Game bets set:', game.bets);
     
     // Deduct total bet from balance
     player.cattleBalance -= totalBet;
+    console.log(`Player balance updated: ${player.cattleBalance}`);
     
     // Calculate burn amount (10%)
     const burnAmount = totalBet * 0.1;
@@ -403,17 +442,40 @@ io.on('connection', (socket) => {
       burnAmount: burnAmount,
       player: player
     });
+    console.log('Race started event emitted');
   });
   
   // Handle player drawing a card
   socket.on('draw-card', () => {
+    console.log('Draw card event received');
+    
     const player = gameState.players[socket.id];
     const game = raceGames[socket.id];
     
-    if (!player || !game || game.status !== 'racing') return;
+    if (!player) {
+      console.error('Player not found for socket ID:', socket.id);
+      return;
+    }
+    
+    if (!game) {
+      console.error('Game not found for socket ID:', socket.id);
+      socket.emit('error-message', { 
+        message: 'No active race. Please start a new race first!'
+      });
+      return;
+    }
+    
+    if (game.status !== 'racing') {
+      console.error('Game not in racing state. Current state:', game.status);
+      socket.emit('error-message', { 
+        message: 'Race not active. Please start a new race first!'
+      });
+      return;
+    }
     
     // Check if there are cards left in the deck
     if (game.deck.length === 0) {
+      console.log('No cards left in the deck');
       socket.emit('error-message', { 
         message: 'No cards left in the deck!'
       });
@@ -423,12 +485,14 @@ io.on('connection', (socket) => {
     // Draw a card
     const card = game.deck.pop();
     const suitName = getSuitName(card.suit);
+    console.log('Card drawn:', card, 'Suit name:', suitName);
     
     // Update remaining cards count
     game.remainingCards[suitName]--;
     
     // Update progress for the corresponding suit
     game.progress[suitName] += 10; // Each card advances the horse by 10%
+    console.log(`Progress updated for ${suitName}: ${game.progress[suitName]}%`);
     
     // Check if any horse finished the race
     let winner = null;
@@ -437,6 +501,7 @@ io.on('connection', (socket) => {
         winner = suit;
         game.status = 'finished';
         game.winner = winner;
+        console.log(`Winner found: ${winner}`);
         break;
       }
     }
@@ -455,22 +520,28 @@ io.on('connection', (socket) => {
       remainingCards: game.remainingCards,
       odds: odds
     });
+    console.log('Card drawn event emitted');
     
     // If race is finished, calculate winnings and update history
     if (game.status === 'finished') {
+      console.log('Race finished, calculating results');
+      
       // Calculate winnings
       const bet = game.bets[winner];
       const winningsMultiplier = odds[winner];
       const winnings = bet * winningsMultiplier;
       
+      console.log(`Bet on winner: ${bet}, Multiplier: ${winningsMultiplier}, Winnings: ${winnings}`);
+      
       // Add winnings to player balance if they bet on the winner
       if (bet > 0) {
         player.cattleBalance += winnings;
+        console.log(`Player won ${winnings} $CATTLE, new balance: ${player.cattleBalance}`);
         
         // Update player statistics
         if (player.stats) {
-          player.stats.racesWon++;
-          player.stats.totalEarned += winnings;
+          player.stats.racesWon = (player.stats.racesWon || 0) + 1;
+          player.stats.totalEarned = (player.stats.totalEarned || 0) + winnings;
         }
         
         // Send race finished event with win
@@ -483,9 +554,11 @@ io.on('connection', (socket) => {
           player: player
         });
       } else {
+        console.log('Player did not bet on winner');
+        
         // Update player statistics for loss
         if (player.stats) {
-          player.stats.racesLost++;
+          player.stats.racesLost = (player.stats.racesLost || 0) + 1;
         }
         
         // Send race finished event with loss
@@ -513,6 +586,7 @@ io.on('connection', (socket) => {
       
       // Reset game status to betting for next race
       game.status = 'betting';
+      console.log('Race finished event emitted, status reset to betting');
     }
   });
   
