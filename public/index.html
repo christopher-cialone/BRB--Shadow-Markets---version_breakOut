@@ -91,6 +91,10 @@
                         <span class="icon">🌙</span>
                         <span class="label">Enter Ether Range</span>
                     </button>
+                    <button id="go-to-profile-from-ranch" class="action-button">
+                        <span class="icon">👤</span>
+                        <span class="label">Character Profile</span>
+                    </button>
                 </div>
             </div>
             
@@ -245,10 +249,127 @@
                         </div>
                     </div>
                     
-                    <button id="back-to-ranch" class="secondary-button">
-                        <span class="icon">🏠</span>
-                        <span class="label">Back to Ranch</span>
-                    </button>
+                    <div class="navigation-menu">
+                        <h4>Navigation</h4>
+                        <div class="nav-buttons">
+                            <button id="back-to-ranch" class="secondary-button">
+                                <span class="icon">🏠</span>
+                                <span class="label">Ranch</span>
+                            </button>
+                            <button id="go-to-night-from-saloon" class="secondary-button">
+                                <span class="icon">🌙</span>
+                                <span class="label">Ether Range</span>
+                            </button>
+                            <button id="go-to-profile" class="secondary-button">
+                                <span class="icon">👤</span>
+                                <span class="label">Profile</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Profile UI -->
+        <div id="profile-ui" class="screen hidden">
+            <div class="header">
+                <div class="time-indicator day">
+                    <div class="icon">👤</div>
+                    <div class="label">Character Profile</div>
+                </div>
+                <div class="resources">
+                    <div class="resource">
+                        <span class="resource-label">$CATTLE:</span>
+                        <span class="resource-value" id="profile-cattle-balance">100</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="profile-layout">
+                <div class="character-panel">
+                    <h3>Your Character</h3>
+                    <div class="character-customization">
+                        <div class="character-preview">
+                            <div class="current-character">
+                                <img id="character-image" src="img/characters/the-kid.jpeg" alt="Character">
+                            </div>
+                        </div>
+                        
+                        <div class="character-info">
+                            <div class="input-group">
+                                <label for="character-name">Character Name:</label>
+                                <input type="text" id="character-name" value="Cowboy">
+                            </div>
+                            
+                            <div class="character-selection">
+                                <h4>Choose Character Type:</h4>
+                                <div class="character-options">
+                                    <div class="character-option selected" data-character="the-kid">
+                                        <img src="img/characters/the-kid.jpeg" alt="The Kid" class="character-thumbnail">
+                                        <div class="character-name">The Kid</div>
+                                    </div>
+                                    <div class="character-option" data-character="the-hacker">
+                                        <img src="img/characters/the-hacker.jpeg" alt="The Hacker" class="character-thumbnail">
+                                        <div class="character-name">The Hacker</div>
+                                    </div>
+                                    <div class="character-option" data-character="the-scientist">
+                                        <img src="img/characters/the-scientist.jpg" alt="The Scientist" class="character-thumbnail">
+                                        <div class="character-name">The Scientist</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button id="save-profile" class="primary-button">Save Changes</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stats-panel">
+                    <h3>Player Statistics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">Races Won</div>
+                            <div class="stat-value" id="races-won">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Races Lost</div>
+                            <div class="stat-value" id="races-lost">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Cattle Bred</div>
+                            <div class="stat-value" id="cattle-bred">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Potions Crafted</div>
+                            <div class="stat-value" id="potions-crafted">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Total $CATTLE Earned</div>
+                            <div class="stat-value" id="total-earned">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Total $CATTLE Burned</div>
+                            <div class="stat-value" id="total-burned">0</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="navigation-menu">
+                    <h4>Navigation</h4>
+                    <div class="nav-buttons">
+                        <button id="back-to-ranch-from-profile" class="secondary-button">
+                            <span class="icon">🏠</span>
+                            <span class="label">Ranch</span>
+                        </button>
+                        <button id="go-to-saloon-from-profile" class="secondary-button">
+                            <span class="icon">🎰</span>
+                            <span class="label">Saloon</span>
+                        </button>
+                        <button id="go-to-night-from-profile" class="secondary-button">
+                            <span class="icon">🌙</span>
+                            <span class="label">Ether Range</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -291,10 +412,23 @@
                     </div>
                 </div>
                 
-                <button id="back-to-ranch-night" class="secondary-button">
-                    <span class="icon">🏠</span>
-                    <span class="label">Back to Ranch</span>
-                </button>
+                <div class="navigation-menu">
+                    <h4>Navigation</h4>
+                    <div class="nav-buttons">
+                        <button id="back-to-ranch-night" class="secondary-button">
+                            <span class="icon">🏠</span>
+                            <span class="label">Ranch</span>
+                        </button>
+                        <button id="go-to-saloon-from-night" class="secondary-button">
+                            <span class="icon">🎰</span>
+                            <span class="label">Saloon</span>
+                        </button>
+                        <button id="go-to-profile-from-night" class="secondary-button">
+                            <span class="icon">👤</span>
+                            <span class="label">Profile</span>
+                        </button>
+                    </div>
+                </div>
             </div>
             
             <div class="inventory-panel">
