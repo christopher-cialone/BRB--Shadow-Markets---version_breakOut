@@ -182,7 +182,27 @@ Phaser.Scene.prototype.resize = function() {
 
 // Initialize UI event listeners
 document.addEventListener('DOMContentLoaded', () => {
-    // Main Menu Events
+    console.log("DOM Content Loaded - Setting up event listeners");
+    
+    // Helper function to safely add click event listeners
+    function addClickListener(elementId, callback) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            // Remove any existing event listeners to prevent duplicates
+            const newElement = element.cloneNode(true);
+            element.parentNode.replaceChild(newElement, element);
+            
+            // Add the new event listener
+            newElement.addEventListener('click', callback);
+            console.log(`Added click listener to ${elementId}`);
+            return true;
+        } else {
+            console.error(`Element not found: ${elementId}`);
+            return false;
+        }
+    }
+    
+    // MAIN MENU EVENTS
     document.querySelectorAll('.archetype-card').forEach(card => {
         card.addEventListener('click', () => {
             // Deselect all cards
@@ -199,9 +219,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // Start Game button
-    document.getElementById('start-game').addEventListener('click', () => {
+    addClickListener('start-game', () => {
         // Get player name
-        playerData.name = document.getElementById('player-name').value || 'Cowboy';
+        const playerNameInput = document.getElementById('player-name');
+        playerData.name = playerNameInput ? (playerNameInput.value || 'Cowboy') : 'Cowboy';
         
         // Connect to server
         socket.emit('new-player', {
@@ -213,74 +234,85 @@ document.addEventListener('DOMContentLoaded', () => {
         switchScene('ranch');
     });
     
-    // Ranch UI Events
-    document.getElementById('breed-cattle').addEventListener('click', () => {
+    // RANCH UI EVENTS
+    addClickListener('breed-cattle', () => {
         socket.emit('breed-cattle');
     });
     
-    document.getElementById('upgrade-barn').addEventListener('click', () => {
+    addClickListener('upgrade-barn', () => {
         socket.emit('upgrade-barn');
     });
     
-    document.getElementById('go-to-saloon').addEventListener('click', () => {
+    addClickListener('go-to-saloon', () => {
+        console.log("Clicked go to saloon button");
         switchScene('saloon');
     });
     
-    document.getElementById('go-to-night').addEventListener('click', () => {
+    addClickListener('go-to-night', () => {
+        console.log("Clicked go to night button");
         switchScene('night');
     });
     
-    document.getElementById('go-to-profile-from-ranch').addEventListener('click', () => {
+    addClickListener('go-to-profile-from-ranch', () => {
+        console.log("Clicked go to profile from ranch button");
         switchScene('profile');
     });
     
-    // Saloon UI Events
+    // SALOON UI EVENTS
     const wagerSlider = document.getElementById('wager-slider');
     const wagerDisplay = document.getElementById('wager-amount');
-    const burnAmountDisplay = document.getElementById('burn-amount');
     
-    wagerSlider.addEventListener('input', () => {
-        wagerAmount = parseInt(wagerSlider.value);
-        wagerDisplay.textContent = wagerAmount;
-        
-        // Update burn amount (10%)
-        const burnAmount = Math.round(wagerAmount * 0.1 * 10) / 10;
-        burnAmountDisplay.textContent = burnAmount;
-    });
+    if (wagerSlider && wagerDisplay) {
+        wagerSlider.addEventListener('input', () => {
+            wagerAmount = parseInt(wagerSlider.value);
+            wagerDisplay.textContent = wagerAmount;
+            
+            // Update burn amount (10%)
+            const burnAmount = Math.round(wagerAmount * 0.1 * 10) / 10;
+            const burnAmountDisplay = document.getElementById('burn-amount');
+            if (burnAmountDisplay) {
+                burnAmountDisplay.textContent = burnAmount;
+            }
+        });
+    }
     
-    // All event listeners for horse race game are now handled in the initSaloonScene() function
-    // This prevents duplicate event listeners and ensures everything is properly initialized
-    
-    document.getElementById('back-to-ranch').addEventListener('click', () => {
+    // Saloon navigation buttons
+    addClickListener('back-to-ranch', () => {
+        console.log("Clicked back to ranch button");
         switchScene('ranch');
     });
     
-    document.getElementById('go-to-night-from-saloon').addEventListener('click', () => {
+    addClickListener('go-to-night-from-saloon', () => {
+        console.log("Clicked go to night from saloon button");
         switchScene('night');
     });
     
-    document.getElementById('go-to-profile').addEventListener('click', () => {
+    addClickListener('go-to-profile', () => {
+        console.log("Clicked go to profile button");
         switchScene('profile');
     });
     
-    // Night UI Events
-    document.getElementById('craft-potion').addEventListener('click', () => {
+    // NIGHT UI EVENTS
+    addClickListener('craft-potion', () => {
         socket.emit('craft-potion');
     });
     
-    document.getElementById('back-to-ranch-night').addEventListener('click', () => {
+    addClickListener('back-to-ranch-night', () => {
+        console.log("Clicked back to ranch from night button");
         switchScene('ranch');
     });
     
-    document.getElementById('go-to-saloon-from-night').addEventListener('click', () => {
+    addClickListener('go-to-saloon-from-night', () => {
+        console.log("Clicked go to saloon from night button");
         switchScene('saloon');
     });
     
-    document.getElementById('go-to-profile-from-night').addEventListener('click', () => {
+    addClickListener('go-to-profile-from-night', () => {
+        console.log("Clicked go to profile from night button");
         switchScene('profile');
     });
     
-    // Profile UI Events
+    // PROFILE UI EVENTS
     document.querySelectorAll('.character-option').forEach(option => {
         option.addEventListener('click', () => {
             // Deselect all options
@@ -296,16 +328,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const imgPath = characterType === 'the-scientist' ? 
                 'img/characters/the-scientist.jpg' : 
                 `img/characters/${characterType}.jpeg`;
-            document.getElementById('character-image').src = imgPath;
+            const characterImage = document.getElementById('character-image');
+            if (characterImage) {
+                characterImage.src = imgPath;
+            }
             
             // Update player data
             playerData.characterType = characterType;
         });
     });
     
-    document.getElementById('save-profile').addEventListener('click', () => {
+    addClickListener('save-profile', () => {
         // Update player name
-        playerData.name = document.getElementById('character-name').value || 'Cowboy';
+        const characterNameInput = document.getElementById('character-name');
+        playerData.name = characterNameInput ? (characterNameInput.value || 'Cowboy') : 'Cowboy';
         
         // Show notification
         showNotification('Profile updated successfully!', 'success');
@@ -317,27 +353,34 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     
-    document.getElementById('back-to-ranch-from-profile').addEventListener('click', () => {
+    addClickListener('back-to-ranch-from-profile', () => {
+        console.log("Clicked back to ranch from profile button");
         switchScene('ranch');
     });
     
-    document.getElementById('go-to-saloon-from-profile').addEventListener('click', () => {
+    addClickListener('go-to-saloon-from-profile', () => {
+        console.log("Clicked go to saloon from profile button");
         switchScene('saloon');
     });
     
-    document.getElementById('go-to-night-from-profile').addEventListener('click', () => {
+    addClickListener('go-to-night-from-profile', () => {
+        console.log("Clicked go to night from profile button");
         switchScene('night');
     });
     
-    // Modal Events
-    document.getElementById('close-result').addEventListener('click', () => {
-        resultModal.classList.add('hidden');
-        
-        // If in the saloon, reset for a new race
-        if (currentScene === 'saloon') {
-            initSaloonScene();
+    // MODAL EVENTS
+    addClickListener('close-result', () => {
+        if (resultModal) {
+            resultModal.classList.add('hidden');
+            
+            // If in the saloon, reset for a new race
+            if (currentScene === 'saloon') {
+                initSaloonScene();
+            }
         }
     });
+    
+    console.log("Finished setting up all event listeners");
 });
 
 // Socket event handlers
