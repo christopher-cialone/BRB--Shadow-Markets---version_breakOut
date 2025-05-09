@@ -637,18 +637,37 @@ socket.on('bonus-claimed', data => {
 });
 
 socket.on('race-started', data => {
+    console.log('Race started event received:', data);
+    
     // Update player data
     playerData = data.player;
     
     // Enable draw card button
-    document.getElementById('draw-card').disabled = false;
+    const drawCardButton = document.getElementById('draw-card');
+    if (drawCardButton) {
+        drawCardButton.disabled = false;
+        console.log('Draw card button enabled');
+    } else {
+        console.error('Draw card button not found');
+    }
     
     // Disable start race button
-    document.getElementById('start-race').disabled = true;
+    const startRaceButton = document.getElementById('start-race');
+    if (startRaceButton) {
+        startRaceButton.disabled = true;
+        console.log('Start race button disabled');
+    } else {
+        console.error('Start race button not found');
+    }
     
     // Update odds display
     for (const suit in data.odds) {
-        document.getElementById(`odds-${suit}`).textContent = data.odds[suit].toFixed(1);
+        const oddsElement = document.getElementById(`odds-${suit}`);
+        if (oddsElement) {
+            oddsElement.textContent = data.odds[suit].toFixed(1);
+        } else {
+            console.error(`Odds element for ${suit} not found`);
+        }
     }
     
     // Show notification
@@ -659,64 +678,113 @@ socket.on('race-started', data => {
 });
 
 socket.on('card-drawn', data => {
+    console.log('Card drawn event received:', data);
+    
     // Get the card and progress data
     const card = data.card;
     const progress = data.progress;
     
     // Create and display the card
     const drawnCardContainer = document.getElementById('drawn-card');
-    drawnCardContainer.innerHTML = '';
-    
-    const cardElement = createCardElement(card);
-    drawnCardContainer.appendChild(cardElement);
+    if (drawnCardContainer) {
+        drawnCardContainer.innerHTML = '';
+        
+        const cardElement = createCardElement(card);
+        drawnCardContainer.appendChild(cardElement);
+        console.log('Card displayed:', card);
+    } else {
+        console.error('Drawn card container not found');
+    }
     
     // Update progress bars
     for (const suit in progress) {
-        document.getElementById(`${suit}-progress`).style.width = `${progress[suit]}%`;
+        const progressBar = document.getElementById(`${suit}-progress`);
+        if (progressBar) {
+            progressBar.style.width = `${progress[suit]}%`;
+            console.log(`${suit} progress updated to ${progress[suit]}%`);
+        } else {
+            console.error(`Progress bar for ${suit} not found`);
+        }
     }
     
-    // Update odds
-    for (const suit in data.odds) {
-        document.getElementById(`odds-${suit}`).textContent = data.odds[suit].toFixed(1);
+    // Update odds if available
+    if (data.odds) {
+        for (const suit in data.odds) {
+            const oddsElement = document.getElementById(`odds-${suit}`);
+            if (oddsElement) {
+                oddsElement.textContent = data.odds[suit].toFixed(1);
+            } else {
+                console.error(`Odds element for ${suit} not found`);
+            }
+        }
     }
 });
 
 socket.on('race-finished', data => {
+    console.log('Race finished event received:', data);
+    
     // Update player data
     playerData = data.player;
     
     // Disable draw card button
-    document.getElementById('draw-card').disabled = true;
+    const drawCardButton = document.getElementById('draw-card');
+    if (drawCardButton) {
+        drawCardButton.disabled = true;
+        console.log('Draw card button disabled');
+    } else {
+        console.error('Draw card button not found in race-finished handler');
+    }
     
     // Enable start race button
-    document.getElementById('start-race').disabled = false;
+    const startRaceButton = document.getElementById('start-race');
+    if (startRaceButton) {
+        startRaceButton.disabled = false;
+        console.log('Start race button enabled');
+    } else {
+        console.error('Start race button not found in race-finished handler');
+    }
     
     // Add to history
     const historyContainer = document.getElementById('results-history');
-    const historyItem = document.createElement('div');
-    historyItem.className = `history-item ${data.winner} ${data.bet > 0 ? 'win' : 'loss'}`;
-    historyItem.textContent = data.winner.charAt(0).toUpperCase();
-    historyContainer.appendChild(historyItem);
+    if (historyContainer) {
+        const historyItem = document.createElement('div');
+        historyItem.className = `history-item ${data.winner} ${data.bet > 0 ? 'win' : 'loss'}`;
+        historyItem.textContent = data.winner.charAt(0).toUpperCase();
+        historyContainer.appendChild(historyItem);
+        console.log('Added history item for race result:', data.winner);
+    } else {
+        console.error('History container not found');
+    }
     
     // Celebration effect for winners
     if (data.bet > 0) {
+        console.log('Player won! Showing celebration for winning bet:', data.bet);
         // Create confetti animation
-        createConfetti();
+        try {
+            createConfetti();
+        } catch (err) {
+            console.error('Error creating confetti:', err);
+        }
         
         // Show celebration overlay
         const celebration = document.getElementById('win-celebration');
         const winAmount = document.getElementById('win-amount');
-        winAmount.textContent = `+${data.bet.toFixed(2)} $CATTLE`;
-        celebration.classList.remove('hidden');
-        
-        // Hide celebration after 3.5 seconds
-        setTimeout(() => {
-            celebration.classList.add('hidden');
-        }, 3500);
+        if (celebration && winAmount) {
+            winAmount.textContent = `+${data.bet.toFixed(2)} $CATTLE`;
+            celebration.classList.remove('hidden');
+            
+            // Hide celebration after 3.5 seconds
+            setTimeout(() => {
+                celebration.classList.add('hidden');
+            }, 3500);
+        } else {
+            console.error('Celebration elements not found');
+        }
         
         // Display result with auto-close
         showResult('Winner!', `${data.message}`, 'success', true);
     } else {
+        console.log('Player did not win. Showing regular result message');
         // Display result with auto-close
         showResult('Race Finished', `${data.message}`, 'error', true);
     }
@@ -725,6 +793,7 @@ socket.on('race-finished', data => {
     updateUI();
     
     // Prepare for next race automatically after 4 seconds
+    console.log('Scheduling saloon scene reset in 4 seconds');
     setTimeout(() => {
         // Reset the race UI
         initSaloonScene();
@@ -806,6 +875,8 @@ function switchScene(scene) {
 
 // Initialize the saloon scene when it becomes visible
 function initSaloonScene() {
+    console.log('Initializing saloon scene');
+    
     // Safely get elements with null checks
     const elements = {
         drawnCard: document.getElementById('drawn-card'),
@@ -828,14 +899,6 @@ function initSaloonScene() {
         spades: document.getElementById('bet-spades')
     };
     
-    // Skip initialization if we're not in the saloon
-    if (currentScene !== 'saloon') {
-        console.log('Not initializing saloon scene - not in saloon');
-        return;
-    }
-    
-    console.log('Initializing saloon scene');
-    
     // Clear drawn card
     if (elements.drawnCard) {
         elements.drawnCard.innerHTML = '<div class="card-placeholder">Draw a card to advance a horse</div>';
@@ -853,8 +916,9 @@ function initSaloonScene() {
             input.value = 0;
             
             // Add event listener but first remove any existing ones to avoid duplicates
-            input.removeEventListener('input', updateTotalBet);
-            input.addEventListener('input', updateTotalBet);
+            const newInput = input.cloneNode(true);
+            input.parentNode.replaceChild(newInput, input);
+            newInput.addEventListener('input', updateTotalBet);
         }
     });
     
@@ -862,89 +926,97 @@ function initSaloonScene() {
     if (elements.totalBetAmount) elements.totalBetAmount.textContent = '0';
     if (elements.burnAmount) elements.burnAmount.textContent = '0';
     
-    // Initialize button states
+    // Initialize button states and confirm buttons exist
     if (elements.startRaceButton) {
         elements.startRaceButton.disabled = false;
         
         // Remove any existing event listeners to avoid duplicates
-        elements.startRaceButton.replaceWith(elements.startRaceButton.cloneNode(true));
+        const newStartRaceButton = elements.startRaceButton.cloneNode(true);
+        elements.startRaceButton.parentNode.replaceChild(newStartRaceButton, elements.startRaceButton);
         
-        // Re-get the button after replacing it
-        const newStartRaceButton = document.getElementById('start-race');
-        if (newStartRaceButton) {
-            newStartRaceButton.addEventListener('click', () => {
-                // Get bets from inputs with null checks
-                const bets = {
-                    hearts: betInputs.hearts ? (parseInt(betInputs.hearts.value) || 0) : 0,
-                    diamonds: betInputs.diamonds ? (parseInt(betInputs.diamonds.value) || 0) : 0,
-                    clubs: betInputs.clubs ? (parseInt(betInputs.clubs.value) || 0) : 0,
-                    spades: betInputs.spades ? (parseInt(betInputs.spades.value) || 0) : 0
-                };
-                
-                // Calculate total bet
-                const totalBet = bets.hearts + bets.diamonds + bets.clubs + bets.spades;
-                
-                if (totalBet <= 0) {
-                    showNotification('Please place at least one bet to start the race!', 'error');
-                    return;
-                }
-                
-                if (totalBet > playerData.cattleBalance) {
-                    showNotification('Not enough $CATTLE for your total bet!', 'error');
-                    return;
-                }
-                
-                // Clear drawn card with null check
-                const drawnCard = document.getElementById('drawn-card');
-                if (drawnCard) {
-                    drawnCard.innerHTML = '<div class="card-placeholder">Race starting...</div>';
-                }
-                
-                // Reset progress bars with null checks
-                const progressBars = {
-                    hearts: document.getElementById('hearts-progress'),
-                    diamonds: document.getElementById('diamonds-progress'),
-                    clubs: document.getElementById('clubs-progress'),
-                    spades: document.getElementById('spades-progress')
-                };
-                
-                if (progressBars.hearts) progressBars.hearts.style.width = '0%';
-                if (progressBars.diamonds) progressBars.diamonds.style.width = '0%';
-                if (progressBars.clubs) progressBars.clubs.style.width = '0%';
-                if (progressBars.spades) progressBars.spades.style.width = '0%';
-                
-                // Start the race
-                socket.emit('start-race', bets);
-            });
-        }
+        // Attach event listener to the new button
+        newStartRaceButton.addEventListener('click', function() {
+            console.log("Start race button clicked");
+            // Re-get bet inputs to ensure we have the latest values
+            const currentBetInputs = {
+                hearts: document.getElementById('bet-hearts'),
+                diamonds: document.getElementById('bet-diamonds'),
+                clubs: document.getElementById('bet-clubs'),
+                spades: document.getElementById('bet-spades')
+            };
+            
+            // Get bets from inputs with null checks
+            const bets = {
+                hearts: currentBetInputs.hearts ? (parseInt(currentBetInputs.hearts.value) || 0) : 0,
+                diamonds: currentBetInputs.diamonds ? (parseInt(currentBetInputs.diamonds.value) || 0) : 0,
+                clubs: currentBetInputs.clubs ? (parseInt(currentBetInputs.clubs.value) || 0) : 0,
+                spades: currentBetInputs.spades ? (parseInt(currentBetInputs.spades.value) || 0) : 0
+            };
+            
+            console.log("Bets:", bets);
+            
+            // Calculate total bet
+            const totalBet = bets.hearts + bets.diamonds + bets.clubs + bets.spades;
+            console.log("Total bet:", totalBet);
+            
+            if (totalBet <= 0) {
+                showNotification('Please place at least one bet to start the race!', 'error');
+                return;
+            }
+            
+            if (totalBet > playerData.cattleBalance) {
+                showNotification('Not enough $CATTLE for your total bet!', 'error');
+                return;
+            }
+            
+            // Clear drawn card with null check
+            const drawnCard = document.getElementById('drawn-card');
+            if (drawnCard) {
+                drawnCard.innerHTML = '<div class="card-placeholder">Race starting...</div>';
+            }
+            
+            // Reset progress bars with null checks
+            const progressBars = {
+                hearts: document.getElementById('hearts-progress'),
+                diamonds: document.getElementById('diamonds-progress'),
+                clubs: document.getElementById('clubs-progress'),
+                spades: document.getElementById('spades-progress')
+            };
+            
+            if (progressBars.hearts) progressBars.hearts.style.width = '0%';
+            if (progressBars.diamonds) progressBars.diamonds.style.width = '0%';
+            if (progressBars.clubs) progressBars.clubs.style.width = '0%';
+            if (progressBars.spades) progressBars.spades.style.width = '0%';
+            
+            // Start the race
+            socket.emit('start-race', bets);
+        });
     }
     
     if (elements.drawCardButton) {
         elements.drawCardButton.disabled = true;
         
         // Remove any existing event listeners to avoid duplicates
-        elements.drawCardButton.replaceWith(elements.drawCardButton.cloneNode(true));
+        const newDrawCardButton = elements.drawCardButton.cloneNode(true);
+        elements.drawCardButton.parentNode.replaceChild(newDrawCardButton, elements.drawCardButton);
         
-        // Re-get the button after replacing it
-        const newDrawCardButton = document.getElementById('draw-card');
-        if (newDrawCardButton) {
-            newDrawCardButton.addEventListener('click', () => {
-                socket.emit('draw-card');
-            });
-        }
+        // Attach event listener to the new button
+        newDrawCardButton.addEventListener('click', function() {
+            console.log("Draw card button clicked");
+            socket.emit('draw-card');
+        });
     }
     
     if (elements.claimBonusButton) {
         // Remove any existing event listeners to avoid duplicates
-        elements.claimBonusButton.replaceWith(elements.claimBonusButton.cloneNode(true));
+        const newClaimBonusButton = elements.claimBonusButton.cloneNode(true);
+        elements.claimBonusButton.parentNode.replaceChild(newClaimBonusButton, elements.claimBonusButton);
         
-        // Re-get the button after replacing it
-        const newClaimBonusButton = document.getElementById('claim-bonus');
-        if (newClaimBonusButton) {
-            newClaimBonusButton.addEventListener('click', () => {
-                socket.emit('claim-bonus');
-            });
-        }
+        // Attach event listener to the new button
+        newClaimBonusButton.addEventListener('click', function() {
+            console.log("Claim bonus button clicked");
+            socket.emit('claim-bonus');
+        });
     }
 }
 
@@ -1864,6 +1936,14 @@ function updateTotalBet() {
         spades: document.getElementById('bet-spades')
     };
     
+    // Log inputs for debugging
+    console.log("Bet inputs found:", {
+        hearts: !!betInputs.hearts,
+        diamonds: !!betInputs.diamonds,
+        clubs: !!betInputs.clubs,
+        spades: !!betInputs.spades
+    });
+    
     const betValues = {
         hearts: betInputs.hearts ? (parseInt(betInputs.hearts.value) || 0) : 0,
         diamonds: betInputs.diamonds ? (parseInt(betInputs.diamonds.value) || 0) : 0,
@@ -1871,23 +1951,35 @@ function updateTotalBet() {
         spades: betInputs.spades ? (parseInt(betInputs.spades.value) || 0) : 0
     };
     
+    // Log the parsed values
+    console.log("Bet values:", betValues);
+    
     total = betValues.hearts + betValues.diamonds + betValues.clubs + betValues.spades;
+    console.log("Total bet:", total);
     
     // Update total bet display with null checks
     const totalBetEl = document.getElementById('total-bet-amount');
     if (totalBetEl) {
         totalBetEl.textContent = total;
+    } else {
+        console.error("Total bet element not found");
     }
     
     const burnAmountEl = document.getElementById('burn-amount');
     if (burnAmountEl) {
         burnAmountEl.textContent = (total * 0.1).toFixed(1);
+    } else {
+        console.error("Burn amount element not found");
     }
     
     // Update Start Race button state
     const startRaceButton = document.getElementById('start-race');
     if (startRaceButton) {
-        startRaceButton.disabled = total <= 0 || total > playerData.cattleBalance;
+        const isDisabled = total <= 0 || total > playerData.cattleBalance;
+        startRaceButton.disabled = isDisabled;
+        console.log("Start race button state updated. Disabled:", isDisabled);
+    } else {
+        console.error("Start race button not found");
     }
 }
 
