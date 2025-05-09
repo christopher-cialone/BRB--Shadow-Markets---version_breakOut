@@ -2258,6 +2258,7 @@ body {
     margin: 20px auto;
     width: 100%;
     position: relative;
+    padding-bottom: 20px; /* Extra padding at bottom to prevent overlap */
 }
 
 .track {
@@ -2275,6 +2276,7 @@ body {
     align-items: center;
     margin-right: 15px;
     font-size: 24px;
+    z-index: 5; /* Ensure suit icons are always visible */
 }
 
 .suit-icon {
@@ -2307,10 +2309,12 @@ body {
     justify-content: space-between;
     align-items: center;
     margin: 20px 0;
-    padding: 15px;
+    padding: 25px 20px; /* Increased padding */
     background-color: rgba(20, 10, 40, 0.3);
     border-radius: 10px;
     border: 1px solid var(--ui-border);
+    position: relative; /* Required for absolute positioning of children */
+    overflow: visible; /* Allow contents to overflow */
 }
 
 .drawn-card {
