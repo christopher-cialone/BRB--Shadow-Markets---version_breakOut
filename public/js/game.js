@@ -1945,28 +1945,16 @@ function addPotionEffect() {
 function updateTotalBet() {
     let total = 0;
     
-    // Get bet inputs with null checks
-    const betInputs = {
-        hearts: document.getElementById('bet-hearts'),
-        diamonds: document.getElementById('bet-diamonds'),
-        clubs: document.getElementById('bet-clubs'),
-        spades: document.getElementById('bet-spades')
-    };
-    
-    // Log inputs for debugging
-    console.log("Bet inputs found:", {
-        hearts: !!betInputs.hearts,
-        diamonds: !!betInputs.diamonds,
-        clubs: !!betInputs.clubs,
-        spades: !!betInputs.spades
-    });
-    
+    // Get bet values from display spans
     const betValues = {
-        hearts: betInputs.hearts ? (parseInt(betInputs.hearts.value) || 0) : 0,
-        diamonds: betInputs.diamonds ? (parseInt(betInputs.diamonds.value) || 0) : 0,
-        clubs: betInputs.clubs ? (parseInt(betInputs.clubs.value) || 0) : 0,
-        spades: betInputs.spades ? (parseInt(betInputs.spades.value) || 0) : 0
+        hearts: parseInt(document.getElementById('hearts-bet-display').textContent) || 0,
+        diamonds: parseInt(document.getElementById('diamonds-bet-display').textContent) || 0,
+        clubs: parseInt(document.getElementById('clubs-bet-display').textContent) || 0,
+        spades: parseInt(document.getElementById('spades-bet-display').textContent) || 0
     };
+    
+    // Log values for debugging
+    console.log("Bet values:", betValues);
     
     // Log the parsed values
     console.log("Bet values:", betValues);
