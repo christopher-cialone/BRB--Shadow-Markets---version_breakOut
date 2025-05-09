@@ -439,7 +439,7 @@ socket.on('cattle-bred', data => {
     playerData = data.player;
     
     // Show notification
-    showNotification(`New cattle bred! Cattle #${data.cattle.id} with Speed: ${data.cattle.speed}, Milk: ${data.cattle.milk}`, 'success');
+    showNotification(`New cattle bred! Cattle #${data.cattle.id} with Speed: ${data.cattle.speed}, Milk Production: ${data.cattle.milk}`, 'success');
     
     // Update UI
     updateUI();
@@ -1124,12 +1124,15 @@ function updateCattleInventory() {
         cattleElement.className = 'inventory-item cattle';
         cattleElement.innerHTML = `
             <div class="title">
-                <span class="icon">🐄</span>
+                <img src="/img/cattle.png" alt="Cattle" class="item-icon" width="40" height="40">
                 <span>Cattle #${cattle.id.split('-').pop().substr(0, 4)}</span>
             </div>
             <div class="stats">
                 <div>Speed: ${cattle.speed}</div>
-                <div>Milk: ${cattle.milk}</div>
+                <div class="milk-stat">
+                    <img src="/img/milk-bottle.png" alt="Milk" class="stat-icon" width="20" height="20">
+                    Milk: ${cattle.milk}
+                </div>
             </div>
         `;
         cattleInventory.appendChild(cattleElement);
