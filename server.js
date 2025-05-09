@@ -36,13 +36,22 @@ io.on('connection', (socket) => {
       id: socket.id,
       name: data.name || 'Cowboy',
       archetype: data.archetype || 'Entrepreneur',
+      characterType: data.characterType || 'the-kid', // Default character
       cattle: 0,
       cattleBalance: 100,
       hay: 100,
       water: 100,
       barnCapacity: 100,
       cattleCollection: [],
-      potionCollection: []
+      potionCollection: [],
+      stats: {
+        racesWon: 0,
+        racesLost: 0,
+        cattleBred: 0,
+        potionsCrafted: 0,
+        totalEarned: 0,
+        totalBurned: 0
+      }
     };
     
     // Send current game state to the new player
@@ -78,6 +87,11 @@ io.on('connection', (socket) => {
       // Add to player's collection
       player.cattleCollection.push(newCattle);
       player.cattle++;
+      
+      // Update statistics
+      if (player.stats) {
+        player.stats.cattleBred++;
+      }
       
       // Notify player
       socket.emit('cattle-bred', { 
@@ -478,6 +492,22 @@ io.on('connection', (socket) => {
       // Reset game status to betting for next race
       game.status = 'betting';
     }
+  });
+  
+  // Handle profile updates
+  socket.on('update-profile', (data) => {
+    const player = gameState.players[socket.id];
+    if (!player) return;
+    
+    // Update player name and character type
+    player.name = data.name || player.name;
+    player.characterType = data.characterType || player.characterType;
+    
+    // Send updated player data
+    socket.emit('game-state', {
+      player: player,
+      marketPrice: gameState.marketPrice
+    });
   });
   
   // Handle disconnect

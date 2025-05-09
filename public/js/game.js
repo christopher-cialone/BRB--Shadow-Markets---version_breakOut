@@ -230,6 +230,10 @@ document.addEventListener('DOMContentLoaded', () => {
         switchScene('night');
     });
     
+    document.getElementById('go-to-profile-from-ranch').addEventListener('click', () => {
+        switchScene('profile');
+    });
+    
     // Saloon UI Events
     const wagerSlider = document.getElementById('wager-slider');
     const wagerDisplay = document.getElementById('wager-amount');
@@ -251,6 +255,14 @@ document.addEventListener('DOMContentLoaded', () => {
         switchScene('ranch');
     });
     
+    document.getElementById('go-to-night-from-saloon').addEventListener('click', () => {
+        switchScene('night');
+    });
+    
+    document.getElementById('go-to-profile').addEventListener('click', () => {
+        switchScene('profile');
+    });
+    
     // Night UI Events
     document.getElementById('craft-potion').addEventListener('click', () => {
         socket.emit('craft-potion');
@@ -258,6 +270,63 @@ document.addEventListener('DOMContentLoaded', () => {
     
     document.getElementById('back-to-ranch-night').addEventListener('click', () => {
         switchScene('ranch');
+    });
+    
+    document.getElementById('go-to-saloon-from-night').addEventListener('click', () => {
+        switchScene('saloon');
+    });
+    
+    document.getElementById('go-to-profile-from-night').addEventListener('click', () => {
+        switchScene('profile');
+    });
+    
+    // Profile UI Events
+    document.querySelectorAll('.character-option').forEach(option => {
+        option.addEventListener('click', () => {
+            // Deselect all options
+            document.querySelectorAll('.character-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            // Select clicked option
+            option.classList.add('selected');
+            
+            // Update selected character image
+            const characterType = option.dataset.character;
+            const imgPath = characterType === 'the-scientist' ? 
+                'img/characters/the-scientist.jpg' : 
+                `img/characters/${characterType}.jpeg`;
+            document.getElementById('character-image').src = imgPath;
+            
+            // Update player data
+            playerData.characterType = characterType;
+        });
+    });
+    
+    document.getElementById('save-profile').addEventListener('click', () => {
+        // Update player name
+        playerData.name = document.getElementById('character-name').value || 'Cowboy';
+        
+        // Show notification
+        showNotification('Profile updated successfully!', 'success');
+        
+        // Emit update to server
+        socket.emit('update-profile', {
+            name: playerData.name,
+            characterType: playerData.characterType
+        });
+    });
+    
+    document.getElementById('back-to-ranch-from-profile').addEventListener('click', () => {
+        switchScene('ranch');
+    });
+    
+    document.getElementById('go-to-saloon-from-profile').addEventListener('click', () => {
+        switchScene('saloon');
+    });
+    
+    document.getElementById('go-to-night-from-profile').addEventListener('click', () => {
+        switchScene('night');
     });
     
     // Modal Events
