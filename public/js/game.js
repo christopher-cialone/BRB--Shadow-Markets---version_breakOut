@@ -5,13 +5,22 @@ const socket = io();
 let playerData = {
     name: 'Cowboy',
     archetype: 'Entrepreneur',
+    characterType: 'the-kid',
     cattle: 0,
     cattleBalance: 100,
     hay: 100,
     water: 100,
     barnCapacity: 100,
     cattleCollection: [],
-    potionCollection: []
+    potionCollection: [],
+    stats: {
+        racesWon: 0,
+        racesLost: 0,
+        cattleBred: 0,
+        potionsCrafted: 0,
+        totalEarned: 0,
+        totalBurned: 0
+    }
 };
 
 let marketPrice = 1.0;
@@ -23,6 +32,7 @@ const mainMenu = document.getElementById('main-menu');
 const ranchUI = document.getElementById('ranch-ui');
 const saloonUI = document.getElementById('saloon-ui');
 const nightUI = document.getElementById('night-ui');
+const profileUI = document.getElementById('profile-ui');
 const notification = document.getElementById('notification');
 const resultModal = document.getElementById('result-modal');
 
@@ -597,6 +607,7 @@ function switchScene(scene) {
     ranchUI.classList.add('hidden');
     saloonUI.classList.add('hidden');
     nightUI.classList.add('hidden');
+    profileUI.classList.add('hidden');
     
     // Hide all game scenes
     game.scene.scenes[0].ranchScene.visible = false;
@@ -618,6 +629,10 @@ function switchScene(scene) {
             
             // Initialize saloon-specific elements
             initSaloonScene();
+            break;
+        case 'profile':
+            profileUI.classList.remove('hidden');
+            updateProfileUI();
             break;
         case 'night':
             nightUI.classList.remove('hidden');
@@ -939,6 +954,36 @@ function addCattleToScene(cattle) {
         repeat: -1,
         ease: 'Sine.easeInOut'
     });
+}
+
+function updateProfileUI() {
+    // Update profile information
+    document.getElementById('profile-cattle-balance').textContent = playerData.cattleBalance.toFixed(2);
+    document.getElementById('character-name').value = playerData.name;
+    
+    // Update character image
+    document.getElementById('character-image').src = `img/characters/${playerData.characterType}.jpeg`;
+    if (playerData.characterType === 'the-scientist') {
+        document.getElementById('character-image').src = 'img/characters/the-scientist.jpg';
+    }
+    
+    // Update character selection
+    document.querySelectorAll('.character-option').forEach(option => {
+        option.classList.remove('selected');
+        if (option.dataset.character === playerData.characterType) {
+            option.classList.add('selected');
+        }
+    });
+    
+    // Update statistics
+    if (playerData.stats) {
+        document.getElementById('races-won').textContent = playerData.stats.racesWon;
+        document.getElementById('races-lost').textContent = playerData.stats.racesLost;
+        document.getElementById('cattle-bred').textContent = playerData.stats.cattleBred;
+        document.getElementById('potions-crafted').textContent = playerData.stats.potionsCrafted;
+        document.getElementById('total-earned').textContent = playerData.stats.totalEarned.toFixed(2);
+        document.getElementById('total-burned').textContent = playerData.stats.totalBurned.toFixed(2);
+    }
 }
 
 function addPotionEffect() {
