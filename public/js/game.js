@@ -208,6 +208,23 @@ Phaser.Scene.prototype.resize = function() {
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM Content Loaded - Setting up event listeners");
     
+    // Set up inventory panel toggle
+    const toggleButtons = document.querySelectorAll('.toggle-panel');
+    toggleButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const panel = this.closest('.inventory-panel');
+            panel.classList.toggle('collapsed');
+            
+            // Change the toggle icon based on panel state
+            const icon = this.querySelector('.toggle-icon');
+            if (panel.classList.contains('collapsed')) {
+                icon.textContent = '▶';
+            } else {
+                icon.textContent = '◀';
+            }
+        });
+    });
+    
     // Helper function to safely add click event listeners
     function addClickListener(elementId, callback) {
         const element = document.getElementById(elementId);

@@ -595,21 +595,28 @@ body {
 .inventory-panel {
     background-color: var(--card-bg);
     border-radius: var(--radius-lg);
-    border: 1px solid var(--ui-border);
-    padding: 24px;
+    border: 2px solid var(--ui-border);
+    padding: 16px;
     height: 100%;
     overflow-y: auto;
     box-shadow: var(--shadow-md);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+    position: relative;
 }
 
 .inventory-panel h3 {
     color: var(--secondary-color);
-    margin-bottom: 18px;
-    font-weight: 600;
+    margin-bottom: 16px;
+    font-weight: normal;
     position: relative;
     padding-bottom: 8px;
+    font-family: var(--font-title);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .inventory-panel h3::after {
@@ -623,10 +630,49 @@ body {
     border-radius: 3px;
 }
 
+.toggle-panel {
+    background: none;
+    border: none;
+    color: var(--light-text);
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0;
+    margin-left: 10px;
+    transition: all 0.3s;
+}
+
+.toggle-panel:hover {
+    color: var(--accent-color);
+    transform: scale(1.1);
+}
+
+.inventory-panel.collapsed {
+    padding: 0;
+    overflow: hidden;
+}
+
+.inventory-panel.collapsed .inventory-list,
+.inventory-panel.collapsed .empty-message {
+    display: none;
+}
+
+.inventory-panel.collapsed h3 {
+    padding: 15px;
+    margin: 0;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    height: 100%;
+    justify-content: center;
+}
+
+.inventory-panel.collapsed h3::after {
+    display: none;
+}
+
 .inventory-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
     max-height: calc(100% - 60px);
     overflow-y: auto;
     padding-right: 5px;
@@ -1821,14 +1867,40 @@ body {
     }
     
     /* Mobile grid adjustments */
+    .content-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto;
+        height: auto;
+        gap: 15px;
+    }
+    
+    .inventory-panel {
+        max-height: 200px;
+    }
+    
     #ranch-grid {
+        grid-template-columns: repeat(5, 60px);
+        grid-template-rows: repeat(5, 60px);
+    }
+    
+    #shadow-grid {
         grid-template-columns: repeat(4, 70px);
         grid-template-rows: repeat(4, 70px);
     }
     
-    #shadow-grid {
-        grid-template-columns: repeat(3, 80px);
-        grid-template-rows: repeat(3, 80px);
+    .grid-cell {
+        border-radius: 8px;
+    }
+    
+    .grid-controls {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+    }
+    
+    .grid-controls .action-button {
+        width: 100%;
+        justify-content: center;
     }
 }
 
@@ -2001,15 +2073,47 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px;
-    background-color: rgba(0, 0, 0, 0.2);
-    border-radius: 5px;
+    padding: 12px 15px;
+    background: linear-gradient(to right, rgba(40, 10, 80, 0.7), rgba(20, 5, 40, 0.7));
+    border-radius: 10px;
+    margin-top: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--ui-border);
+}
+
+.grid-controls .action-button {
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-weight: 500;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.grid-controls .action-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(120, 60, 220, 0.3);
+    background: linear-gradient(45deg, var(--secondary-color), var(--primary-color));
+}
+
+.grid-controls .action-button .icon {
+    font-size: 1.2em;
 }
 
 .growth-timer, .market-cycle {
-    background-color: rgba(0, 0, 0, 0.5);
-    padding: 5px 10px;
-    border-radius: 5px;
+    background-color: rgba(0, 0, 0, 0.4);
+    padding: 6px 12px;
+    border-radius: 20px;
+    color: var(--accent-color);
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+    border: 1px solid rgba(100, 80, 200, 0.3);
 }
 
 @keyframes pulse {
