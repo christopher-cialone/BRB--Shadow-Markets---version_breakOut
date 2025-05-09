@@ -253,6 +253,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Modal Events
     document.getElementById('close-result').addEventListener('click', () => {
         resultModal.classList.add('hidden');
+        
+        // If in the saloon, reset for a new race
+        if (currentScene === 'saloon') {
+            initSaloonScene();
+        }
     });
 });
 
@@ -540,13 +545,6 @@ socket.on('race-finished', data => {
     // Enable start race button
     document.getElementById('start-race').disabled = false;
     
-    // Display result
-    if (data.bet > 0) {
-        showResult('Race Finished', `${data.message}`, 'success');
-    } else {
-        showResult('Race Finished', `${data.message}`, 'error');
-    }
-    
     // Add to history
     const historyContainer = document.getElementById('results-history');
     const historyItem = document.createElement('div');
@@ -554,8 +552,37 @@ socket.on('race-finished', data => {
     historyItem.textContent = data.winner.charAt(0).toUpperCase();
     historyContainer.appendChild(historyItem);
     
+    // Celebration effect for winners
+    if (data.bet > 0) {
+        // Create confetti animation
+        createConfetti();
+        
+        // Show celebration overlay
+        const celebration = document.getElementById('win-celebration');
+        const winAmount = document.getElementById('win-amount');
+        winAmount.textContent = `+${data.bet.toFixed(2)} $CATTLE`;
+        celebration.classList.remove('hidden');
+        
+        // Hide celebration after 3.5 seconds
+        setTimeout(() => {
+            celebration.classList.add('hidden');
+        }, 3500);
+        
+        // Display result with auto-close
+        showResult('Winner!', `${data.message}`, 'success', true);
+    } else {
+        // Display result with auto-close
+        showResult('Race Finished', `${data.message}`, 'error', true);
+    }
+    
     // Update UI
     updateUI();
+    
+    // Prepare for next race automatically after 4 seconds
+    setTimeout(() => {
+        // Reset the race UI
+        initSaloonScene();
+    }, 4000);
 });
 
 socket.on('error-message', data => {
