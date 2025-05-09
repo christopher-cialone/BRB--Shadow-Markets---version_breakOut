@@ -842,14 +842,19 @@ function updateUI() {
         updateProfileUI();
     }
     
-    // Update wager slider max value
+    // Update wager slider max value (only if in saloon)
     const wagerSlider = document.getElementById('wager-slider');
-    wagerSlider.max = Math.min(50, Math.floor(playerData.cattleBalance));
-    
-    if (wagerAmount > playerData.cattleBalance) {
-        wagerAmount = Math.floor(playerData.cattleBalance);
-        document.getElementById('wager-amount').textContent = wagerAmount;
-        wagerSlider.value = wagerAmount;
+    if (wagerSlider) {
+        wagerSlider.max = Math.min(50, Math.floor(playerData.cattleBalance));
+        
+        if (wagerAmount > playerData.cattleBalance) {
+            wagerAmount = Math.floor(playerData.cattleBalance);
+            const wagerAmountEl = document.getElementById('wager-amount');
+            if (wagerAmountEl) {
+                wagerAmountEl.textContent = wagerAmount;
+            }
+            wagerSlider.value = wagerAmount;
+        }
     }
     
     // Update cattle inventory
@@ -864,6 +869,7 @@ function updateUI() {
 
 function updateCattleInventory() {
     const cattleInventory = document.getElementById('cattle-inventory');
+    if (!cattleInventory) return; // Skip if element doesn't exist
     
     // Clear inventory
     cattleInventory.innerHTML = '';
@@ -894,6 +900,7 @@ function updateCattleInventory() {
 
 function updatePotionInventory() {
     const potionInventory = document.getElementById('potion-inventory');
+    if (!potionInventory) return; // Skip if element doesn't exist
     
     // Clear inventory
     potionInventory.innerHTML = '';
@@ -972,8 +979,13 @@ function updateButtonStates() {
 }
 
 function showNotification(message, type = 'info') {
+    if (!notification) return; // Skip if notification element doesn't exist
+    
     // Set notification content
-    notification.querySelector('.content').textContent = message;
+    const contentEl = notification.querySelector('.content');
+    if (contentEl) {
+        contentEl.textContent = message;
+    }
     
     // Set notification type
     notification.className = type;
@@ -986,9 +998,14 @@ function showNotification(message, type = 'info') {
 }
 
 function showResult(title, message, type = 'info', autoClose = false) {
+    if (!resultModal) return; // Skip if modal doesn't exist
+    
     // Set result content
-    document.getElementById('result-title').textContent = title;
-    document.getElementById('result-message').textContent = message;
+    const titleEl = document.getElementById('result-title');
+    const messageEl = document.getElementById('result-message');
+    
+    if (titleEl) titleEl.textContent = title;
+    if (messageEl) messageEl.textContent = message;
     
     // Set result type
     resultModal.className = 'modal ' + type;
@@ -1032,13 +1049,23 @@ function addCattleToScene(cattle) {
 
 function updateProfileUI() {
     // Update profile information
-    document.getElementById('profile-cattle-balance').textContent = playerData.cattleBalance.toFixed(2);
-    document.getElementById('character-name').value = playerData.name;
+    const cattleBalanceEl = document.getElementById('profile-cattle-balance');
+    if (cattleBalanceEl) {
+        cattleBalanceEl.textContent = playerData.cattleBalance.toFixed(2);
+    }
+    
+    const characterNameEl = document.getElementById('character-name');
+    if (characterNameEl) {
+        characterNameEl.value = playerData.name;
+    }
     
     // Update character image
-    document.getElementById('character-image').src = `img/characters/${playerData.characterType}.jpeg`;
-    if (playerData.characterType === 'the-scientist') {
-        document.getElementById('character-image').src = 'img/characters/the-scientist.jpg';
+    const characterImageEl = document.getElementById('character-image');
+    if (characterImageEl) {
+        characterImageEl.src = `img/characters/${playerData.characterType}.jpeg`;
+        if (playerData.characterType === 'the-scientist') {
+            characterImageEl.src = 'img/characters/the-scientist.jpg';
+        }
     }
     
     // Update character selection
@@ -1051,12 +1078,21 @@ function updateProfileUI() {
     
     // Update statistics
     if (playerData.stats) {
-        document.getElementById('races-won').textContent = playerData.stats.racesWon;
-        document.getElementById('races-lost').textContent = playerData.stats.racesLost;
-        document.getElementById('cattle-bred').textContent = playerData.stats.cattleBred;
-        document.getElementById('potions-crafted').textContent = playerData.stats.potionsCrafted;
-        document.getElementById('total-earned').textContent = playerData.stats.totalEarned.toFixed(2);
-        document.getElementById('total-burned').textContent = playerData.stats.totalBurned.toFixed(2);
+        const statsElements = {
+            racesWon: document.getElementById('races-won'),
+            racesLost: document.getElementById('races-lost'),
+            cattleBred: document.getElementById('cattle-bred'),
+            potionsCrafted: document.getElementById('potions-crafted'),
+            totalEarned: document.getElementById('total-earned'),
+            totalBurned: document.getElementById('total-burned')
+        };
+        
+        if (statsElements.racesWon) statsElements.racesWon.textContent = playerData.stats.racesWon;
+        if (statsElements.racesLost) statsElements.racesLost.textContent = playerData.stats.racesLost;
+        if (statsElements.cattleBred) statsElements.cattleBred.textContent = playerData.stats.cattleBred;
+        if (statsElements.potionsCrafted) statsElements.potionsCrafted.textContent = playerData.stats.potionsCrafted;
+        if (statsElements.totalEarned) statsElements.totalEarned.textContent = playerData.stats.totalEarned.toFixed(2);
+        if (statsElements.totalBurned) statsElements.totalBurned.textContent = playerData.stats.totalBurned.toFixed(2);
     }
 }
 
@@ -1084,16 +1120,34 @@ function addPotionEffect() {
 // Update total bet display - global function used by event listeners
 function updateTotalBet() {
     let total = 0;
-    const betHearts = parseInt(document.getElementById('bet-hearts').value) || 0;
-    const betDiamonds = parseInt(document.getElementById('bet-diamonds').value) || 0;
-    const betClubs = parseInt(document.getElementById('bet-clubs').value) || 0;
-    const betSpades = parseInt(document.getElementById('bet-spades').value) || 0;
     
-    total = betHearts + betDiamonds + betClubs + betSpades;
+    // Get bet inputs with null checks
+    const betInputs = {
+        hearts: document.getElementById('bet-hearts'),
+        diamonds: document.getElementById('bet-diamonds'),
+        clubs: document.getElementById('bet-clubs'),
+        spades: document.getElementById('bet-spades')
+    };
     
-    // Update total bet display
-    document.getElementById('total-bet-amount').textContent = total;
-    document.getElementById('burn-amount').textContent = (total * 0.1).toFixed(1);
+    const betValues = {
+        hearts: betInputs.hearts ? (parseInt(betInputs.hearts.value) || 0) : 0,
+        diamonds: betInputs.diamonds ? (parseInt(betInputs.diamonds.value) || 0) : 0,
+        clubs: betInputs.clubs ? (parseInt(betInputs.clubs.value) || 0) : 0,
+        spades: betInputs.spades ? (parseInt(betInputs.spades.value) || 0) : 0
+    };
+    
+    total = betValues.hearts + betValues.diamonds + betValues.clubs + betValues.spades;
+    
+    // Update total bet display with null checks
+    const totalBetEl = document.getElementById('total-bet-amount');
+    if (totalBetEl) {
+        totalBetEl.textContent = total;
+    }
+    
+    const burnAmountEl = document.getElementById('burn-amount');
+    if (burnAmountEl) {
+        burnAmountEl.textContent = (total * 0.1).toFixed(1);
+    }
     
     // Update Start Race button state
     const startRaceButton = document.getElementById('start-race');
