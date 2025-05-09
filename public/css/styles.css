@@ -5,10 +5,30 @@
     box-sizing: border-box;
 }
 
+:root {
+    /* Main color palette based on character artwork */
+    --primary-color: #6a2ca0;     /* Purple from scientist's hair */
+    --secondary-color: #00ccff;   /* Cyan from glasses and elements */
+    --accent-color: #ff9900;      /* Orange/gold accents */
+    --dark-bg: #0a0a0a;           /* Dark background */
+    --light-text: #e0e0e0;        /* Light text color */
+    --highlight: #ff00ff;         /* Bright magenta highlights */
+    
+    /* UI component colors */
+    --ui-bg: rgba(10, 10, 10, 0.85);
+    --ui-border: #444;
+    --ui-element-bg: #222;
+    --ui-element-active: #333;
+    --ui-success: #00cc66;
+    --ui-error: #ff3366;
+    --ui-warning: #ffcc00;
+    --ui-info: #0099ff;
+}
+
 body {
-    font-family: 'Courier New', monospace;
-    background-color: #0a0a0a;
-    color: #00ff00;
+    font-family: 'GameText', 'VT323', 'Courier New', monospace;
+    background-color: var(--dark-bg);
+    color: var(--light-text);
     overflow: hidden;
 }
 

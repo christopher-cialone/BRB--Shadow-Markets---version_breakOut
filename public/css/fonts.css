@@ -1,0 +1,44 @@
+/* Custom fonts for Bull Run Boost */
+
+/* Game Title font - Was JamjanNP alternative */
+@font-face {
+  font-family: 'GameTitle';
+  src: url('https://fonts.gstatic.com/s/pressstart2p/v14/e3t4euO8T-267oIAQAu6jDQyK3nVivM.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Section Titles font - Hitchcut alternative */
+@font-face {
+  font-family: 'SectionTitle';
+  src: url('https://fonts.gstatic.com/s/bangers/v19/FeVQS0BTqb0h60ACH55Q2J5hm24.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Character names and regular text */
+@font-face {
+  font-family: 'GameText';
+  src: url('https://fonts.gstatic.com/s/vt323/v17/pxiKyp0ihIEF2isfFJU.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Fallback fonts */
+body {
+  font-family: 'GameText', 'Courier New', monospace;
+}
+
+h1, .game-title {
+  font-family: 'GameTitle', 'Press Start 2P', cursive;
+}
+
+h2, h3, h4, .section-title {
+  font-family: 'SectionTitle', 'Bangers', cursive;
+}
+
+/* Download Google Fonts for fallback */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Bangers&family=VT323&display=swap');
