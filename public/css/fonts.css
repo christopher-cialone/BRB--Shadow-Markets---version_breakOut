@@ -19,12 +19,22 @@
   font-display: swap;
 }
 
+/* TECHNIQUE OL BRK font for game title */
+@font-face {
+  font-family: 'TECHNIQUE OL BRK';
+  src: url('../fonts/technique-ol-brk.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Base font definitions */
 :root {
   --font-title: 'Hitchcut', sans-serif;
   --font-heading: 'Montserrat', sans-serif;
   --font-body: 'Roboto', sans-serif;
   --font-mono: 'Share Tech Mono', monospace;
+  --font-game-title: 'TECHNIQUE OL BRK', sans-serif;
 }
 
 /* Modern font setup */
