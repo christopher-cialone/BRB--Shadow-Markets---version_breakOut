@@ -894,16 +894,18 @@ body {
     position: absolute;
     top: 0;
     bottom: 0;
-    width: 2px;
+    width: 3px;
+    height: 100%; /* Ensure full height */
+    z-index: 3; /* Make sure they're visible */
 }
 
 .starting-line {
-    left: 40px;
+    left: 70px;
     background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.1));
 }
 
 .finish-line {
-    right: 40px;
+    right: 20px;
     background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.1));
 }
 
@@ -2280,8 +2282,14 @@ body {
     margin: 20px auto;
     width: 100%;
     position: relative;
-    padding-bottom: 40px; /* Increased padding at bottom to prevent overlap */
+    padding-bottom: 5px; /* Reduce padding as we'll fix the height */
     margin-bottom: 30px; /* Add space between track container and card area */
+    min-height: 260px; /* Fixed height to contain all tracks including spades */
+    border: 1px solid var(--ui-border);
+    border-radius: 10px;
+    background-color: rgba(20, 10, 40, 0.3);
+    padding: 20px; /* Add padding around all tracks */
+    box-sizing: border-box; /* Include padding in height calculation */
 }
 
 .track {
@@ -2289,7 +2297,13 @@ body {
     align-items: center;
     margin-bottom: 22px; /* Increased spacing between tracks */
     position: relative;
-    padding: 0 5px; /* Add some padding on sides */
+    padding: 5px 10px; /* Add more padding all around */
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.track:hover {
+    background-color: rgba(60, 30, 100, 0.3);
 }
 
 .horse-label {
