@@ -143,19 +143,24 @@ body {
 }
 
 #main-menu h1 {
-    font-family: 'GameTitle', 'Press Start 2P', cursive;
-    font-size: 3em;
+    font-family: var(--font-title);
+    font-size: 4em;
     margin-bottom: 10px;
     color: var(--accent-color);
-    text-shadow: 0 0 10px #ff6600;
+    text-shadow: 0 0 15px rgba(255, 90, 205, 0.8);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    line-height: 1.1;
 }
 
 #main-menu h2 {
-    font-family: 'SectionTitle', 'Bangers', cursive;
-    font-size: 1.5em;
+    font-family: var(--font-title);
+    font-size: 1.8em;
     margin-bottom: 40px;
     color: var(--primary-color);
-    text-shadow: 0 0 5px var(--highlight);
+    text-shadow: 0 0 8px var(--highlight);
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .input-group {
@@ -1533,11 +1538,24 @@ body {
 }
 
 .character-panel h3 {
-    font-family: 'SectionTitle', 'Bangers', cursive;
+    font-family: var(--font-title);
     color: var(--secondary-color);
-    margin-bottom: 15px;
-    border-bottom: 1px solid var(--ui-border);
-    padding-bottom: 5px;
+    margin-bottom: 18px;
+    font-weight: normal;
+    position: relative;
+    padding-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.character-panel h3::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    border-radius: 3px;
 }
 
 .character-customization {
@@ -1579,9 +1597,12 @@ body {
 }
 
 .character-selection h4 {
-    font-family: 'SectionTitle', 'Bangers', cursive;
+    font-family: var(--font-title);
     color: var(--secondary-color);
     margin-bottom: 15px;
+    text-transform: uppercase;
+    font-weight: normal;
+    letter-spacing: 1px;
 }
 
 .character-options {
@@ -1631,11 +1652,25 @@ body {
 }
 
 .stats-panel h3 {
-    font-family: 'SectionTitle', 'Bangers', cursive;
+    font-family: var(--font-title);
     color: var(--secondary-color);
-    margin-bottom: 15px;
-    border-bottom: 1px solid var(--ui-border);
-    padding-bottom: 5px;
+    margin-bottom: 18px;
+    font-weight: normal;
+    position: relative;
+    padding-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.stats-panel h3::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    border-radius: 3px;
 }
 
 .stats-grid {
@@ -1672,10 +1707,13 @@ body {
 }
 
 .navigation-menu h4 {
-    font-family: 'SectionTitle', 'Bangers', cursive;
+    font-family: var(--font-title);
     color: var(--secondary-color);
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     text-align: center;
+    text-transform: uppercase;
+    font-weight: normal;
+    letter-spacing: 1px;
 }
 
 .nav-buttons {
