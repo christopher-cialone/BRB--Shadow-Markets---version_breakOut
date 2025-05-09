@@ -869,7 +869,7 @@ function showNotification(message, type = 'info') {
     }, 5000);
 }
 
-function showResult(title, message, type = 'info') {
+function showResult(title, message, type = 'info', autoClose = false) {
     // Set result content
     document.getElementById('result-title').textContent = title;
     document.getElementById('result-message').textContent = message;
@@ -877,6 +877,18 @@ function showResult(title, message, type = 'info') {
     // Set result type
     resultModal.className = 'modal ' + type;
     resultModal.classList.remove('hidden');
+    
+    // Auto-close after 3 seconds if requested
+    if (autoClose) {
+        setTimeout(() => {
+            resultModal.classList.add('hidden');
+            
+            // If we're in the saloon, reset for a new race
+            if (currentScene === 'saloon') {
+                initSaloonScene();
+            }
+        }, 3000);
+    }
 }
 
 function addCattleToScene(cattle) {
