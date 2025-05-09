@@ -1835,42 +1835,79 @@ body {
 /* Grid Layouts for Ranch and Night Market */
 .content-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
     gap: 20px;
     height: calc(100vh - 220px);
     overflow: hidden;
+    position: relative;
 }
 
 .ranch-grid-panel, .shadow-market-panel {
-    padding: 15px;
+    padding: 20px;
     background-color: var(--ui-element-bg);
     border-radius: 10px;
-    border: 1px solid var(--ui-border);
+    border: 2px solid var(--ui-border);
     overflow-y: auto;
     height: 100%;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
-.pasture-info, .market-info {
-    padding: 10px;
-    margin-bottom: 15px;
-    background-color: rgba(0, 0, 0, 0.2);
-    border-radius: 5px;
+.ranch-grid-panel h3, .shadow-market-panel h3 {
+    font-family: var(--font-title);
+    color: var(--secondary-color);
+    margin-bottom: 18px;
+    font-weight: normal;
+    position: relative;
+    padding-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
     text-align: center;
 }
 
+.ranch-grid-panel h3::after, .shadow-market-panel h3::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    border-radius: 3px;
+}
+
+.pasture-info, .market-info {
+    padding: 15px;
+    margin: 0 auto 20px;
+    max-width: 90%;
+    background-color: rgba(20, 20, 40, 0.3);
+    border-radius: 10px;
+    text-align: center;
+    border: 1px solid var(--ui-border);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    color: var(--light-text);
+    font-size: 0.95rem;
+}
+
 .resources-earned {
-    margin-top: 10px;
+    margin-top: 12px;
     display: flex;
     justify-content: center;
     gap: 20px;
+    flex-wrap: wrap;
 }
 
 .resource-item {
     display: inline-block;
-    background-color: rgba(255, 255, 255, 0.1);
-    padding: 5px 10px;
-    border-radius: 15px;
-    color: var(--secondary-color);
+    background: linear-gradient(45deg, rgba(40, 10, 80, 0.6), rgba(80, 40, 160, 0.4));
+    padding: 6px 14px;
+    border-radius: 20px;
+    color: var(--accent-color);
+    font-weight: 500;
+    border: 1px solid rgba(140, 100, 255, 0.3);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .grid-container {
@@ -1881,19 +1918,21 @@ body {
 }
 
 #ranch-grid {
-    grid-template-columns: repeat(5, 80px);
-    grid-template-rows: repeat(5, 80px);
+    grid-template-columns: repeat(5, 90px);
+    grid-template-rows: repeat(5, 90px);
+    margin: 25px auto;
 }
 
 #shadow-grid {
-    grid-template-columns: repeat(4, 90px);
-    grid-template-rows: repeat(4, 90px);
+    grid-template-columns: repeat(4, 95px);
+    grid-template-rows: repeat(4, 95px);
+    margin: 25px auto;
 }
 
 .grid-cell {
     position: relative;
     border: 2px solid var(--ui-border);
-    border-radius: 8px;
+    border-radius: 10px;
     background-color: rgba(0, 0, 0, 0.4);
     cursor: pointer;
     transition: all 0.3s ease;
@@ -1901,6 +1940,8 @@ body {
     justify-content: center;
     align-items: center;
     overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    background-image: linear-gradient(to bottom right, rgba(80, 40, 120, 0.1), rgba(40, 20, 80, 0.2));
 }
 
 .grid-cell:hover {
