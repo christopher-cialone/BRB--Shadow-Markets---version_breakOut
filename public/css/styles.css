@@ -741,12 +741,34 @@ body {
     font-weight: 500;
 }
 
-.inventory-item .icon {
+.inventory-item .icon,
+.inventory-item .item-icon {
     font-size: 1.6em;
     transition: transform var(--transition-quick);
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
 }
 
-.inventory-item:hover .icon {
+.button-icon {
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+.milk-stat {
+    display: flex;
+    align-items: center;
+}
+
+.stat-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+.inventory-item:hover .icon,
+.inventory-item:hover .item-icon {
     transform: scale(1.1);
 }
 
