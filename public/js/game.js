@@ -10,6 +10,7 @@ let playerData = {
     cattleBalance: 100,
     hay: 100,
     water: 100,
+    ether: 0,
     barnCapacity: 100,
     cattleCollection: [],
     potionCollection: [],
@@ -19,13 +20,35 @@ let playerData = {
         cattleBred: 0,
         potionsCrafted: 0,
         totalEarned: 0,
-        totalBurned: 0
+        totalBurned: 0,
+        plantsHarvested: 0,
+        potionsDistilled: 0
     }
 };
 
 let marketPrice = 1.0;
 let currentScene = 'main-menu';
 let wagerAmount = 10;
+
+// Grid state for ranch and shadow market
+const ranchGrid = {
+    size: 5,
+    cells: [],
+    growthTimer: 60,
+    growthInterval: null,
+    multiplier: 1.0,
+    // Growth states: empty, planted, growing, harvestable
+};
+
+const shadowGrid = {
+    size: 4,
+    cells: [],
+    cycleTimer: 30,
+    cycleInterval: null,
+    marketState: 'stable', // can be stable, volatile, booming
+    multiplier: 1.0,
+    // Potion states: empty, brewing, distilling, ready
+};
 
 // DOM elements
 const mainMenu = document.getElementById('main-menu');
