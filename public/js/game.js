@@ -382,35 +382,35 @@ class NightScene extends Phaser.Scene {
     }
     
     create() {
-        // Get dimensions
-        const width = this.scale.width;
-        const height = this.scale.height;
+        // Get dimensions - use fixed dimensions for the shadow grid container
+        const containerWidth = 450;
+        const containerHeight = 450;
         
-        // Set up background
-        this.bg = this.add.image(width/2, height/2, 'game-bg');
-        this.bg.setDisplaySize(width, height);
+        // Set up background that fits in the container
+        this.bg = this.add.image(containerWidth/2, containerHeight/2, 'game-bg');
+        this.bg.setDisplaySize(containerWidth, containerHeight);
         this.bg.setTint(0x5566aa); // Cool blue night tint
         
         // Add a semi-transparent overlay for better visibility
-        this.overlay = this.add.rectangle(width/2, height/2, width, height, 0x000000, 0.4);
+        this.overlay = this.add.rectangle(containerWidth/2, containerHeight/2, containerWidth, containerHeight, 0x000000, 0.4);
         
-        // Create shadow market title
-        this.marketTitle = this.add.text(width/2, height * 0.1, 'Shadow Market', {
+        // Create shadow market title at the top of the container
+        this.marketTitle = this.add.text(containerWidth/2, 40, 'Shadow Market', {
             fontFamily: 'Anta',
-            fontSize: '38px',
+            fontSize: '32px',
             color: '#cc00ff',
             stroke: '#000000',
             strokeThickness: 3,
             shadow: { color: '#aa00ff', fill: true, offsetX: 2, offsetY: 2, blur: 8 }
         }).setOrigin(0.5);
         
-        // Create a container for our Shadow Grid
-        this.gridContainer = this.add.container(width/2, height * 0.45);
+        // Create a container for our Shadow Grid in the center
+        this.gridContainer = this.add.container(containerWidth/2, containerHeight/2);
         
         // Create market state indicator
-        this.marketStateText = this.add.text(width/2, height * 0.25, 'Market: Stable', {
+        this.marketStateText = this.add.text(containerWidth/2, 80, 'Market: Stable', {
             fontFamily: 'Roboto',
-            fontSize: '24px',
+            fontSize: '20px',
             color: '#00ffff'
         }).setOrigin(0.5);
         
@@ -419,6 +419,8 @@ class NightScene extends Phaser.Scene {
         
         // Add resize listener
         this.scale.on('resize', this.resize, this);
+        
+        console.log("NightScene created with container dimensions:", containerWidth, containerHeight);
     }
     
     // Initialize the Phaser version of shadow grid
@@ -719,6 +721,10 @@ const config = {
     scale: {
         mode: Phaser.Scale.RESIZE,
         autoCenter: Phaser.Scale.CENTER_BOTH
+    },
+    transparent: true,
+    dom: {
+        createContainer: true
     }
 };
 
@@ -1346,6 +1352,13 @@ socket.on('error-message', data => {
 // Helper Functions
 function switchScene(scene) {
     // Map HTML UI elements
+    const mainMenu = document.getElementById('main-menu');
+    const ranchUI = document.getElementById('ranch-ui');
+    const saloonUI = document.getElementById('saloon-ui');
+    const nightUI = document.getElementById('night-ui');
+    const profileUI = document.getElementById('profile-ui');
+    const phaserCanvas = document.getElementById('game-container');
+    
     const screens = {
         'main-menu': mainMenu,
         'ranch': ranchUI,
@@ -1370,10 +1383,52 @@ function switchScene(scene) {
     // Store current scene
     currentScene = scene;
     
+    // Handle Phaser canvas visibility and positioning
+    if (scene === 'profile') {
+        // Hide Phaser canvas for profile scene (HTML only)
+        if (phaserCanvas) phaserCanvas.style.display = 'none';
+    } else {
+        // Show Phaser canvas for other scenes
+        if (phaserCanvas) phaserCanvas.style.display = 'block';
+    }
+    
+    // Special handling for night scene
+    if (scene === 'night') {
+        // Add phaser-active class to night UI to hide HTML grid
+        if (nightUI) nightUI.classList.add('phaser-active');
+        
+        // Move the Phaser canvas into the shadow grid container for proper positioning
+        const shadowGridContainer = document.getElementById('phaser-shadow-grid');
+        if (shadowGridContainer && phaserCanvas) {
+            // Position the Phaser canvas within the container
+            shadowGridContainer.appendChild(phaserCanvas);
+            phaserCanvas.style.position = 'relative';
+            phaserCanvas.style.width = '100%';
+            phaserCanvas.style.height = '100%';
+            phaserCanvas.style.zIndex = '5'; // Make sure it's above HTML elements
+        }
+    } else {
+        // For other scenes, restore canvas to the body
+        if (phaserCanvas) {
+            document.body.appendChild(phaserCanvas);
+            phaserCanvas.style.position = 'absolute';
+            phaserCanvas.style.top = '0';
+            phaserCanvas.style.left = '0';
+            phaserCanvas.style.width = '100%';
+            phaserCanvas.style.height = '100%';
+            phaserCanvas.style.zIndex = '1';
+        }
+        
+        // Remove phaser-active class from night UI
+        if (nightUI) nightUI.classList.remove('phaser-active');
+    }
+    
     // Update the HTML UI
     if (screens[scene]) {
         screens[scene].classList.remove('hidden');
     }
+    
+    console.log("Switched to scene: " + scene);
     
     // Start the corresponding Phaser scene if available
     if (phaser_scenes[scene] && game && game.scene) {
