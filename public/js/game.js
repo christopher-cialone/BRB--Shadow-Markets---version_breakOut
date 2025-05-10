@@ -277,12 +277,41 @@ class MainMenuScene extends Phaser.Scene {
 class RanchScene extends Phaser.Scene {
     constructor() {
         super('RanchScene');
+        
+        // Store grid cell sprites and data
+        this.gridCells = [];
+        this.gridTexts = [];
+        this.cattle = [];
+        this.cattleMilkTimers = [];
+        
+        // Grid configuration
+        this.gridConfig = {
+            size: 5,
+            cellSize: 80,
+            padding: 10,
+            startX: 0, // Will be calculated in create
+            startY: 0  // Will be calculated in create
+        };
     }
     
     preload() {
-        // Load the background
+        // Load the background and basic assets
         this.load.image('game-bg', 'img/game-background.jpeg');
         this.load.image('barn', 'https://i.imgur.com/t32QEZB.png');
+        
+        // Load ranch grid cell state images
+        this.load.image('cell-empty', 'img/empty.png');
+        this.load.image('cell-planted', 'img/planted.png');
+        this.load.image('cell-growing', 'img/growing.png');
+        this.load.image('cell-harvestable', 'img/harvestable.png');
+        
+        // Load cattle sprite
+        this.load.image('cattle', 'img/cattle.png');
+        
+        // Load additional assets for animations
+        this.load.image('water-drop', 'img/water-drop.png');
+        this.load.image('hay-icon', 'img/hay-icon.png');
+        this.load.image('milk-bottle', 'img/milk-bottle.png');
     }
     
     create() {
@@ -295,12 +324,323 @@ class RanchScene extends Phaser.Scene {
         this.bg.setDisplaySize(width, height);
         this.bg.setTint(0xffeedd); // Warm daylight tint
         
+        // Create a container for our ranch elements
+        this.ranchContainer = this.add.container(0, 0);
+        
         // Add barn to ranch scene
         this.barn = this.add.image(width * 0.7, height * 0.4, 'barn');
         this.barn.setScale(0.5);
+        this.ranchContainer.add(this.barn);
+        
+        // Initialize the Phaser grid
+        this.initPhaserGrid();
+        
+        // Set up cattle milking timer
+        this.milkTimer = this.time.addEvent({
+            delay: 30000, // 30 seconds
+            callback: this.milkAllCattle,
+            callbackScope: this,
+            loop: true
+        });
         
         // Add resize listener
         this.scale.on('resize', this.resize, this);
+    }
+    
+    // Initialize the Phaser-based ranch grid
+    initPhaserGrid() {
+        // Calculate grid dimensions
+        const { size, cellSize, padding } = this.gridConfig;
+        const totalWidth = (cellSize + padding) * size;
+        const totalHeight = (cellSize + padding) * size;
+        
+        // Position grid on left side of screen
+        const gridX = this.scale.width * 0.25;
+        const gridY = this.scale.height * 0.5;
+        
+        // Calculate starting position (top-left of grid)
+        this.gridConfig.startX = gridX - totalWidth/2 + cellSize/2;
+        this.gridConfig.startY = gridY - totalHeight/2 + cellSize/2;
+        
+        // Create grid container
+        this.gridContainer = this.add.container(0, 0);
+        this.ranchContainer.add(this.gridContainer);
+        
+        // Create grid header
+        const gridHeader = this.add.text(gridX, gridY - totalHeight/2 - 40, 'Ranch Pasture', {
+            fontFamily: 'Anta',
+            fontSize: '24px',
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 2,
+            shadow: { color: '#000000', fill: true, offsetX: 1, offsetY: 1, blur: 2 }
+        }).setOrigin(0.5);
+        this.ranchContainer.add(gridHeader);
+        
+        // Create the grid cells
+        this.createGridCells();
+        
+        // Add harvest all button
+        const harvestAllBtn = this.add.text(gridX, gridY + totalHeight/2 + 40, '🌾 Harvest All', {
+            fontFamily: 'Anta',
+            fontSize: '20px',
+            color: '#ffffff',
+            backgroundColor: '#3a7d44',
+            padding: { x: 10, y: 5 },
+            shadow: { color: '#000000', fill: true, offsetX: 1, offsetY: 1, blur: 2 }
+        }).setOrigin(0.5);
+        
+        harvestAllBtn.setInteractive({ useHandCursor: true })
+            .on('pointerdown', () => harvestAllRanchCells());
+            
+        this.ranchContainer.add(harvestAllBtn);
+    }
+    
+    // Create individual grid cells
+    createGridCells() {
+        const { size, cellSize, padding, startX, startY } = this.gridConfig;
+        
+        // Initialize the cells array if it's empty
+        if (ranchGrid.cells.length === 0) {
+            for (let i = 0; i < size * size; i++) {
+                ranchGrid.cells.push({
+                    id: i,
+                    state: 'empty',
+                    growthStage: 0,
+                    growthMax: 3
+                });
+            }
+        }
+        
+        // Clear existing cells if any
+        this.gridCells.forEach(cell => {
+            if (cell.sprite) cell.sprite.destroy();
+            if (cell.text) cell.text.destroy();
+        });
+        this.gridCells = [];
+        
+        // Create the grid cells
+        for (let row = 0; row < size; row++) {
+            for (let col = 0; col < size; col++) {
+                const cellIndex = row * size + col;
+                const cell = ranchGrid.cells[cellIndex];
+                
+                // Calculate position
+                const x = startX + col * (cellSize + padding);
+                const y = startY + row * (cellSize + padding);
+                
+                // Determine which sprite to use based on state
+                let spriteName = 'cell-empty';
+                if (cell.state === 'planted') spriteName = 'cell-planted';
+                if (cell.state === 'growing') spriteName = 'cell-growing';
+                if (cell.state === 'harvestable') spriteName = 'cell-harvestable';
+                
+                // Add the cell sprite
+                const cellSprite = this.add.image(x, y, spriteName);
+                cellSprite.setDisplaySize(cellSize, cellSize);
+                cellSprite.setScale(0.8); // Start small for animation
+                
+                // Add an animation for appearance
+                this.tweens.add({
+                    targets: cellSprite,
+                    scale: 1,
+                    duration: 500,
+                    ease: 'Bounce.easeOut'
+                });
+                
+                // Add interactivity
+                cellSprite.setInteractive({ useHandCursor: true });
+                cellSprite.on('pointerdown', () => this.handleGridCellClick(cellIndex));
+                
+                // Add growth stage indicator for non-empty cells
+                let growthText = null;
+                if (cell.state !== 'empty') {
+                    growthText = this.add.text(x, y, `${cell.growthStage}/${cell.growthMax}`, {
+                        fontFamily: 'Anta',
+                        fontSize: '16px',
+                        color: '#ffffff',
+                        stroke: '#000000',
+                        strokeThickness: 2
+                    }).setOrigin(0.5);
+                }
+                
+                // Store the cell reference
+                this.gridCells.push({
+                    sprite: cellSprite,
+                    text: growthText,
+                    index: cellIndex
+                });
+                
+                // Add to container
+                this.gridContainer.add(cellSprite);
+                if (growthText) this.gridContainer.add(growthText);
+            }
+        }
+    }
+    
+    // Handle grid cell clicks
+    handleGridCellClick(cellIndex) {
+        // Call the existing handler function
+        handleRanchCellClick(cellIndex);
+        
+        // Update cell appearance after click
+        this.updateCellAppearance(cellIndex);
+    }
+    
+    // Update the appearance of a specific cell
+    updateCellAppearance(cellIndex) {
+        const cell = ranchGrid.cells[cellIndex];
+        const cellObj = this.gridCells[cellIndex];
+        
+        if (!cellObj || !cellObj.sprite) return;
+        
+        // Determine which sprite to use based on state
+        let spriteName = 'cell-empty';
+        if (cell.state === 'planted') spriteName = 'cell-planted';
+        if (cell.state === 'growing') spriteName = 'cell-growing';
+        if (cell.state === 'harvestable') spriteName = 'cell-harvestable';
+        
+        // Update the sprite with animation
+        cellObj.sprite.setTexture(spriteName);
+        
+        // Add scale animation for state change
+        this.tweens.add({
+            targets: cellObj.sprite,
+            scale: { from: 0.8, to: 1 },
+            duration: 500,
+            ease: 'Bounce.easeOut'
+        });
+        
+        // Update growth text
+        if (cellObj.text) {
+            if (cell.state === 'empty') {
+                cellObj.text.setVisible(false);
+            } else {
+                cellObj.text.setVisible(true);
+                cellObj.text.setText(`${cell.growthStage}/${cell.growthMax}`);
+            }
+        } else if (cell.state !== 'empty') {
+            // Create text if it doesn't exist
+            const { startX, startY, cellSize, padding, size } = this.gridConfig;
+            const row = Math.floor(cellIndex / size);
+            const col = cellIndex % size;
+            const x = startX + col * (cellSize + padding);
+            const y = startY + row * (cellSize + padding);
+            
+            cellObj.text = this.add.text(x, y, `${cell.growthStage}/${cell.growthMax}`, {
+                fontFamily: 'Anta',
+                fontSize: '16px',
+                color: '#ffffff',
+                stroke: '#000000',
+                strokeThickness: 2
+            }).setOrigin(0.5);
+            
+            this.gridContainer.add(cellObj.text);
+        }
+    }
+    
+    // Update all cells with current data
+    updateAllCells() {
+        ranchGrid.cells.forEach((cell, index) => {
+            this.updateCellAppearance(index);
+        });
+    }
+    
+    // Add a cattle sprite to the scene with animation
+    addCattleSprite(cattle) {
+        // Random position near the barn
+        const x = this.barn.x + (Math.random() * 200 - 100);
+        const y = this.barn.y + (Math.random() * 200 - 50);
+        
+        // Create the cattle sprite
+        const cattleSprite = this.add.image(x, y, 'cattle');
+        cattleSprite.setScale(0.2);
+        cattleSprite.setData('cattle', cattle);
+        
+        // Add to scene and store reference
+        this.ranchContainer.add(cattleSprite);
+        this.cattle.push(cattleSprite);
+        
+        // Add bouncing animation
+        this.tweens.add({
+            targets: cattleSprite,
+            y: y - 10,
+            duration: 1000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+        
+        // Set up milk production timer for this cattle
+        this.cattleMilkTimers.push({
+            cattleId: cattle.id,
+            lastMilked: Date.now()
+        });
+        
+        return cattleSprite;
+    }
+    
+    // Milk all cattle
+    milkAllCattle() {
+        if (!playerData || !playerData.cattle) return;
+        
+        let totalMilk = 0;
+        
+        playerData.cattle.forEach(cattle => {
+            const milkProduced = cattle.milk * 2;
+            totalMilk += milkProduced;
+            
+            // Create milk animation
+            this.createMilkAnimation(cattle.id, milkProduced);
+        });
+        
+        if (totalMilk > 0) {
+            // Update player balance
+            playerData.cattleBalance += totalMilk;
+            
+            // Show notification
+            showNotification(`Your cattle produced ${totalMilk} $CATTLE!`, 'success');
+            
+            // Update UI
+            updateUI();
+        }
+    }
+    
+    // Create milk animation for a specific cattle
+    createMilkAnimation(cattleId, amount) {
+        // Find the cattle sprite
+        const cattleSprite = this.cattle.find(sprite => 
+            sprite.getData('cattle') && sprite.getData('cattle').id === cattleId
+        );
+        
+        if (!cattleSprite) return;
+        
+        // Create milk bottle icon
+        const milkIcon = this.add.image(cattleSprite.x, cattleSprite.y - 30, 'milk-bottle');
+        milkIcon.setScale(0.15);
+        this.ranchContainer.add(milkIcon);
+        
+        // Create milk amount text
+        const milkText = this.add.text(cattleSprite.x + 20, cattleSprite.y - 30, `+${amount}`, {
+            fontFamily: 'Anta',
+            fontSize: '16px',
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 2
+        }).setOrigin(0, 0.5);
+        this.ranchContainer.add(milkText);
+        
+        // Animate milk icon and text
+        this.tweens.add({
+            targets: [milkIcon, milkText],
+            y: '-=50',
+            alpha: { from: 1, to: 0 },
+            duration: 2000,
+            onComplete: () => {
+                milkIcon.destroy();
+                milkText.destroy();
+            }
+        });
     }
     
     resize(gameSize) {
@@ -318,6 +658,67 @@ class RanchScene extends Phaser.Scene {
             this.barn.x = width * 0.7;
             this.barn.y = height * 0.4;
         }
+        
+        // Recalculate grid position
+        if (this.gridContainer) {
+            const { size, cellSize, padding } = this.gridConfig;
+            const totalWidth = (cellSize + padding) * size;
+            const totalHeight = (cellSize + padding) * size;
+            
+            // Update grid position
+            const gridX = width * 0.25;
+            const gridY = height * 0.5;
+            
+            // Recalculate starting position
+            this.gridConfig.startX = gridX - totalWidth/2 + cellSize/2;
+            this.gridConfig.startY = gridY - totalHeight/2 + cellSize/2;
+            
+            // Update cell positions
+            this.updateGridCellPositions();
+        }
+    }
+    
+    // Update the positions of all grid cells after resize
+    updateGridCellPositions() {
+        const { size, cellSize, padding, startX, startY } = this.gridConfig;
+        
+        // Update position of each cell
+        this.gridCells.forEach((cellObj, index) => {
+            if (!cellObj.sprite) return;
+            
+            const row = Math.floor(index / size);
+            const col = index % size;
+            const x = startX + col * (cellSize + padding);
+            const y = startY + row * (cellSize + padding);
+            
+            // Update sprite position
+            cellObj.sprite.setPosition(x, y);
+            
+            // Update text position if it exists
+            if (cellObj.text) {
+                cellObj.text.setPosition(x, y);
+            }
+        });
+        
+        // Update grid header and harvest button positions
+        const children = this.ranchContainer.getAll();
+        children.forEach(child => {
+            if (child.type === 'Text' && child.text === 'Ranch Pasture') {
+                const gridX = this.scale.width * 0.25;
+                const totalHeight = (cellSize + padding) * size;
+                const gridY = this.scale.height * 0.5;
+                
+                child.setPosition(gridX, gridY - totalHeight/2 - 40);
+            }
+            
+            if (child.type === 'Text' && child.text === '🌾 Harvest All') {
+                const gridX = this.scale.width * 0.25;
+                const totalHeight = (cellSize + padding) * size;
+                const gridY = this.scale.height * 0.5;
+                
+                child.setPosition(gridX, gridY + totalHeight/2 + 40);
+            }
+        });
     }
 }
 
@@ -2188,51 +2589,26 @@ function showWinCelebration(amount) {
 function addCattleToScene(cattle) {
     try {
         // Check if game is initialized
-        if (!game || !game.scene || !game.scene.scenes || !game.scene.scenes[0]) {
+        if (!game || !game.scene) {
             console.log('Cannot add cattle - game scene not initialized');
-            return;
+            return null;
         }
         
-        const scene = game.scene.scenes[0];
-        
-        // Check if barn exists
-        if (!scene.barn) {
-            console.log('Cannot add cattle - barn not found in scene');
-            return;
+        // Get the RanchScene instance
+        const ranchScene = game.scene.getScene('RanchScene');
+        if (!ranchScene) {
+            console.log('Cannot add cattle - RanchScene not active');
+            return null;
         }
         
-        // Check if ranchScene exists
-        if (!scene.ranchScene) {
-            console.log('Cannot add cattle - ranch scene not found');
-            return;
-        }
+        // Use the dedicated method in RanchScene to add the cattle sprite
+        const cattleSprite = ranchScene.addCattleSprite(cattle);
+        console.log(`Added cattle #${cattle.id} to scene with milk production`);
         
-        // Random position near the barn
-        const x = scene.barn.x + (Math.random() * 200 - 100);
-        const y = scene.barn.y + (Math.random() * 200);
-        
-        // Add cattle sprite with error handling
-        try {
-            const cattleSprite = scene.add.image(x, y, 'cattle');
-            cattleSprite.setScale(0.1);
-            scene.ranchScene.add(cattleSprite);
-            
-            // Simple animation
-            scene.tweens.add({
-                targets: cattleSprite,
-                y: '+=20',
-                duration: 1500,
-                yoyo: true,
-                repeat: -1,
-                ease: 'Sine.easeInOut'
-            });
-            
-            console.log(`Added cattle #${cattle.id} to scene`);
-        } catch (err) {
-            console.error('Error adding cattle sprite:', err);
-        }
+        return cattleSprite;
     } catch (err) {
         console.error('Error in addCattleToScene:', err);
+        return null;
     }
 }
 
