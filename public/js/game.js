@@ -2317,19 +2317,8 @@ function startShadowMarketCycle() {
         shadowGrid.cycleTimer = 30;
     }
     
-    // Update the HTML market state display if it exists
-    const cycleDisplay = document.getElementById('market-cycle');
-    if (cycleDisplay) {
-        cycleDisplay.textContent = shadowGrid.marketState;
-    }
-    
-    // Update Phaser scene if active
-    if (game && game.scene && game.scene.isActive('NightScene')) {
-        const nightScene = game.scene.getScene('NightScene');
-        if (nightScene && nightScene.updateMarketStateDisplay) {
-            nightScene.updateMarketStateDisplay();
-        }
-    }
+    // Update the market state display
+    updateShadowMarketStateDisplay();
     
     // Clear existing interval if it exists
     if (shadowGrid.cycleInterval) {
@@ -2348,14 +2337,6 @@ function startShadowMarketCycle() {
                 updateShadowMarketState();
                 processShadowBrewing();
                 shadowGrid.cycleTimer = 30; // Reset to 30 seconds
-                
-                // Update timer display in Phaser scene
-                if (game && game.scene && game.scene.isActive('NightScene')) {
-                    const nightScene = game.scene.getScene('NightScene');
-                    if (nightScene && nightScene.updateMarketStateDisplay) {
-                        nightScene.updateMarketStateDisplay();
-                    }
-                }
             }
         }
     }, 1000);
@@ -2419,7 +2400,7 @@ function processShadowBrewing() {
                 cell.state = 'distilling';
             }
             
-            // Update HTML UI if it exists
+            // Update HTML UI
             const cellElement = document.getElementById(`shadow-cell-${index}`);
             if (cellElement) {
                 cellElement.className = `grid-cell ${cell.state}`;
@@ -2428,6 +2409,12 @@ function processShadowBrewing() {
                 const indicator = cellElement.querySelector('.growth-indicator');
                 if (indicator) {
                     indicator.textContent = `${cell.stage}/${cell.maxStage}`;
+                } else {
+                    // Create indicator if it doesn't exist
+                    const newIndicator = document.createElement('div');
+                    newIndicator.className = 'growth-indicator';
+                    newIndicator.textContent = `${cell.stage}/${cell.maxStage}`;
+                    cellElement.appendChild(newIndicator);
                 }
             }
         }
@@ -2436,17 +2423,57 @@ function processShadowBrewing() {
     // Update button states
     updateButtonStates();
     
-    // Update Phaser scene if active
-    if (anyProgressed && game && game.scene && game.scene.isActive('NightScene')) {
-        const nightScene = game.scene.getScene('NightScene');
-        if (nightScene && nightScene.updateAllCells) {
-            nightScene.updateAllCells();
-        }
-    }
-    
     // Notify only if something actually progressed
     if (anyProgressed) {
         showNotification('Your potions are progressing!', 'info');
+    }
+}
+
+// Function to update market state display
+function updateShadowMarketStateDisplay() {
+    // Get the status elements
+    const marketStateElement = document.getElementById('market-state');
+    const marketTipElement = document.getElementById('market-tip');
+    
+    if (marketStateElement && marketTipElement) {
+        // Update text and styling based on current state
+        let stateText = '';
+        let stateColor = '';
+        let tipText = '';
+        
+        switch (shadowGrid.marketState) {
+            case 'stable':
+                stateText = 'Network: Stable';
+                stateColor = '#00ffff';
+                tipText = 'Normal crystal yield';
+                break;
+            case 'volatile':
+                stateText = 'Network: Volatile';
+                stateColor = '#ffaa00';
+                tipText = 'Unpredictable yields (+50%)';
+                break;
+            case 'booming':
+                stateText = 'Network: Surging';
+                stateColor = '#00ff00';
+                tipText = 'High crystal yield (2x)';
+                break;
+        }
+        
+        marketStateElement.textContent = stateText;
+        marketStateElement.style.color = stateColor;
+        marketTipElement.textContent = tipText;
+    }
+    
+    // Also update the cycle display
+    const cycleDisplay = document.getElementById('market-cycle');
+    if (cycleDisplay) {
+        cycleDisplay.textContent = shadowGrid.marketState;
+    }
+    
+    // Update multiplier display
+    const multiplierDisplay = document.getElementById('market-multiplier-value');
+    if (multiplierDisplay) {
+        multiplierDisplay.textContent = `x${shadowGrid.multiplier.toFixed(1)}`;
     }
 }
 
@@ -2471,24 +2498,8 @@ function updateShadowMarketState() {
             break;
     }
     
-    // Update HTML UI display
-    const cycleDisplay = document.getElementById('market-cycle');
-    if (cycleDisplay) {
-        cycleDisplay.textContent = shadowGrid.marketState;
-    }
-    
-    const multiplierDisplay = document.getElementById('market-multiplier-value');
-    if (multiplierDisplay) {
-        multiplierDisplay.textContent = `x${shadowGrid.multiplier.toFixed(1)}`;
-    }
-    
-    // Update Phaser scene if active
-    if (game && game.scene && game.scene.isActive('NightScene')) {
-        const nightScene = game.scene.getScene('NightScene');
-        if (nightScene && nightScene.updateMarketStateDisplay) {
-            nightScene.updateMarketStateDisplay();
-        }
-    }
+    // Update the display
+    updateShadowMarketStateDisplay();
     
     // Update supply/demand values for each cell
     shadowGrid.cells.forEach((cell, index) => {
