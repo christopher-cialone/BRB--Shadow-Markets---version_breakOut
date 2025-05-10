@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
+  <rect width="100" height="100" rx="5" ry="5" fill="#5a6114" stroke="#8b9e25" stroke-width="4"/>
+  <rect x="10" y="10" width="80" height="80" rx="3" ry="3" fill="#708218" stroke="#9aae32" stroke-width="2"/>
+  
+  <!-- Plowed rows -->
+  <rect x="20" y="30" width="60" height="5" fill="#3d4304"/>
+  <rect x="20" y="50" width="60" height="5" fill="#3d4304"/>
+  <rect x="20" y="70" width="60" height="5" fill="#3d4304"/>
+  
+  <!-- Full grown plants with hay/wheat heads -->
+  <g>
+    <!-- Plant 1 -->
+    <rect x="29" y="15" width="2" height="25" fill="#aa8800"/>
+    <ellipse cx="30" cy="15" rx="10" ry="5" fill="#ffd700"/>
+    
+    <!-- Plant 2 -->
+    <rect x="49" y="10" width="2" height="30" fill="#aa8800"/>
+    <ellipse cx="50" cy="10" rx="10" ry="5" fill="#ffd700"/>
+    
+    <!-- Plant 3 -->
+    <rect x="69" y="15" width="2" height="25" fill="#aa8800"/>
+    <ellipse cx="70" cy="15" rx="10" ry="5" fill="#ffd700"/>
+    
+    <!-- Plant 4 -->
+    <rect x="29" y="55" width="2" height="25" fill="#aa8800"/>
+    <ellipse cx="30" cy="55" rx="10" ry="5" fill="#ffd700"/>
+    
+    <!-- Plant 5 -->
+    <rect x="49" y="50" width="2" height="30" fill="#aa8800"/>
+    <ellipse cx="50" cy="50" rx="10" ry="5" fill="#ffd700"/>
+    
+    <!-- Plant 6 -->
+    <rect x="69" y="55" width="2" height="25" fill="#aa8800"/>
+    <ellipse cx="70" cy="55" rx="10" ry="5" fill="#ffd700"/>
+  </g>
+  
+  <!-- Subtle glow to indicate harvestable state -->
+  <rect x="0" y="0" width="100" height="100" rx="5" ry="5" fill="#ffd700" opacity="0.15"/>
+</svg>

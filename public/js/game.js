@@ -2112,9 +2112,6 @@ function initShadowGrid() {
 // Handle clicking on a ranch grid cell
 function handleRanchCellClick(cellIndex) {
     const cell = ranchGrid.cells[cellIndex];
-    const cellElement = document.getElementById(`ranch-cell-${cellIndex}`);
-    
-    if (!cellElement) return;
     
     switch (cell.state) {
         case 'empty':
@@ -2123,13 +2120,14 @@ function handleRanchCellClick(cellIndex) {
                 playerData.hay -= 10;
                 cell.state = 'planted';
                 cell.growthStage = 0;
-                cellElement.className = 'grid-cell planted';
                 
-                // Add growth indicator
-                const indicator = document.createElement('div');
-                indicator.className = 'growth-indicator';
-                indicator.textContent = `${cell.growthStage}/${cell.growthMax}`;
-                cellElement.appendChild(indicator);
+                // Update the Phaser cell appearance
+                if (game && game.scene) {
+                    const ranchScene = game.scene.getScene('RanchScene');
+                    if (ranchScene) {
+                        ranchScene.updateCellAppearance(cellIndex);
+                    }
+                }
                 
                 showNotification('Planted a new crop! -10 Hay', 'success');
                 updateRanchResourceDisplay();
