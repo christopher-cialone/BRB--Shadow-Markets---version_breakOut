@@ -59,19 +59,15 @@ const profileUI = document.getElementById('profile-ui');
 const notification = document.getElementById('notification');
 const resultModal = document.getElementById('result-modal');
 
-// Define the MainMenuScene class
+// Define the MainMenuScene class - simplified for stability
 class MainMenuScene extends Phaser.Scene {
     constructor() {
         super('MainMenuScene');
     }
     
     preload() {
-        // Load desert background for the main menu
+        // Load the background
         this.load.image('menu-bg', 'img/game-background.jpeg');
-        
-        // Load character sprites for archetype selection
-        this.load.image('entrepreneur', 'img/characters/the-kid.jpeg');
-        this.load.image('adventurer', 'img/characters/the-hacker.jpeg');
     }
     
     create() {
@@ -80,13 +76,12 @@ class MainMenuScene extends Phaser.Scene {
         const height = this.scale.height;
         
         // Set up background with desert tint
-        this.bg = this.add.image(0, 0, 'menu-bg').setOrigin(0, 0);
-        this.bg.displayWidth = width;
-        this.bg.displayHeight = height;
+        this.bg = this.add.image(width/2, height/2, 'menu-bg');
+        this.bg.setDisplaySize(width, height);
         this.bg.setTint(0xf5deb3); // Warm desert tint
         
         // Add a semi-transparent overlay to make UI more readable
-        this.overlay = this.add.rectangle(0, 0, width, height, 0x000000, 0.3).setOrigin(0, 0);
+        this.overlay = this.add.rectangle(width/2, height/2, width, height, 0x000000, 0.3);
         
         // Title text - "Bull Run Boost"
         this.titleText = this.add.text(width / 2, height * 0.15, 'Bull Run Boost', {
@@ -94,8 +89,7 @@ class MainMenuScene extends Phaser.Scene {
             fontSize: '64px',
             color: '#ffffff',
             stroke: '#6a2ca0',
-            strokeThickness: 6,
-            shadow: { color: '#000000', fill: true, offsetX: 2, offsetY: 2, blur: 8 }
+            strokeThickness: 6
         }).setOrigin(0.5);
         
         // Subtitle - "Shadow Markets"
@@ -104,243 +98,114 @@ class MainMenuScene extends Phaser.Scene {
             fontSize: '36px',
             color: '#00ccff',
             stroke: '#000000',
-            strokeThickness: 4,
-            shadow: { color: '#000000', fill: true, offsetX: 1, offsetY: 1, blur: 4 }
+            strokeThickness: 4
         }).setOrigin(0.5);
         
         // Player name input field hint
-        this.nameText = this.add.text(width / 2, height * 0.35, 'Enter your name:', {
+        this.nameText = this.add.text(width / 2, height * 0.35, 'Enter your name in the field below:', {
             fontFamily: 'Roboto',
             fontSize: '24px',
             color: '#ffffff'
         }).setOrigin(0.5);
-        
-        // Note: We'll use the HTML input for the actual name entry
-        // Update the value in the HTML input element
-        const nameInput = document.getElementById('player-name');
-        if (nameInput) {
-            nameInput.value = playerData.name;
-        }
         
         // Archetype selection title
         this.archetypeTitle = this.add.text(width / 2, height * 0.5, 'Choose Your Archetype:', {
             fontFamily: 'Roboto',
             fontSize: '28px',
-            color: '#ffffff',
-            stroke: '#000000',
-            strokeThickness: 2
+            color: '#ffffff'
         }).setOrigin(0.5);
         
-        // Create Entrepreneur option
-        this.entrepreneurCard = this.createArchetypeCard(
-            width * 0.35, 
-            height * 0.65, 
-            'Entrepreneur', 
-            '+10% $CATTLE earning rate',
-            'entrepreneur'
-        );
+        // Entrepreneur card background
+        this.entrepreneurCardBg = this.add.rectangle(width * 0.35, height * 0.65, 250, 200, 0x222222, 0.7);
+        this.entrepreneurCardBg.setStrokeStyle(3, 0x00ffff);
         
-        // Create Adventurer option
-        this.adventurerCard = this.createArchetypeCard(
-            width * 0.65, 
-            height * 0.65, 
-            'Adventurer', 
-            '+10% heist success rate',
-            'adventurer',
-            true // disabled
-        );
+        // Entrepreneur card title
+        this.entrepreneurTitle = this.add.text(width * 0.35, height * 0.65 - 70, 'Entrepreneur', {
+            fontFamily: 'Roboto',
+            fontSize: '24px',
+            color: '#ffffff',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        
+        // Entrepreneur card description
+        this.entrepreneurDesc = this.add.text(width * 0.35, height * 0.65 + 20, '+10% $CATTLE\nearning rate', {
+            fontFamily: 'Roboto',
+            fontSize: '18px',
+            color: '#00ffff',
+            align: 'center'
+        }).setOrigin(0.5);
+        
+        // Make entrepreneur card interactive
+        this.entrepreneurCardBg.setInteractive({ useHandCursor: true })
+            .on('pointerdown', () => {
+                // Set selected
+                this.entrepreneurCardBg.setStrokeStyle(3, 0x00ff00);
+                playerData.archetype = 'Entrepreneur';
+                
+                // Update HTML selection too
+                const htmlCards = document.querySelectorAll('.archetype-card');
+                htmlCards.forEach(card => {
+                    if (card.dataset.archetype === 'Entrepreneur') {
+                        card.classList.add('selected');
+                    } else {
+                        card.classList.remove('selected');
+                    }
+                });
+            });
+        
+        // Adventurer card background - disabled
+        this.adventurerCardBg = this.add.rectangle(width * 0.65, height * 0.65, 250, 200, 0x222222, 0.7);
+        this.adventurerCardBg.setStrokeStyle(3, 0x555555);
+        
+        // Adventurer card title
+        this.adventurerTitle = this.add.text(width * 0.65, height * 0.65 - 70, 'Adventurer', {
+            fontFamily: 'Roboto',
+            fontSize: '24px',
+            color: '#888888',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        
+        // Adventurer card description
+        this.adventurerDesc = this.add.text(width * 0.65, height * 0.65 + 20, '+10% heist\nsuccess rate', {
+            fontFamily: 'Roboto',
+            fontSize: '18px',
+            color: '#888888',
+            align: 'center'
+        }).setOrigin(0.5);
+        
+        // Disabled overlay
+        this.disabledText = this.add.text(width * 0.65, height * 0.65, 'Coming Soon', {
+            fontFamily: 'Roboto',
+            fontSize: '20px',
+            color: '#ff0000',
+            backgroundColor: '#000000',
+            padding: { x: 10, y: 5 }
+        }).setOrigin(0.5).setAngle(-15);
         
         // Start button
-        this.startButton = this.add.container(width / 2, height * 0.85);
-        
-        // Button background
-        const buttonBg = this.add.rectangle(0, 0, 200, 60, 0x6a2ca0, 1).setOrigin(0.5);
-        buttonBg.setStrokeStyle(2, 0xff44cc);
+        this.startBtnBg = this.add.rectangle(width / 2, height * 0.85, 200, 60, 0x6a2ca0);
+        this.startBtnBg.setStrokeStyle(2, 0xff44cc);
         
         // Button text
-        const buttonText = this.add.text(0, 0, 'Start Game', {
+        this.startBtnText = this.add.text(width / 2, height * 0.85, 'Start Game', {
             fontFamily: 'Anta',
             fontSize: '28px',
             color: '#ffffff'
         }).setOrigin(0.5);
         
-        // Add elements to button container
-        this.startButton.add([buttonBg, buttonText]);
-        
-        // Make button interactive
-        buttonBg.setInteractive({ useHandCursor: true })
-            .on('pointerover', () => {
-                buttonBg.fillColor = 0x8a3cc0;
-                this.tweens.add({
-                    targets: this.startButton,
-                    scaleX: 1.05,
-                    scaleY: 1.05,
-                    duration: 50
-                });
-            })
-            .on('pointerout', () => {
-                buttonBg.fillColor = 0x6a2ca0;
-                this.tweens.add({
-                    targets: this.startButton,
-                    scaleX: 1,
-                    scaleY: 1,
-                    duration: 50
-                });
-            })
+        // Make start button interactive
+        this.startBtnBg.setInteractive({ useHandCursor: true })
             .on('pointerdown', () => {
-                buttonBg.fillColor = 0x5a1c90;
-                this.tweens.add({
-                    targets: this.startButton,
-                    scaleX: 0.95,
-                    scaleY: 0.95,
-                    duration: 50
-                });
-            })
-            .on('pointerup', () => {
-                buttonBg.fillColor = 0x8a3cc0;
-                this.tweens.add({
-                    targets: this.startButton,
-                    scaleX: 1.05,
-                    scaleY: 1.05,
-                    duration: 50,
-                    onComplete: () => {
-                        this.startGame();
-                    }
-                });
+                this.startGame();
             });
             
-        // Add particles for desert dust effect
-        try {
-            // Only add particles if supported
-            if (this.add.particles) {
-                this.particles = this.add.particles('menu-bg');
-                
-                this.dustEmitter = this.particles.createEmitter({
-                    x: { min: 0, max: width },
-                    y: height,
-                    lifespan: 5000,
-                    speed: { min: 20, max: 50 },
-                    angle: { min: 250, max: 290 },
-                    gravityY: -10,
-                    scale: { start: 0.05, end: 0 },
-                    alpha: { start: 0.2, end: 0 },
-                    quantity: 1,
-                    tint: 0xffe2c9
-                });
-            }
-        } catch (e) {
-            console.log('Particles not supported in this Phaser version');
+        // Set initial selection based on playerData
+        if (playerData.archetype === 'Entrepreneur') {
+            this.entrepreneurCardBg.setStrokeStyle(3, 0x00ff00);
         }
         
         // Add resize listener
         this.scale.on('resize', this.resize, this);
-        
-        // Check if archetype is already selected (from previous session)
-        this.updateArchetypeSelection(playerData.archetype);
-    }
-    
-    createArchetypeCard(x, y, title, description, key, disabled = false) {
-        const cardContainer = this.add.container(x, y);
-        
-        // Card background
-        const cardBg = this.add.rectangle(0, 0, 250, 200, 0x222222, 0.7).setOrigin(0.5);
-        cardBg.setStrokeStyle(3, disabled ? 0x555555 : 0x00ffff);
-        
-        // Card title
-        const cardTitle = this.add.text(0, -70, title, {
-            fontFamily: 'Roboto',
-            fontSize: '24px',
-            color: disabled ? '#888888' : '#ffffff',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
-        
-        // Card icon - use character sprite
-        const cardIcon = this.add.image(0, -20, key).setOrigin(0.5);
-        cardIcon.setDisplaySize(100, 100);
-        cardIcon.setAlpha(disabled ? 0.5 : 1);
-        
-        // Card description
-        const cardDesc = this.add.text(0, 60, description, {
-            fontFamily: 'Roboto',
-            fontSize: '16px',
-            color: disabled ? '#888888' : '#00ffff',
-            align: 'center'
-        }).setOrigin(0.5);
-        
-        // Add disabled overlay if needed
-        let disabledText;
-        if (disabled) {
-            disabledText = this.add.text(0, 0, 'Coming Soon', {
-                fontFamily: 'Roboto',
-                fontSize: '20px',
-                color: '#ff0000',
-                backgroundColor: '#000000',
-                padding: { x: 10, y: 5 }
-            }).setOrigin(0.5).setAngle(-15);
-        }
-        
-        // Add all elements to the container
-        const elements = [cardBg, cardTitle, cardIcon, cardDesc];
-        if (disabledText) elements.push(disabledText);
-        cardContainer.add(elements);
-        
-        // Make card interactive if not disabled
-        if (!disabled) {
-            cardBg.setInteractive({ useHandCursor: true })
-                .on('pointerover', () => {
-                    cardBg.fillColor = 0x333333;
-                    this.tweens.add({
-                        targets: cardContainer,
-                        y: y - 10,
-                        duration: 200
-                    });
-                })
-                .on('pointerout', () => {
-                    cardBg.fillColor = 0x222222;
-                    this.tweens.add({
-                        targets: cardContainer,
-                        y: y,
-                        duration: 200
-                    });
-                })
-                .on('pointerdown', () => {
-                    // Select this archetype
-                    this.updateArchetypeSelection(title);
-                });
-        }
-        
-        return cardContainer;
-    }
-    
-    updateArchetypeSelection(archetype) {
-        try {
-            // Only update if the card is available
-            if (this.entrepreneurCard && this.entrepreneurCard.getAt) {
-                // Reset both cards
-                const entrepreneurCard = this.entrepreneurCard.getAt(0);
-                if (entrepreneurCard && entrepreneurCard.setStrokeStyle) {
-                    entrepreneurCard.setStrokeStyle(3, 0x00ffff);
-                    
-                    // Update selected card
-                    if (archetype === 'Entrepreneur') {
-                        entrepreneurCard.setStrokeStyle(3, 0x00ff00);
-                        playerData.archetype = 'Entrepreneur';
-                        
-                        // Update HTML selection too
-                        const htmlCards = document.querySelectorAll('.archetype-card');
-                        htmlCards.forEach(card => {
-                            if (card.dataset.archetype === 'Entrepreneur') {
-                                card.classList.add('selected');
-                            } else {
-                                card.classList.remove('selected');
-                            }
-                        });
-                    }
-                }
-            }
-        } catch (e) {
-            console.log('Error updating archetype selection', e);
-        }
     }
     
     startGame() {
@@ -362,7 +227,7 @@ class MainMenuScene extends Phaser.Scene {
             mainMenuElement.classList.add('hidden');
         }
         
-        // Switch to ranch scene through the HTML interface
+        // Switch to ranch scene
         switchScene('ranch');
         
         // Start RanchScene in Phaser too
@@ -373,13 +238,14 @@ class MainMenuScene extends Phaser.Scene {
         const width = gameSize.width;
         const height = gameSize.height;
         
-        // Resize background
+        // Resize and reposition background
         if (this.bg) {
-            this.bg.displayWidth = width;
-            this.bg.displayHeight = height;
+            this.bg.setPosition(width/2, height/2);
+            this.bg.setDisplaySize(width, height);
         }
         
         if (this.overlay) {
+            this.overlay.setPosition(width/2, height/2);
             this.overlay.width = width;
             this.overlay.height = height;
         }
@@ -390,62 +256,48 @@ class MainMenuScene extends Phaser.Scene {
         if (this.nameText) this.nameText.setPosition(width / 2, height * 0.35);
         if (this.archetypeTitle) this.archetypeTitle.setPosition(width / 2, height * 0.5);
         
-        // Reposition archetype cards
-        if (this.entrepreneurCard) this.entrepreneurCard.setPosition(width * 0.35, height * 0.65);
-        if (this.adventurerCard) this.adventurerCard.setPosition(width * 0.65, height * 0.65);
+        // Reposition entrepreneur card
+        if (this.entrepreneurCardBg) this.entrepreneurCardBg.setPosition(width * 0.35, height * 0.65);
+        if (this.entrepreneurTitle) this.entrepreneurTitle.setPosition(width * 0.35, height * 0.65 - 70);
+        if (this.entrepreneurDesc) this.entrepreneurDesc.setPosition(width * 0.35, height * 0.65 + 20);
+        
+        // Reposition adventurer card
+        if (this.adventurerCardBg) this.adventurerCardBg.setPosition(width * 0.65, height * 0.65);
+        if (this.adventurerTitle) this.adventurerTitle.setPosition(width * 0.65, height * 0.65 - 70);
+        if (this.adventurerDesc) this.adventurerDesc.setPosition(width * 0.65, height * 0.65 + 20);
+        if (this.disabledText) this.disabledText.setPosition(width * 0.65, height * 0.65);
         
         // Reposition start button
-        if (this.startButton) this.startButton.setPosition(width / 2, height * 0.85);
-        
-        // Update dust emitter
-        try {
-            if (this.dustEmitter) {
-                this.dustEmitter.setPosition({ min: 0, max: width }, height);
-            }
-        } catch (e) {
-            console.log('Error updating dust emitter position');
-        }
+        if (this.startBtnBg) this.startBtnBg.setPosition(width / 2, height * 0.85);
+        if (this.startBtnText) this.startBtnText.setPosition(width / 2, height * 0.85);
     }
 }
 
-// Define the RanchScene class
+// Define the RanchScene class - simplified for stability
 class RanchScene extends Phaser.Scene {
     constructor() {
         super('RanchScene');
     }
     
     preload() {
-        // Load assets for ranch scene
+        // Load the background
         this.load.image('game-bg', 'img/game-background.jpeg');
-        this.load.image('character', 'img/characters/the-kid.jpeg');
-        this.load.image('cattle', 'img/cattle.png');
         this.load.image('barn', 'https://i.imgur.com/t32QEZB.png');
     }
     
     create() {
-        // Set up Ranch scene with tinted background
-        this.ranchBg = this.add.image(0, 0, 'game-bg').setOrigin(0, 0);
-        this.ranchBg.displayWidth = this.scale.width;
-        this.ranchBg.displayHeight = this.scale.height;
-        this.ranchBg.setTint(0xffeedd); // Warm, daylight tint
+        // Get dimensions
+        const width = this.scale.width;
+        const height = this.scale.height;
+        
+        // Set up background
+        this.bg = this.add.image(width/2, height/2, 'game-bg');
+        this.bg.setDisplaySize(width, height);
+        this.bg.setTint(0xffeedd); // Warm daylight tint
         
         // Add barn to ranch scene
-        this.barn = this.add.image(this.scale.width * 0.7, this.scale.height * 0.4, 'barn');
+        this.barn = this.add.image(width * 0.7, height * 0.4, 'barn');
         this.barn.setScale(0.5);
-        
-        // Add character to ranch scene
-        this.character = this.add.image(this.scale.width * 0.3, this.scale.height * 0.6, 'character');
-        this.character.setScale(0.15);
-        
-        // Make character slightly animated
-        this.tweens.add({
-            targets: this.character,
-            y: '+=10',
-            duration: 1000,
-            yoyo: true,
-            repeat: -1,
-            ease: 'Sine.easeInOut'
-        });
         
         // Add resize listener
         this.scale.on('resize', this.resize, this);
@@ -456,9 +308,9 @@ class RanchScene extends Phaser.Scene {
         const height = gameSize.height;
         
         // Resize background
-        if (this.ranchBg) {
-            this.ranchBg.displayWidth = width;
-            this.ranchBg.displayHeight = height;
+        if (this.bg) {
+            this.bg.setPosition(width/2, height/2);
+            this.bg.setDisplaySize(width, height);
         }
         
         // Reposition elements
@@ -466,45 +318,29 @@ class RanchScene extends Phaser.Scene {
             this.barn.x = width * 0.7;
             this.barn.y = height * 0.4;
         }
-        
-        if (this.character) {
-            this.character.x = width * 0.3;
-            this.character.y = height * 0.6;
-        }
     }
 }
 
-// Define the SaloonScene class
+// Define the SaloonScene class - simplified for stability
 class SaloonScene extends Phaser.Scene {
     constructor() {
         super('SaloonScene');
     }
     
     preload() {
+        // Load the background
         this.load.image('game-bg', 'img/game-background.jpeg');
-        this.load.image('character', 'img/characters/the-kid.jpeg');
     }
     
     create() {
-        // Set up Saloon scene with tinted background
-        this.saloonBg = this.add.image(0, 0, 'game-bg').setOrigin(0, 0);
-        this.saloonBg.displayWidth = this.scale.width;
-        this.saloonBg.displayHeight = this.scale.height;
-        this.saloonBg.setTint(0xddbb88); // Warm indoor lighting tint
+        // Get dimensions
+        const width = this.scale.width;
+        const height = this.scale.height;
         
-        // Add character to saloon scene
-        this.character = this.add.image(this.scale.width * 0.3, this.scale.height * 0.6, 'character');
-        this.character.setScale(0.15);
-        
-        // Make character slightly animated
-        this.tweens.add({
-            targets: this.character,
-            y: '+=10',
-            duration: 1000,
-            yoyo: true,
-            repeat: -1,
-            ease: 'Sine.easeInOut'
-        });
+        // Set up background
+        this.bg = this.add.image(width/2, height/2, 'game-bg');
+        this.bg.setDisplaySize(width, height);
+        this.bg.setTint(0xddbb88); // Warm indoor lighting tint
         
         // Add resize listener
         this.scale.on('resize', this.resize, this);
@@ -515,51 +351,33 @@ class SaloonScene extends Phaser.Scene {
         const height = gameSize.height;
         
         // Resize background
-        if (this.saloonBg) {
-            this.saloonBg.displayWidth = width;
-            this.saloonBg.displayHeight = height;
-        }
-        
-        // Reposition elements
-        if (this.character) {
-            this.character.x = width * 0.3;
-            this.character.y = height * 0.6;
+        if (this.bg) {
+            this.bg.setPosition(width/2, height/2);
+            this.bg.setDisplaySize(width, height);
         }
     }
 }
 
-// Define the NightScene class
+// Define the NightScene class - simplified for stability
 class NightScene extends Phaser.Scene {
     constructor() {
         super('NightScene');
     }
     
     preload() {
+        // Load the background
         this.load.image('game-bg', 'img/game-background.jpeg');
-        this.load.image('character', 'img/characters/the-kid.jpeg');
-        this.load.image('potion', 'https://i.imgur.com/BWZHIOJ.png');
     }
     
     create() {
-        // Set up Night scene with tinted background
-        this.nightBg = this.add.image(0, 0, 'game-bg').setOrigin(0, 0);
-        this.nightBg.displayWidth = this.scale.width;
-        this.nightBg.displayHeight = this.scale.height;
-        this.nightBg.setTint(0x5566aa); // Cool blue night tint
+        // Get dimensions
+        const width = this.scale.width;
+        const height = this.scale.height;
         
-        // Add character to night scene
-        this.character = this.add.image(this.scale.width * 0.3, this.scale.height * 0.6, 'character');
-        this.character.setScale(0.15);
-        
-        // Make character slightly animated
-        this.tweens.add({
-            targets: this.character,
-            y: '+=10',
-            duration: 1000,
-            yoyo: true,
-            repeat: -1,
-            ease: 'Sine.easeInOut'
-        });
+        // Set up background
+        this.bg = this.add.image(width/2, height/2, 'game-bg');
+        this.bg.setDisplaySize(width, height);
+        this.bg.setTint(0x5566aa); // Cool blue night tint
         
         // Add resize listener
         this.scale.on('resize', this.resize, this);
@@ -570,15 +388,9 @@ class NightScene extends Phaser.Scene {
         const height = gameSize.height;
         
         // Resize background
-        if (this.nightBg) {
-            this.nightBg.displayWidth = width;
-            this.nightBg.displayHeight = height;
-        }
-        
-        // Reposition elements
-        if (this.character) {
-            this.character.x = width * 0.3;
-            this.character.y = height * 0.6;
+        if (this.bg) {
+            this.bg.setPosition(width/2, height/2);
+            this.bg.setDisplaySize(width, height);
         }
     }
 }
