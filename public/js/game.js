@@ -6,13 +6,12 @@ let playerData = {
     name: 'Cowboy',
     archetype: 'Entrepreneur',
     characterType: 'the-kid',
-    cattle: 0,
     cattleBalance: 100,
     hay: 100,
     water: 100,
     ether: 0,
     barnCapacity: 100,
-    cattleCollection: [],
+    cattle: [],
     potionCollection: [],
     stats: {
         racesWon: 0,
@@ -1799,13 +1798,13 @@ function updateCattleInventory() {
     cattleInventory.innerHTML = '';
     
     // Check if empty
-    if (playerData.cattleCollection.length === 0) {
+    if (!playerData.cattle || playerData.cattle.length === 0) {
         cattleInventory.innerHTML = '<div class="empty-message">No cattle yet. Start breeding!</div>';
         return;
     }
     
     // Add all cattle
-    playerData.cattleCollection.forEach(cattle => {
+    playerData.cattle.forEach(cattle => {
         const cattleElement = document.createElement('div');
         cattleElement.className = 'inventory-item cattle';
         cattleElement.innerHTML = `
@@ -1819,10 +1818,107 @@ function updateCattleInventory() {
                     <img src="/img/milk-bottle.png" alt="Milk" class="stat-icon" width="20" height="20">
                     Milk: ${cattle.milk}
                 </div>
+                <div class="milk-production">
+                    <span class="production-rate">Produces ${cattle.milk * 2} $CATTLE every 30s</span>
+                </div>
+            </div>
+            <div class="cattle-actions">
+                <button class="sell-cattle-btn" data-cattle-id="${cattle.id}">
+                    Sell for ${cattle.speed * 10} $CATTLE
+                </button>
             </div>
         `;
         cattleInventory.appendChild(cattleElement);
+        
+        // Add event listener for sell button
+        const sellBtn = cattleElement.querySelector('.sell-cattle-btn');
+        sellBtn.addEventListener('click', () => sellCattle(cattle.id));
     });
+}
+
+// Function to sell a cattle
+function sellCattle(cattleId) {
+    // Find the cattle in the player's collection
+    const cattleIndex = playerData.cattle.findIndex(c => c.id === cattleId);
+    
+    if (cattleIndex === -1) {
+        showNotification('Cattle not found!', 'error');
+        return;
+    }
+    
+    const cattle = playerData.cattle[cattleIndex];
+    const sellPrice = cattle.speed * 10;
+    
+    // Remove from player's collection
+    playerData.cattle.splice(cattleIndex, 1);
+    
+    // Add money to player's balance
+    playerData.cattleBalance += sellPrice;
+    
+    // Show notification
+    showNotification(`Sold cattle for ${sellPrice} $CATTLE!`, 'success');
+    
+    // Remove sprite from scene if the RanchScene is active
+    if (game && game.scene) {
+        const ranchScene = game.scene.getScene('RanchScene');
+        if (ranchScene) {
+            // Find and remove the cattle sprite
+            const cattleSprite = ranchScene.cattle.find(sprite => 
+                sprite.getData('cattle') && sprite.getData('cattle').id === cattleId
+            );
+            
+            if (cattleSprite) {
+                // Add selling animation
+                ranchScene.tweens.add({
+                    targets: cattleSprite,
+                    alpha: 0,
+                    y: '-=50',
+                    duration: 500,
+                    ease: 'Power2',
+                    onComplete: () => {
+                        // Remove from ranchScene.cattle array
+                        const spriteIndex = ranchScene.cattle.indexOf(cattleSprite);
+                        if (spriteIndex !== -1) {
+                            ranchScene.cattle.splice(spriteIndex, 1);
+                        }
+                        
+                        // Remove milk timer for this cattle
+                        const timerIndex = ranchScene.cattleMilkTimers.findIndex(t => t.cattleId === cattleId);
+                        if (timerIndex !== -1) {
+                            ranchScene.cattleMilkTimers.splice(timerIndex, 1);
+                        }
+                        
+                        // Destroy the sprite
+                        cattleSprite.destroy();
+                        
+                        // Create money animation
+                        const moneyText = ranchScene.add.text(cattleSprite.x, cattleSprite.y, `+${sellPrice}`, {
+                            fontFamily: 'Anta',
+                            fontSize: '24px',
+                            color: '#00ff00',
+                            stroke: '#000000',
+                            strokeThickness: 4
+                        }).setOrigin(0.5);
+                        
+                        ranchScene.tweens.add({
+                            targets: moneyText,
+                            y: '-=100',
+                            alpha: { from: 1, to: 0 },
+                            duration: 1500,
+                            ease: 'Power2',
+                            onComplete: () => {
+                                moneyText.destroy();
+                            }
+                        });
+                    }
+                });
+            }
+        }
+    }
+    
+    // Update UI
+    updateCattleInventory();
+    updateUI();
 }
 
 function updatePotionInventory() {
