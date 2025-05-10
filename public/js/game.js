@@ -2194,9 +2194,8 @@ function handleShadowCellClick(cellIndex) {
 // Harvest a single ranch cell
 function harvestRanchCell(cellIndex) {
     const cell = ranchGrid.cells[cellIndex];
-    const cellElement = document.getElementById(`ranch-cell-${cellIndex}`);
     
-    if (!cellElement || cell.state !== 'harvestable') return;
+    if (cell.state !== 'harvestable') return;
     
     // Calculate harvest rewards
     const hayReward = Math.floor(15 + Math.random() * 10) * ranchGrid.multiplier;
@@ -2210,8 +2209,67 @@ function harvestRanchCell(cellIndex) {
     // Reset cell
     cell.state = 'empty';
     cell.growthStage = 0;
-    cellElement.className = 'grid-cell empty';
-    cellElement.innerHTML = '';
+    
+    // Update the Phaser cell appearance with animation
+    if (game && game.scene) {
+        const ranchScene = game.scene.getScene('RanchScene');
+        if (ranchScene) {
+            // Update cell appearance in Phaser
+            ranchScene.updateCellAppearance(cellIndex);
+            
+            // Create harvest animation
+            const { startX, startY, cellSize, padding, size } = ranchScene.gridConfig;
+            const row = Math.floor(cellIndex / size);
+            const col = cellIndex % size;
+            const x = startX + col * (cellSize + padding);
+            const y = startY + row * (cellSize + padding);
+            
+            // Create hay icon animation
+            const hayIcon = ranchScene.add.image(x, y, 'hay-icon');
+            hayIcon.setScale(0.4);
+            ranchScene.ranchContainer.add(hayIcon);
+            
+            // Create water icon animation
+            const waterIcon = ranchScene.add.image(x + 20, y, 'water-drop');
+            waterIcon.setScale(0.4);
+            ranchScene.ranchContainer.add(waterIcon);
+            
+            // Create reward text
+            const hayText = ranchScene.add.text(x, y - 15, `+${hayReward.toFixed(0)}`, {
+                fontFamily: 'Anta',
+                fontSize: '16px',
+                color: '#ffcc00',
+                stroke: '#000000',
+                strokeThickness: 3
+            }).setOrigin(0.5);
+            
+            const waterText = ranchScene.add.text(x + 20, y - 15, `+${waterReward.toFixed(0)}`, {
+                fontFamily: 'Anta',
+                fontSize: '16px',
+                color: '#00ccff',
+                stroke: '#000000',
+                strokeThickness: 3
+            }).setOrigin(0.5);
+            
+            ranchScene.ranchContainer.add(hayText);
+            ranchScene.ranchContainer.add(waterText);
+            
+            // Animate the rewards floating up and fading
+            ranchScene.tweens.add({
+                targets: [hayIcon, hayText, waterIcon, waterText],
+                y: '-=50',
+                alpha: { from: 1, to: 0 },
+                duration: 1500,
+                ease: 'Power2',
+                onComplete: () => {
+                    hayIcon.destroy();
+                    hayText.destroy();
+                    waterIcon.destroy();
+                    waterText.destroy();
+                }
+            });
+        }
+    }
     
     // Show notification
     showNotification(`Harvested crop! +${hayReward.toFixed(0)} Hay, +${waterReward.toFixed(0)} Water`, 'success');
@@ -2377,29 +2435,51 @@ function startShadowMarketCycle() {
 function growRanchPlants() {
     let anyGrown = false;
     
+    // Get RanchScene for visual updates
+    let ranchScene = null;
+    if (game && game.scene) {
+        ranchScene = game.scene.getScene('RanchScene');
+    }
+    
     ranchGrid.cells.forEach((cell, index) => {
-        const cellElement = document.getElementById(`ranch-cell-${index}`);
-        if (!cellElement) return;
-        
         // Only process cells that are planted or growing
         if (cell.state === 'planted' || cell.state === 'growing') {
             // Increment growth stage
             cell.growthStage++;
             anyGrown = true;
             
-            // Update growth indicator
-            const indicator = cellElement.querySelector('.growth-indicator');
-            if (indicator) {
-                indicator.textContent = `${cell.growthStage}/${cell.growthMax}`;
-            }
-            
             // Check if fully grown
             if (cell.growthStage >= cell.growthMax) {
                 cell.state = 'harvestable';
-                cellElement.className = 'grid-cell harvestable';
             } else if (cell.state === 'planted' && cell.growthStage >= 1) {
                 cell.state = 'growing';
-                cellElement.className = 'grid-cell growing';
+            }
+            
+            // Update the cell appearance in Phaser
+            if (ranchScene) {
+                ranchScene.updateCellAppearance(index);
+                
+                // Add growing particle effect
+                const { startX, startY, cellSize, padding, size } = ranchScene.gridConfig;
+                const row = Math.floor(index / size);
+                const col = index % size;
+                const x = startX + col * (cellSize + padding);
+                const y = startY + row * (cellSize + padding);
+                
+                // Create a sparkle effect for growing
+                const particles = ranchScene.add.particles(x, y, 'water-drop', {
+                    scale: { start: 0.1, end: 0 },
+                    speed: { min: 20, max: 50 },
+                    quantity: 5,
+                    lifespan: 500,
+                    alpha: { start: 0.6, end: 0 },
+                    blendMode: 'ADD'
+                });
+                
+                // Auto-destroy particles after 1 second
+                ranchScene.time.delayedCall(1000, () => {
+                    particles.destroy();
+                });
             }
         }
     });
