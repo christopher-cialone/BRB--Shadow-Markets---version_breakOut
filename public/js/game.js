@@ -2791,17 +2791,66 @@ function harvestAllRanchCells() {
 function distillAllShadowCells() {
     let distilledCount = 0;
     
+    // Get the NightScene if available
+    let nightScene = null;
+    if (game && game.scene) {
+        nightScene = game.scene.getScene('NightScene');
+    }
+    
+    // Get all ready cells first (because distilling modifies the array)
+    const readyCells = [];
     shadowGrid.cells.forEach((cell, index) => {
         if (cell.state === 'ready') {
-            distillShadowCell(index);
-            distilledCount++;
+            readyCells.push(index);
         }
     });
     
-    if (distilledCount === 0) {
+    // Add a small delay between each distillation for visual effect
+    readyCells.forEach((cellIndex, i) => {
+        // Add a slight delay between each distillation (150ms) for better visualization
+        setTimeout(() => {
+            distillShadowCell(cellIndex);
+            distilledCount++;
+            
+            // Show final notification after all are processed
+            if (i === readyCells.length - 1) {
+                if (distilledCount === 0) {
+                    showNotification('No potions ready to distill yet!', 'info');
+                } else {
+                    showNotification(`Distilled ${distilledCount} potions!`, 'success');
+                    
+                    // Add a celebratory effect if multiple potions were distilled
+                    if (distilledCount > 1 && nightScene) {
+                        // Add confetti effect at center of screen
+                        const centerX = nightScene.cameras.main.width / 2;
+                        const centerY = nightScene.cameras.main.height / 2;
+                        
+                        // Create a burst of particles
+                        const particles = nightScene.add.particles(centerX, centerY, 'glow', {
+                            scale: { start: 0.4, end: 0.1 },
+                            speed: { min: 100, max: 300 },
+                            quantity: distilledCount * 10, // More particles for more potions
+                            lifespan: 2000,
+                            alpha: { start: 1, end: 0 },
+                            blendMode: 'ADD',
+                            angle: { min: 0, max: 360 },
+                            rotate: { min: 0, max: 360 },
+                            tint: [0xff00ff, 0x00ffff, 0xffff00]
+                        });
+                        
+                        // Auto-destroy particles after animation completes
+                        nightScene.time.delayedCall(2000, () => {
+                            particles.destroy();
+                        });
+                    }
+                }
+            }
+        }, i * 150);
+    });
+    
+    // If no potions were ready, show notification immediately
+    if (readyCells.length === 0) {
         showNotification('No potions ready to distill yet!', 'info');
-    } else {
-        showNotification(`Distilled ${distilledCount} potions!`, 'success');
     }
 }
 
@@ -2932,12 +2981,21 @@ function growRanchPlants() {
 function processShadowBrewing() {
     let anyProgressed = false;
     
+    // Get the NightScene if available
+    let nightScene = null;
+    if (game && game.scene) {
+        nightScene = game.scene.getScene('NightScene');
+    }
+    
     shadowGrid.cells.forEach((cell, index) => {
         // Only process cells that are brewing or distilling
         if (cell.state === 'brewing' || cell.state === 'distilling') {
             // Increment stage
             cell.stage++;
             anyProgressed = true;
+            
+            // Store previous state
+            const prevState = cell.state;
             
             // Check if fully ready
             if (cell.stage >= cell.maxStage) {
@@ -2946,21 +3004,50 @@ function processShadowBrewing() {
                 cell.state = 'distilling';
             }
             
-            // Update HTML UI
-            const cellElement = document.getElementById(`shadow-cell-${index}`);
-            if (cellElement) {
-                cellElement.className = `grid-cell ${cell.state}`;
+            // Update Phaser UI
+            if (nightScene) {
+                nightScene.updateCellAppearance(index);
                 
-                // Update stage indicator
-                const indicator = cellElement.querySelector('.growth-indicator');
-                if (indicator) {
-                    indicator.textContent = `${cell.stage}/${cell.maxStage}`;
-                } else {
-                    // Create indicator if it doesn't exist
-                    const newIndicator = document.createElement('div');
-                    newIndicator.className = 'growth-indicator';
-                    newIndicator.textContent = `${cell.stage}/${cell.maxStage}`;
-                    cellElement.appendChild(newIndicator);
+                // Add particle effect for state transitions
+                if (prevState !== cell.state) {
+                    const { startX, startY, cellSize, padding, size } = nightScene.gridConfig;
+                    const row = Math.floor(index / size);
+                    const col = index % size;
+                    const x = startX + col * (cellSize + padding);
+                    const y = startY + row * (cellSize + padding);
+                    
+                    if (cell.state === 'distilling') {
+                        // Transition from brewing to distilling
+                        const particles = nightScene.add.particles(x, y, 'bubble', {
+                            scale: { start: 0.2, end: 0 },
+                            speed: { min: 30, max: 70 },
+                            quantity: 15,
+                            lifespan: 800,
+                            alpha: { start: 0.8, end: 0 },
+                            blendMode: 'ADD'
+                        });
+                        
+                        // Auto-destroy particles after animation
+                        nightScene.time.delayedCall(1000, () => {
+                            particles.destroy();
+                        });
+                    } else if (cell.state === 'ready') {
+                        // Transition to ready state
+                        const particles = nightScene.add.particles(x, y, 'glow', {
+                            scale: { start: 0.5, end: 0.1 },
+                            speed: { min: 40, max: 100 },
+                            quantity: 10,
+                            lifespan: 1200,
+                            alpha: { start: 1, end: 0 },
+                            blendMode: 'ADD',
+                            angle: { min: 0, max: 360 }
+                        });
+                        
+                        // Auto-destroy particles after animation
+                        nightScene.time.delayedCall(1500, () => {
+                            particles.destroy();
+                        });
+                    }
                 }
             }
         }
