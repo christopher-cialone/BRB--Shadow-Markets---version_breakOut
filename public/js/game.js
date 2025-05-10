@@ -210,22 +210,27 @@ class MainMenuScene extends Phaser.Scene {
             });
             
         // Add particles for desert dust effect
-        this.particles = this.add.particles('menu-bg');
-        
-        this.dustEmitter = this.particles.createEmitter({
-            frame: { frames: [0], cycle: true },
-            x: { min: 0, max: width },
-            y: height,
-            lifespan: 5000,
-            speed: { min: 20, max: 50 },
-            angle: { min: 250, max: 290 },
-            gravityY: -10,
-            scale: { start: 0.05, end: 0 },
-            alpha: { start: 0.2, end: 0 },
-            quantity: 1,
-            tint: 0xffe2c9,
-            blendMode: 'ADD'
-        });
+        try {
+            // Only add particles if supported
+            if (this.add.particles) {
+                this.particles = this.add.particles('menu-bg');
+                
+                this.dustEmitter = this.particles.createEmitter({
+                    x: { min: 0, max: width },
+                    y: height,
+                    lifespan: 5000,
+                    speed: { min: 20, max: 50 },
+                    angle: { min: 250, max: 290 },
+                    gravityY: -10,
+                    scale: { start: 0.05, end: 0 },
+                    alpha: { start: 0.2, end: 0 },
+                    quantity: 1,
+                    tint: 0xffe2c9
+                });
+            }
+        } catch (e) {
+            console.log('Particles not supported in this Phaser version');
+        }
         
         // Add resize listener
         this.scale.on('resize', this.resize, this);
@@ -308,24 +313,33 @@ class MainMenuScene extends Phaser.Scene {
     }
     
     updateArchetypeSelection(archetype) {
-        // Reset both cards
-        const entrepreneurCard = this.entrepreneurCard.getAt(0);
-        entrepreneurCard.setStrokeStyle(3, 0x00ffff);
-        
-        // Update selected card
-        if (archetype === 'Entrepreneur') {
-            entrepreneurCard.setStrokeStyle(3, 0x00ff00);
-            playerData.archetype = 'Entrepreneur';
-            
-            // Update HTML selection too
-            const htmlCards = document.querySelectorAll('.archetype-card');
-            htmlCards.forEach(card => {
-                if (card.dataset.archetype === 'Entrepreneur') {
-                    card.classList.add('selected');
-                } else {
-                    card.classList.remove('selected');
+        try {
+            // Only update if the card is available
+            if (this.entrepreneurCard && this.entrepreneurCard.getAt) {
+                // Reset both cards
+                const entrepreneurCard = this.entrepreneurCard.getAt(0);
+                if (entrepreneurCard && entrepreneurCard.setStrokeStyle) {
+                    entrepreneurCard.setStrokeStyle(3, 0x00ffff);
+                    
+                    // Update selected card
+                    if (archetype === 'Entrepreneur') {
+                        entrepreneurCard.setStrokeStyle(3, 0x00ff00);
+                        playerData.archetype = 'Entrepreneur';
+                        
+                        // Update HTML selection too
+                        const htmlCards = document.querySelectorAll('.archetype-card');
+                        htmlCards.forEach(card => {
+                            if (card.dataset.archetype === 'Entrepreneur') {
+                                card.classList.add('selected');
+                            } else {
+                                card.classList.remove('selected');
+                            }
+                        });
+                    }
                 }
-            });
+            }
+        } catch (e) {
+            console.log('Error updating archetype selection', e);
         }
     }
     
@@ -384,8 +398,12 @@ class MainMenuScene extends Phaser.Scene {
         if (this.startButton) this.startButton.setPosition(width / 2, height * 0.85);
         
         // Update dust emitter
-        if (this.dustEmitter) {
-            this.dustEmitter.setPosition({ min: 0, max: width }, height);
+        try {
+            if (this.dustEmitter) {
+                this.dustEmitter.setPosition({ min: 0, max: width }, height);
+            }
+        } catch (e) {
+            console.log('Error updating dust emitter position');
         }
     }
 }
