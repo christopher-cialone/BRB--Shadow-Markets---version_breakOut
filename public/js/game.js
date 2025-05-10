@@ -2244,32 +2244,83 @@ function updatePotionInventory() {
     // Clear inventory
     potionInventory.innerHTML = '';
     
-    // Check if empty
-    if (playerData.potionCollection.length === 0) {
+    // Check if potion collection exists and is not empty
+    if (!playerData.potionCollection || playerData.potionCollection.length === 0) {
         potionInventory.innerHTML = '<div class="empty-message">No potions yet. Start crafting!</div>';
         return;
     }
     
     // Add all potions
     playerData.potionCollection.forEach(potion => {
+        // Create potion element with cyberpunk styling
         const potionElement = document.createElement('div');
         potionElement.className = 'inventory-item potion';
+        
+        // Calculate value based on potion properties and market conditions
+        const baseValue = potion.value || (25 + potion.potency * 1);
+        const marketMultiplier = shadowGrid.multiplier || 1.0;
+        const currentValue = Math.floor(baseValue * marketMultiplier);
+        
+        // Format unique ID for display
+        const shortId = typeof potion.id === 'number' 
+            ? potion.id.toString().slice(-4) 
+            : (potion.id.split('-').pop() || '').substr(0, 4);
+        
+        // Get creation date
+        const creationDate = potion.created ? new Date(potion.created).toLocaleDateString() : 'Unknown';
+        
+        // Create HTML with glow effects for higher potency potions
+        const glowClass = potion.potency > 7 ? 'high-potency' : 
+                         potion.potency > 4 ? 'medium-potency' : '';
+        
         potionElement.innerHTML = `
-            <div class="title">
-                <span class="icon">🧪</span>
-                <span>Potion #${potion.id.split('-').pop().substr(0, 4)}</span>
+            <div class="title ${glowClass}">
+                <span class="icon">⚗️</span>
+                <span>Shadow Elixir #${shortId}</span>
             </div>
             <div class="stats">
-                <div>Potency: ${potion.potency}</div>
-                <div>Market Value: ${((25 + potion.potency * 1.5) * marketPrice).toFixed(2)} $CATTLE</div>
+                <div class="potency-meter">
+                    <span>Potency: ${potion.potency}/10</span>
+                    <div class="meter-bar">
+                        <div class="meter-fill" style="width: ${potion.potency * 10}%"></div>
+                    </div>
+                </div>
+                <div class="market-value">
+                    <span>Market Value: ${currentValue} $CATTLE</span>
+                    <span class="multiplier">(${marketMultiplier.toFixed(1)}x Market Multiplier)</span>
+                </div>
+                <div class="created">Crafted: ${creationDate}</div>
             </div>
-            <button class="sell">Sell Potion</button>
+            <button class="sell-button">
+                <span class="icon">💰</span>
+                <span>Sell for ${currentValue} $CATTLE</span>
+            </button>
         `;
         
         // Add sell event listener
-        const sellButton = potionElement.querySelector('.sell');
+        const sellButton = potionElement.querySelector('.sell-button');
         sellButton.addEventListener('click', () => {
-            socket.emit('sell-potion', { potionId: potion.id });
+            // Add to player's cattle balance
+            playerData.cattleBalance += currentValue;
+            
+            // Record sale in stats
+            playerData.stats.potionsSold = (playerData.stats.potionsSold || 0) + 1;
+            playerData.stats.potionEarnings = (playerData.stats.potionEarnings || 0) + currentValue;
+            
+            // Remove from collection
+            playerData.potionCollection = playerData.potionCollection.filter(p => p.id !== potion.id);
+            
+            // Update UI
+            updatePotionInventory();
+            updateUI();
+            
+            // Show notification
+            showNotification(`Sold potion for ${currentValue} $CATTLE!`, 'success');
+            
+            // Show celebration if it's a high value potion
+            if (currentValue > 30) {
+                showWinCelebration(currentValue);
+            }
         });
         
         potionInventory.appendChild(potionElement);
