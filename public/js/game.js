@@ -390,32 +390,59 @@ class NightScene extends Phaser.Scene {
         const containerWidth = 450;
         const containerHeight = 450;
         
-        // Set up background that fits in the container
-        this.bg = this.add.image(containerWidth/2, containerHeight/2, 'game-bg');
-        this.bg.setDisplaySize(containerWidth, containerHeight);
-        this.bg.setTint(0x5566aa); // Cool blue night tint
+        // Set up simple background with gradient that matches the grid cells style
+        this.bg = this.add.rectangle(containerWidth/2, containerHeight/2, containerWidth, containerHeight, 0x1a0f33);
         
-        // Add a semi-transparent overlay for better visibility
-        this.overlay = this.add.rectangle(containerWidth/2, containerHeight/2, containerWidth, containerHeight, 0x000000, 0.4);
+        // Add a grid pattern background instead of image
+        const gridPattern = this.add.grid(
+            containerWidth/2, 
+            containerHeight/2,
+            containerWidth, 
+            containerHeight, 
+            20, 
+            20, 
+            0, 
+            0, 
+            0x3a2066, 
+            0.2
+        );
         
         // Create shadow market title at the top of the container
-        this.marketTitle = this.add.text(containerWidth/2, 40, 'Shadow Market', {
+        this.marketTitle = this.add.text(containerWidth/2, 40, 'Intelligence Network', {
             fontFamily: 'Anta',
-            fontSize: '32px',
+            fontSize: '28px',
             color: '#cc00ff',
             stroke: '#000000',
-            strokeThickness: 3,
-            shadow: { color: '#aa00ff', fill: true, offsetX: 2, offsetY: 2, blur: 8 }
+            strokeThickness: 2,
+            shadow: { color: '#aa00ff', fill: true, offsetX: 1, offsetY: 1, blur: 4 }
+        }).setOrigin(0.5);
+        
+        // Create an instruction text
+        this.instructionText = this.add.text(containerWidth/2, 80, 'Gather data crystals to craft potions', {
+            fontFamily: 'Roboto',
+            fontSize: '16px',
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 1
         }).setOrigin(0.5);
         
         // Create a container for our Shadow Grid in the center
         this.gridContainer = this.add.container(containerWidth/2, containerHeight/2);
         
         // Create market state indicator
-        this.marketStateText = this.add.text(containerWidth/2, 80, 'Market: Stable', {
+        this.marketStateText = this.add.text(containerWidth/2, containerHeight - 60, 'Network: Stable', {
             fontFamily: 'Roboto',
-            fontSize: '20px',
+            fontSize: '18px',
             color: '#00ffff'
+        }).setOrigin(0.5);
+        
+        // Add helpful tip text
+        this.tipText = this.add.text(containerWidth/2, containerHeight - 30, 'Click empty cells to start crystal formation', {
+            fontFamily: 'Roboto',
+            fontSize: '14px',
+            color: '#aaaaff',
+            stroke: '#000000',
+            strokeThickness: 1
         }).setOrigin(0.5);
         
         // Initialize the shadow grid
@@ -475,14 +502,52 @@ class NightScene extends Phaser.Scene {
                 if (cell.state === 'distilling') spriteName = 'cell-distilling';
                 if (cell.state === 'ready') spriteName = 'cell-ready';
                 
-                // Create cell sprite
-                const cellSprite = this.add.sprite(x, y, spriteName);
-                cellSprite.setDisplaySize(cellSize, cellSize);
-                cellSprite.setInteractive({ useHandCursor: true });
+                // Instead of loading sprites, create grid cells similar to ranch cells
+                // Create a rectangle for the cell background
+                const cellBg = this.add.rectangle(x, y, cellSize, cellSize, 0x1a0f33);
+                cellBg.setStrokeStyle(2, 0x8a2be2);
+                cellBg.setInteractive({ useHandCursor: true });
+                
+                // Add different visual indicators based on state
+                let cellContent;
+                let cellLabel = '';
+                
+                if (cell.state === 'empty') {
+                    cellContent = this.add.text(x, y, '📊', {
+                        fontSize: '24px'
+                    }).setOrigin(0.5);
+                    cellLabel = 'Data Node';
+                } else if (cell.state === 'brewing') {
+                    cellContent = this.add.text(x, y, '💾', {
+                        fontSize: '24px'
+                    }).setOrigin(0.5);
+                    cellLabel = 'Collecting';
+                } else if (cell.state === 'distilling') {
+                    cellContent = this.add.text(x, y, '🔮', {
+                        fontSize: '24px'
+                    }).setOrigin(0.5);
+                    cellLabel = 'Processing';
+                } else if (cell.state === 'ready') {
+                    cellContent = this.add.text(x, y, '💎', {
+                        fontSize: '24px'
+                    }).setOrigin(0.5);
+                    cellLabel = 'Crystal Ready';
+                }
+                
+                // Add a label below the icon
+                const label = this.add.text(x, y + cellSize/2 - 12, cellLabel, {
+                    fontFamily: 'Roboto',
+                    fontSize: '12px',
+                    color: '#ffffff',
+                    align: 'center'
+                }).setOrigin(0.5);
+                
+                // Group cell elements
+                const cellGroup = this.add.container(0, 0, [cellBg, cellContent, label]);
                 
                 // Add cell to our container
-                this.gridContainer.add(cellSprite);
-                this.gridCells.push(cellSprite);
+                this.gridContainer.add(cellGroup);
+                this.gridCells.push({ bg: cellBg, content: cellContent, label: label, container: cellGroup });
                 
                 // Add stage indicator text for non-empty cells
                 if (cell.state !== 'empty') {
@@ -506,14 +571,13 @@ class NightScene extends Phaser.Scene {
                     this.gridTexts.push(emptyText);
                 }
                 
-                // Create tooltip but hide it initially
-                const tooltipBg = this.add.image(x, y - 60, 'tooltip-bg');
-                tooltipBg.setDisplaySize(120, 70);
-                tooltipBg.setAlpha(0.9);
+                // Create tooltip as a rectangle with text
+                const tooltipBg = this.add.rectangle(x, y - 60, 140, 80, 0x1a0f33, 0.9);
+                tooltipBg.setStrokeStyle(1, 0x8a2be2);
                 tooltipBg.visible = false;
                 
                 const supplyDemandText = this.add.text(x, y - 60, 
-                    `Supply: ${cell.supply}\nDemand: ${cell.demand}`, {
+                    `Intel: ${cell.supply}\nDemand: ${cell.demand}`, {
                     fontFamily: 'Roboto',
                     fontSize: '12px',
                     color: '#ffffff',
@@ -527,37 +591,71 @@ class NightScene extends Phaser.Scene {
                 this.gridContainer.add([tooltipBg, supplyDemandText]);
                 
                 // Hover events for tooltip
-                cellSprite.on('pointerover', () => {
+                cellBg.on('pointerover', () => {
                     tooltipBg.visible = true;
                     supplyDemandText.visible = true;
                     
-                    // Update tooltip text with current values
+                    // Update tooltip text with current values and tip
+                    let tipText = '';
+                    
+                    if (cell.state === 'empty') {
+                        tipText = 'Click to start collection';
+                    } else if (cell.state === 'brewing') {
+                        tipText = `Collecting: ${cell.stage}/${cell.maxStage}`;
+                    } else if (cell.state === 'distilling') {
+                        tipText = `Processing: ${cell.stage}/${cell.maxStage}`;
+                    } else if (cell.state === 'ready') {
+                        tipText = 'Click to extract crystal';
+                    }
+                    
+                    const marketTip = this.getMarketTip(cell);
                     supplyDemandText.setText(
-                        `Supply: ${cell.supply}\nDemand: ${cell.demand}\n${this.getMarketTip(cell)}`
+                        `Intel: ${cell.supply}\nDemand: ${cell.demand}\n${marketTip}\n${tipText}`
                     );
                 });
                 
-                cellSprite.on('pointerout', () => {
+                cellBg.on('pointerout', () => {
                     tooltipBg.visible = false;
                     supplyDemandText.visible = false;
                 });
                 
                 // Click event for cell interaction
-                cellSprite.on('pointerdown', () => {
+                cellBg.on('pointerdown', () => {
                     handleShadowCellClick(cellIndex);
                     
                     // Update cell appearance after click
                     this.updateCellAppearance(cellIndex);
                 });
                 
-                // Add animations for brewing state
+                // Set initial animations based on state
                 if (cell.state === 'brewing') {
-                    this.addBrewingAnimation(cellSprite, x, y);
-                }
-                
-                // Add glow for ready state
-                if (cell.state === 'ready') {
-                    this.addReadyGlow(cellSprite);
+                    this.tweens.add({
+                        targets: cellContent,
+                        scale: { from: 1, to: 1.2 },
+                        duration: 800,
+                        yoyo: true,
+                        repeat: -1,
+                        ease: 'Sine.easeInOut'
+                    });
+                } else if (cell.state === 'distilling') {
+                    this.tweens.add({
+                        targets: cellContent,
+                        angle: 360,
+                        duration: 3000,
+                        repeat: -1,
+                        ease: 'Linear'
+                    });
+                } else if (cell.state === 'ready') {
+                    this.addReadyGlow(cellBg);
+                    
+                    this.tweens.add({
+                        targets: cellContent,
+                        y: '-=10',
+                        duration: 1000,
+                        yoyo: true,
+                        repeat: -1,
+                        ease: 'Sine.easeInOut'
+                    });
                 }
             }
         }
@@ -613,11 +711,11 @@ class NightScene extends Phaser.Scene {
     }
     
     // Add glow effect to ready cells
-    addReadyGlow(cellSprite) {
-        // Add a subtle pulsing glow
+    addReadyGlow(cellElement) {
+        // Add a subtle pulsing glow effect to background
         this.tweens.add({
-            targets: cellSprite,
-            alpha: { from: 1, to: 0.7 },
+            targets: cellElement,
+            strokeThickness: { from: 3, to: 5 },
             duration: 800,
             repeat: -1,
             yoyo: true,
@@ -628,34 +726,87 @@ class NightScene extends Phaser.Scene {
     // Update the appearance of a specific cell
     updateCellAppearance(cellIndex) {
         const cell = shadowGrid.cells[cellIndex];
-        const cellSprite = this.gridCells[cellIndex];
+        const cellElements = this.gridCells[cellIndex];
         const stageText = this.gridTexts[cellIndex];
         
-        // Update sprite based on state
+        if (!cellElements) return;
+        
+        // Update cell content based on state
         if (cell.state === 'empty') {
-            cellSprite.setTexture('cell-empty');
-            stageText.setText('');
+            cellElements.content.setText('📊');
+            cellElements.label.setText('Data Node');
+            if (stageText) stageText.setText('');
+            
             // Remove any animations
-            this.tweens.killTweensOf(cellSprite);
-        } else if (cell.state === 'brewing') {
-            cellSprite.setTexture('cell-brewing');
-            stageText.setText(`${cell.stage}/${cell.maxStage}`);
-            // Add brewing animation
-            this.addBrewingAnimation(
-                cellSprite, 
-                cellSprite.x, 
-                cellSprite.y
-            );
-        } else if (cell.state === 'distilling') {
-            cellSprite.setTexture('cell-distilling');
-            stageText.setText(`${cell.stage}/${cell.maxStage}`);
+            this.tweens.killTweensOf(cellElements.bg);
+            this.tweens.killTweensOf(cellElements.content);
+            
+            // Reset stroke color
+            cellElements.bg.setStrokeStyle(2, 0x8a2be2);
+        } 
+        else if (cell.state === 'brewing') {
+            cellElements.content.setText('💾');
+            cellElements.label.setText('Collecting');
+            if (stageText) stageText.setText(`${cell.stage}/${cell.maxStage}`);
+            
+            // Add brewing animation - pulse for data collection
+            this.tweens.add({
+                targets: cellElements.content,
+                scale: { from: 1, to: 1.2 },
+                duration: 800,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+            
+            // Change stroke color
+            cellElements.bg.setStrokeStyle(2, 0x00ffff);
+        } 
+        else if (cell.state === 'distilling') {
+            cellElements.content.setText('🔮');
+            cellElements.label.setText('Processing');
+            if (stageText) stageText.setText(`${cell.stage}/${cell.maxStage}`);
+            
+            // Remove any animations and add processing animation
+            this.tweens.killTweensOf(cellElements.bg);
+            this.tweens.killTweensOf(cellElements.content);
+            
+            // Add rotation animation for processing
+            this.tweens.add({
+                targets: cellElements.content,
+                angle: 360,
+                duration: 3000,
+                repeat: -1,
+                ease: 'Linear'
+            });
+            
+            // Change stroke color
+            cellElements.bg.setStrokeStyle(2, 0xff00ff);
+        } 
+        else if (cell.state === 'ready') {
+            cellElements.content.setText('💎');
+            cellElements.label.setText('Crystal Ready');
+            if (stageText) stageText.setText(`${cell.stage}/${cell.maxStage}`);
+            
             // Remove any animations
-            this.tweens.killTweensOf(cellSprite);
-        } else if (cell.state === 'ready') {
-            cellSprite.setTexture('cell-ready');
-            stageText.setText(`${cell.stage}/${cell.maxStage}`);
-            // Add ready glow
-            this.addReadyGlow(cellSprite);
+            this.tweens.killTweensOf(cellElements.bg);
+            this.tweens.killTweensOf(cellElements.content);
+            
+            // Add ready glow animation
+            this.addReadyGlow(cellElements.bg);
+            
+            // Add upward bounce animation for crystal ready
+            this.tweens.add({
+                targets: cellElements.content,
+                y: '-=10',
+                duration: 1000,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+            
+            // Change stroke color
+            cellElements.bg.setStrokeStyle(3, 0x00ff00);
         }
     }
     
@@ -663,24 +814,33 @@ class NightScene extends Phaser.Scene {
     updateMarketStateDisplay() {
         let stateText = '';
         let stateColor = '';
+        let tipText = '';
         
         switch (shadowGrid.marketState) {
             case 'stable':
-                stateText = 'Market: Stable';
+                stateText = 'Network: Stable';
                 stateColor = '#00ffff';
+                tipText = 'Normal crystal yield';
                 break;
             case 'volatile':
-                stateText = 'Market: Volatile';
+                stateText = 'Network: Volatile';
                 stateColor = '#ffaa00';
+                tipText = 'Unpredictable yields (+50%)';
                 break;
             case 'booming':
-                stateText = 'Market: Booming';
+                stateText = 'Network: Surging';
                 stateColor = '#00ff00';
+                tipText = 'High crystal yield (2x)';
                 break;
         }
         
         this.marketStateText.setText(stateText);
         this.marketStateText.setColor(stateColor);
+        
+        // Update tip text
+        if (this.tipText) {
+            this.tipText.setText(tipText);
+        }
     }
     
     // Update all cells with current data
