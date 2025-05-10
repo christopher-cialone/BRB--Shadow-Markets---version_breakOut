@@ -762,16 +762,38 @@ class SaloonScene extends Phaser.Scene {
 class NightScene extends Phaser.Scene {
     constructor() {
         super('NightScene');
+        
+        // Grid configuration for this scene
+        this.gridConfig = {
+            size: 4, // 4x4 grid
+            startX: 400,
+            startY: 250,
+            cellSize: 90,
+            padding: 10
+        };
+        
+        // Animation timers
+        this.bubblingTimers = [];
+        this.glowTimers = [];
     }
     
     preload() {
-        // Load only the background
+        // Load background and grid cell states
         this.load.image('shadow-bg', 'img/game-background.jpeg');
+        this.load.image('empty-night', 'img/empty-night.svg');
+        this.load.image('brewing', 'img/brewing.svg');
+        this.load.image('distilling', 'img/distilling.svg');
+        this.load.image('ready', 'img/ready.svg');
+        
+        // Load particle textures
+        this.load.image('bubble', 'img/bubble.png');
+        this.load.image('glow', 'img/glow.png');
+        
         console.log("Night scene preloaded assets");
     }
     
     create() {
-        // Create a simple background for night scene
+        // Create background for night scene
         this.bg = this.add.image(
             this.cameras.main.width / 2,
             this.cameras.main.height / 2,
@@ -795,10 +817,271 @@ class NightScene extends Phaser.Scene {
             0.5
         );
         
+        // Initialize the grid cells
+        this.initPhaserGrid();
+        
         // Add resize listener
         this.scale.on('resize', this.resize, this);
         
-        console.log("NightScene created with simplified background only");
+        console.log("NightScene created with Phaser grid");
+    }
+    
+    initPhaserGrid() {
+        // Store references to cell sprites
+        this.cellSprites = [];
+        this.cellIndicators = [];
+        
+        // Center the grid
+        const { startX, startY, cellSize, padding, size } = this.gridConfig;
+        
+        // Create grid container
+        this.gridContainer = this.add.container(0, 0);
+        
+        // Create all cells
+        this.createGridCells();
+        
+        // Set the grid as interactive
+        this.input.on('gameobjectdown', (pointer, gameObject) => {
+            // Find index of clicked cell
+            const index = this.cellSprites.indexOf(gameObject);
+            if (index !== -1) {
+                handleShadowCellClick(index);
+            }
+        });
+        
+        // Mark night UI as using Phaser
+        const nightUI = document.getElementById('night-screen');
+        if (nightUI) nightUI.classList.add('phaser-active');
+    }
+    
+    createGridCells() {
+        const { startX, startY, cellSize, padding, size } = this.gridConfig;
+        
+        // Clear existing cell sprites if any
+        if (this.cellSprites.length > 0) {
+            this.cellSprites.forEach(sprite => sprite.destroy());
+            this.cellSprites = [];
+        }
+        
+        // Clear existing text indicators
+        if (this.cellIndicators.length > 0) {
+            this.cellIndicators.forEach(text => text.destroy());
+            this.cellIndicators = [];
+        }
+        
+        // Create cells based on shadowGrid data
+        for (let row = 0; row < size; row++) {
+            for (let col = 0; col < size; col++) {
+                const index = row * size + col;
+                const x = startX + col * (cellSize + padding);
+                const y = startY + row * (cellSize + padding);
+                
+                // Create cell and store reference
+                this.createCell(x, y, index);
+            }
+        }
+        
+        // Update appearance of all cells
+        this.updateAllCells();
+    }
+    
+    createCell(x, y, index) {
+        const cell = shadowGrid.cells[index];
+        const state = cell ? cell.state : 'empty-night';
+        
+        // Determine sprite key based on cell state
+        let spriteKey = 'empty-night';
+        if (cell) {
+            switch(cell.state) {
+                case 'brewing': spriteKey = 'brewing'; break;
+                case 'distilling': spriteKey = 'distilling'; break;
+                case 'ready': spriteKey = 'ready'; break;
+                default: spriteKey = 'empty-night';
+            }
+        }
+        
+        // Create the cell sprite
+        const cellSprite = this.add.sprite(x, y, spriteKey);
+        cellSprite.setDisplaySize(this.gridConfig.cellSize, this.gridConfig.cellSize);
+        cellSprite.setInteractive();
+        
+        // Store reference
+        this.cellSprites[index] = cellSprite;
+        
+        // Add growth stage indicator for non-empty cells
+        if (cell && cell.state !== 'empty') {
+            const indicator = this.add.text(
+                x, 
+                y + (this.gridConfig.cellSize / 2) - 15, 
+                `${cell.stage}/${cell.maxStage}`,
+                { 
+                    font: '14px Arial', 
+                    fill: '#FFFFFF',
+                    stroke: '#000000',
+                    strokeThickness: 2
+                }
+            );
+            indicator.setOrigin(0.5);
+            this.cellIndicators[index] = indicator;
+        }
+        
+        // Add appropriate animation based on state
+        if (cell) {
+            switch(cell.state) {
+                case 'brewing':
+                    this.addBubblingAnimation(cellSprite, index);
+                    break;
+                case 'distilling':
+                    // Add subtle pulsing for distilling
+                    this.tweens.add({
+                        targets: cellSprite,
+                        scaleX: 1.05,
+                        scaleY: 1.05,
+                        duration: 1000,
+                        yoyo: true,
+                        repeat: -1,
+                        ease: 'Sine.easeInOut'
+                    });
+                    break;
+                case 'ready':
+                    this.addGlowAnimation(cellSprite, index);
+                    break;
+            }
+        }
+    }
+    
+    updateCellAppearance(cellIndex) {
+        const cell = shadowGrid.cells[cellIndex];
+        if (!cell) return;
+        
+        // Get the cell sprite
+        const cellSprite = this.cellSprites[cellIndex];
+        if (!cellSprite) return;
+        
+        // Determine sprite key based on cell state
+        let spriteKey = 'empty-night';
+        switch(cell.state) {
+            case 'brewing': spriteKey = 'brewing'; break;
+            case 'distilling': spriteKey = 'distilling'; break;
+            case 'ready': spriteKey = 'ready'; break;
+            default: spriteKey = 'empty-night';
+        }
+        
+        // Update sprite texture
+        cellSprite.setTexture(spriteKey);
+        
+        // Update or create growth indicator
+        if (cell.state !== 'empty') {
+            let indicator = this.cellIndicators[cellIndex];
+            
+            // Create indicator if it doesn't exist
+            if (!indicator) {
+                const { startX, startY, cellSize, padding, size } = this.gridConfig;
+                const row = Math.floor(cellIndex / size);
+                const col = cellIndex % size;
+                const x = startX + col * (cellSize + padding);
+                const y = startY + row * (cellSize + padding);
+                
+                indicator = this.add.text(
+                    x, 
+                    y + (cellSize / 2) - 15, 
+                    `${cell.stage}/${cell.maxStage}`,
+                    { 
+                        font: '14px Arial', 
+                        fill: '#FFFFFF',
+                        stroke: '#000000',
+                        strokeThickness: 2
+                    }
+                );
+                indicator.setOrigin(0.5);
+                this.cellIndicators[cellIndex] = indicator;
+            } else {
+                // Update existing indicator
+                indicator.setText(`${cell.stage}/${cell.maxStage}`);
+            }
+        } else if (this.cellIndicators[cellIndex]) {
+            // Destroy indicator if cell is empty
+            this.cellIndicators[cellIndex].destroy();
+            this.cellIndicators[cellIndex] = null;
+        }
+        
+        // Stop any existing animations
+        if (this.bubblingTimers[cellIndex]) {
+            this.bubblingTimers[cellIndex].remove();
+            this.bubblingTimers[cellIndex] = null;
+        }
+        
+        if (this.glowTimers[cellIndex]) {
+            this.glowTimers[cellIndex].remove();
+            this.glowTimers[cellIndex] = null;
+        }
+        
+        // Reset scale
+        cellSprite.setScale(1);
+        
+        // Add appropriate new animation based on state
+        switch(cell.state) {
+            case 'brewing':
+                this.addBubblingAnimation(cellSprite, cellIndex);
+                break;
+            case 'distilling':
+                // Add subtle pulsing for distilling
+                this.tweens.add({
+                    targets: cellSprite,
+                    scaleX: 1.05,
+                    scaleY: 1.05,
+                    duration: 1000,
+                    yoyo: true,
+                    repeat: -1,
+                    ease: 'Sine.easeInOut'
+                });
+                break;
+            case 'ready':
+                this.addGlowAnimation(cellSprite, cellIndex);
+                break;
+        }
+    }
+    
+    updateAllCells() {
+        shadowGrid.cells.forEach((cell, index) => {
+            this.updateCellAppearance(index);
+        });
+    }
+    
+    addBubblingAnimation(cellSprite, cellIndex) {
+        // Bubbling animation (scale 0.9-1.1, 800ms repeat)
+        this.bubblingTimers[cellIndex] = this.tweens.add({
+            targets: cellSprite,
+            scaleX: { from: 0.9, to: 1.1 },
+            scaleY: { from: 0.9, to: 1.1 },
+            duration: 800,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+    }
+    
+    addGlowAnimation(cellSprite, cellIndex) {
+        // Glow animation (alpha 0.8-1, 1000ms repeat)
+        this.glowTimers[cellIndex] = this.tweens.add({
+            targets: cellSprite,
+            alpha: { from: 0.8, to: 1 },
+            duration: 1000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+        
+        // Also add a subtle scale pulse
+        this.tweens.add({
+            targets: cellSprite,
+            scaleX: 1.1,
+            scaleY: 1.1,
+            duration: 1000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
     }
     
     resize(gameSize) {
@@ -816,6 +1099,39 @@ class NightScene extends Phaser.Scene {
             this.overlay.setPosition(width/2, height/2);
             this.overlay.width = width;
             this.overlay.height = height;
+        }
+        
+        // Recenter the grid
+        this.updateGridCellPositions();
+    }
+    
+    updateGridCellPositions() {
+        const { size, cellSize, padding } = this.gridConfig;
+        
+        // New center position
+        this.gridConfig.startX = this.cameras.main.width / 2 - ((cellSize + padding) * size) / 2 + cellSize / 2;
+        this.gridConfig.startY = this.cameras.main.height / 2 - ((cellSize + padding) * size) / 2 + cellSize / 2;
+        
+        // Update cell positions
+        for (let row = 0; row < size; row++) {
+            for (let col = 0; col < size; col++) {
+                const index = row * size + col;
+                const x = this.gridConfig.startX + col * (cellSize + padding);
+                const y = this.gridConfig.startY + row * (cellSize + padding);
+                
+                // Update sprite position
+                if (this.cellSprites[index]) {
+                    this.cellSprites[index].setPosition(x, y);
+                }
+                
+                // Update indicator position
+                if (this.cellIndicators[index]) {
+                    this.cellIndicators[index].setPosition(
+                        x, 
+                        y + (cellSize / 2) - 15
+                    );
+                }
+            }
         }
     }
 }
@@ -2030,15 +2346,12 @@ function initRanchGrid() {
 
 // Initialize the shadow market grid - HTML/CSS based
 function initShadowGrid() {
-    // Get the grid container
+    // Get the grid container (for showing it's hidden when using Phaser)
     const gridContainer = document.getElementById('shadow-grid');
     if (!gridContainer) {
         console.error('Shadow grid container not found');
         return;
     }
-    
-    // Clear any existing content
-    gridContainer.innerHTML = '';
     
     // Initialize the cells array if it's empty
     if (shadowGrid.cells.length === 0) {
@@ -2053,27 +2366,6 @@ function initShadowGrid() {
             });
         }
     }
-    
-    // Create the grid cells
-    shadowGrid.cells.forEach((cell, index) => {
-        const cellElement = document.createElement('div');
-        cellElement.className = `grid-cell ${cell.state}`;
-        cellElement.id = `shadow-cell-${index}`;
-        
-        // Add stage indicator for non-empty cells
-        if (cell.state !== 'empty') {
-            const indicator = document.createElement('div');
-            indicator.className = 'growth-indicator';
-            indicator.textContent = `${cell.stage}/${cell.maxStage}`;
-            cellElement.appendChild(indicator);
-        }
-        
-        // Add click handler for cell interactions
-        cellElement.addEventListener('click', () => handleShadowCellClick(index));
-        
-        // Add to grid
-        gridContainer.appendChild(cellElement);
-    });
     
     // Update the network status display
     updateShadowMarketStateDisplay();
@@ -2094,19 +2386,71 @@ function initShadowGrid() {
         newButton.addEventListener('click', distillAllShadowCells);
     }
     
+    // Set up potion crafting button
+    const craftPotionButton = document.getElementById('craft-potion');
+    if (craftPotionButton) {
+        // Remove any existing event listeners
+        const newButton = craftPotionButton.cloneNode(true);
+        craftPotionButton.parentNode.replaceChild(newButton, craftPotionButton);
+        
+        // Add new event listener to craft potions
+        newButton.addEventListener('click', () => {
+            // Check if player has enough $CATTLE
+            if (playerData.cattleBalance >= 20) {
+                // Deduct 20 $CATTLE (50% burned)
+                playerData.cattleBalance -= 20;
+                playerData.stats.cattleBurned = (playerData.stats.cattleBurned || 0) + 10; // 50% burn
+                
+                // Generate random potency between 1-10
+                const potency = Math.floor(Math.random() * 10) + 1;
+                
+                // Add potion to collection
+                if (!playerData.potionCollection) {
+                    playerData.potionCollection = [];
+                }
+                
+                const potionId = Date.now();
+                playerData.potionCollection.push({
+                    id: potionId,
+                    potency: potency,
+                    created: Date.now()
+                });
+                
+                // Update UI
+                updatePotionInventory();
+                updateUI();
+                
+                // Show notification
+                showNotification(`Crafted a potion with potency ${potency}! 50% (10 $CATTLE) burned.`, 'success');
+            } else {
+                showNotification('Not enough $CATTLE! Need 20 $CATTLE to craft a potion.', 'error');
+            }
+        });
+    }
+    
     // Update resources and button states
     updateShadowResourceDisplay();
     updateButtonStates();
     
-    // Make night scene visible and start the Phaser scene for background only
+    // Start the Phaser scene for the night market grid
     if (game && game.scene) {
+        // Stop other scenes first
         game.scene.stop('RanchScene');
         game.scene.stop('SaloonScene');
-        game.scene.start('NightScene');
+        
+        // Check if the scene is already running
+        const nightScene = game.scene.getScene('NightScene');
+        if (nightScene && game.scene.isActive('NightScene')) {
+            // Update the cells if it's already running
+            nightScene.updateAllCells();
+        } else {
+            // Start the scene if it's not running
+            game.scene.start('NightScene');
+        }
     }
     
     // Log initialization
-    console.log("Shadow Market Grid initialized with HTML/CSS implementation");
+    console.log("Shadow Market Grid initialized with Phaser implementation");
 }
 
 // Handle clicking on a ranch grid cell
