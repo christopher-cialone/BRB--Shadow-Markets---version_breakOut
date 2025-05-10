@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+  <!-- Bubble with cyberpunk gradient -->
+  <circle cx="8" cy="8" r="7" fill="url(#bubbleGradient)" opacity="0.8" />
+  <circle cx="8" cy="8" r="6" fill="none" stroke="#00ffff" stroke-width="0.5" opacity="0.7" />
+  
+  <!-- Shine/highlight -->
+  <circle cx="5.5" cy="5.5" r="2" fill="#ffffff" opacity="0.5" />
+  
+  <defs>
+    <radialGradient id="bubbleGradient" cx="40%" cy="40%" r="60%" fx="40%" fy="40%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.7" />
+      <stop offset="60%" stop-color="#00ffff" stop-opacity="0.5" />
+      <stop offset="100%" stop-color="#8a2be2" stop-opacity="0.3" />
+    </radialGradient>
+  </defs>
+</svg>
