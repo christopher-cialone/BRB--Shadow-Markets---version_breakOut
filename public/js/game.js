@@ -1860,9 +1860,6 @@ function handleRanchCellClick(cellIndex) {
 // Handle clicking on a shadow market cell
 function handleShadowCellClick(cellIndex) {
     const cell = shadowGrid.cells[cellIndex];
-    const cellElement = document.getElementById(`shadow-cell-${cellIndex}`);
-    
-    if (!cellElement) return;
     
     switch (cell.state) {
         case 'empty':
@@ -1871,13 +1868,26 @@ function handleShadowCellClick(cellIndex) {
                 playerData.water -= 15;
                 cell.state = 'brewing';
                 cell.stage = 0;
-                cellElement.className = 'grid-cell brewing';
                 
-                // Add stage indicator
-                const indicator = document.createElement('div');
-                indicator.className = 'growth-indicator';
-                indicator.textContent = `${cell.stage}/${cell.maxStage}`;
-                cellElement.appendChild(indicator);
+                // Update HTML UI if it exists
+                const cellElement = document.getElementById(`shadow-cell-${cellIndex}`);
+                if (cellElement) {
+                    cellElement.className = 'grid-cell brewing';
+                    
+                    // Add stage indicator
+                    const indicator = document.createElement('div');
+                    indicator.className = 'growth-indicator';
+                    indicator.textContent = `${cell.stage}/${cell.maxStage}`;
+                    cellElement.appendChild(indicator);
+                }
+                
+                // Update Phaser scene if active
+                if (game && game.scene && game.scene.isActive('NightScene')) {
+                    const nightScene = game.scene.getScene('NightScene');
+                    if (nightScene && nightScene.updateCellAppearance) {
+                        nightScene.updateCellAppearance(cellIndex);
+                    }
+                }
                 
                 showNotification('Started brewing a potion! -15 Water', 'success');
                 updateShadowResourceDisplay();
@@ -2098,34 +2108,43 @@ function processShadowBrewing() {
     let anyProgressed = false;
     
     shadowGrid.cells.forEach((cell, index) => {
-        const cellElement = document.getElementById(`shadow-cell-${index}`);
-        if (!cellElement) return;
-        
         // Only process cells that are brewing or distilling
         if (cell.state === 'brewing' || cell.state === 'distilling') {
             // Increment stage
             cell.stage++;
             anyProgressed = true;
             
-            // Update stage indicator
-            const indicator = cellElement.querySelector('.growth-indicator');
-            if (indicator) {
-                indicator.textContent = `${cell.stage}/${cell.maxStage}`;
-            }
-            
             // Check if fully ready
             if (cell.stage >= cell.maxStage) {
                 cell.state = 'ready';
-                cellElement.className = 'grid-cell ready';
             } else if (cell.state === 'brewing' && cell.stage >= 1) {
                 cell.state = 'distilling';
-                cellElement.className = 'grid-cell distilling';
+            }
+            
+            // Update HTML UI if it exists
+            const cellElement = document.getElementById(`shadow-cell-${index}`);
+            if (cellElement) {
+                cellElement.className = `grid-cell ${cell.state}`;
+                
+                // Update stage indicator
+                const indicator = cellElement.querySelector('.growth-indicator');
+                if (indicator) {
+                    indicator.textContent = `${cell.stage}/${cell.maxStage}`;
+                }
             }
         }
     });
     
     // Update button states
     updateButtonStates();
+    
+    // Update Phaser scene if active
+    if (anyProgressed && game && game.scene && game.scene.isActive('NightScene')) {
+        const nightScene = game.scene.getScene('NightScene');
+        if (nightScene && nightScene.updateAllCells) {
+            nightScene.updateAllCells();
+        }
+    }
     
     // Notify only if something actually progressed
     if (anyProgressed) {
@@ -2154,7 +2173,7 @@ function updateShadowMarketState() {
             break;
     }
     
-    // Update display
+    // Update HTML UI display
     const cycleDisplay = document.getElementById('market-cycle');
     if (cycleDisplay) {
         cycleDisplay.textContent = shadowGrid.marketState;
@@ -2164,6 +2183,27 @@ function updateShadowMarketState() {
     if (multiplierDisplay) {
         multiplierDisplay.textContent = `x${shadowGrid.multiplier.toFixed(1)}`;
     }
+    
+    // Update Phaser scene if active
+    if (game && game.scene && game.scene.isActive('NightScene')) {
+        const nightScene = game.scene.getScene('NightScene');
+        if (nightScene && nightScene.updateMarketStateDisplay) {
+            nightScene.updateMarketStateDisplay();
+        }
+    }
+    
+    // Update supply/demand values for each cell
+    shadowGrid.cells.forEach((cell, index) => {
+        // Adjust supply/demand values based on market state
+        if (shadowGrid.marketState === 'volatile') {
+            // In volatile markets, create more variance
+            cell.supply = Math.max(1, Math.floor(cell.supply + (Math.random() * 6 - 3)));
+            cell.demand = Math.max(1, Math.floor(cell.demand + (Math.random() * 6 - 3)));
+        } else if (shadowGrid.marketState === 'booming') {
+            // In booming markets, increase demand
+            cell.demand = Math.min(10, Math.floor(cell.demand + (Math.random() * 3)));
+        }
+    });
     
     // Notify of change if different from before
     if (oldState !== shadowGrid.marketState) {
