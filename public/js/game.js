@@ -1941,13 +1941,23 @@ function harvestRanchCell(cellIndex) {
 // Distill a single shadow market cell
 function distillShadowCell(cellIndex) {
     const cell = shadowGrid.cells[cellIndex];
-    const cellElement = document.getElementById(`shadow-cell-${cellIndex}`);
     
-    if (!cellElement || cell.state !== 'ready') return;
+    if (cell.state !== 'ready') return;
     
-    // Calculate distill rewards
-    const etherReward = Math.floor(10 + Math.random() * 15) * shadowGrid.multiplier;
-    const cattleReward = Math.floor(5 + Math.random() * 10) * shadowGrid.multiplier;
+    // Calculate distill rewards based on supply/demand
+    let rewardMultiplier = 1.0;
+    
+    // If demand is higher than supply, increase reward
+    if (cell.demand > cell.supply) {
+        rewardMultiplier = 1.0 + ((cell.demand - cell.supply) / 10);
+    }
+    
+    // Apply market multiplier
+    rewardMultiplier *= shadowGrid.multiplier;
+    
+    // Calculate final rewards
+    const etherReward = Math.floor(10 + Math.random() * 15) * rewardMultiplier;
+    const cattleReward = Math.floor(5 + Math.random() * 10) * rewardMultiplier;
     
     // Add resources to player
     playerData.ether = (playerData.ether || 0) + etherReward;
@@ -1957,8 +1967,24 @@ function distillShadowCell(cellIndex) {
     // Reset cell
     cell.state = 'empty';
     cell.stage = 0;
-    cellElement.className = 'grid-cell empty';
-    cellElement.innerHTML = '';
+    
+    // Update HTML UI if it exists
+    const cellElement = document.getElementById(`shadow-cell-${cellIndex}`);
+    if (cellElement) {
+        cellElement.className = 'grid-cell empty';
+        cellElement.innerHTML = '';
+    }
+    
+    // Update Phaser scene if active
+    if (game && game.scene && game.scene.isActive('NightScene')) {
+        const nightScene = game.scene.getScene('NightScene');
+        if (nightScene && nightScene.updateCellAppearance) {
+            nightScene.updateCellAppearance(cellIndex);
+        }
+    }
+    
+    // Play distillation sound
+    playSoundEffect('bubbling');
     
     // Show notification
     showNotification(`Distilled potion! +${etherReward.toFixed(0)} Ether, +${cattleReward.toFixed(2)} $CATTLE`, 'success');
@@ -2040,10 +2066,28 @@ function startRanchGrowthCycle() {
 
 // Start the market cycle for shadow market
 function startShadowMarketCycle() {
-    // Update the market state display
+    // Initialize cycleTimer if not set
+    if (!shadowGrid.cycleTimer) {
+        shadowGrid.cycleTimer = 30;
+    }
+    
+    // Update the HTML market state display if it exists
     const cycleDisplay = document.getElementById('market-cycle');
     if (cycleDisplay) {
         cycleDisplay.textContent = shadowGrid.marketState;
+    }
+    
+    // Update Phaser scene if active
+    if (game && game.scene && game.scene.isActive('NightScene')) {
+        const nightScene = game.scene.getScene('NightScene');
+        if (nightScene && nightScene.updateMarketStateDisplay) {
+            nightScene.updateMarketStateDisplay();
+        }
+    }
+    
+    // Clear existing interval if it exists
+    if (shadowGrid.cycleInterval) {
+        clearInterval(shadowGrid.cycleInterval);
     }
     
     // Start the interval
@@ -2058,6 +2102,14 @@ function startShadowMarketCycle() {
                 updateShadowMarketState();
                 processShadowBrewing();
                 shadowGrid.cycleTimer = 30; // Reset to 30 seconds
+                
+                // Update timer display in Phaser scene
+                if (game && game.scene && game.scene.isActive('NightScene')) {
+                    const nightScene = game.scene.getScene('NightScene');
+                    if (nightScene && nightScene.updateMarketStateDisplay) {
+                        nightScene.updateMarketStateDisplay();
+                    }
+                }
             }
         }
     }, 1000);
