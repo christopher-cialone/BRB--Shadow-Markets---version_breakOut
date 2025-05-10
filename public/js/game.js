@@ -358,15 +358,27 @@ class SaloonScene extends Phaser.Scene {
     }
 }
 
-// Define the NightScene class - simplified for stability
+// Define the NightScene class with shadow grid integration
 class NightScene extends Phaser.Scene {
     constructor() {
         super('NightScene');
+        
+        // Store grid cell sprites and text objects
+        this.gridCells = [];
+        this.gridTexts = [];
+        this.tooltips = [];
     }
     
     preload() {
-        // Load the background
+        // Load background and grid assets
         this.load.image('game-bg', 'img/game-background.jpeg');
+        this.load.image('cell-empty', 'img/shadow-cell-empty.png');
+        this.load.image('cell-brewing', 'img/shadow-cell-brewing.png');
+        this.load.image('cell-distilling', 'img/shadow-cell-distilling.png');
+        this.load.image('cell-ready', 'img/shadow-cell-ready.png');
+        this.load.image('potion', 'img/potion.png');
+        this.load.image('bubble', 'img/bubble.png');
+        this.load.image('tooltip-bg', 'img/tooltip-bg.png');
     }
     
     create() {
@@ -379,8 +391,299 @@ class NightScene extends Phaser.Scene {
         this.bg.setDisplaySize(width, height);
         this.bg.setTint(0x5566aa); // Cool blue night tint
         
+        // Add a semi-transparent overlay for better visibility
+        this.overlay = this.add.rectangle(width/2, height/2, width, height, 0x000000, 0.4);
+        
+        // Create shadow market title
+        this.marketTitle = this.add.text(width/2, height * 0.1, 'Shadow Market', {
+            fontFamily: 'Anta',
+            fontSize: '38px',
+            color: '#cc00ff',
+            stroke: '#000000',
+            strokeThickness: 3,
+            shadow: { color: '#aa00ff', fill: true, offsetX: 2, offsetY: 2, blur: 8 }
+        }).setOrigin(0.5);
+        
+        // Create a container for our Shadow Grid
+        this.gridContainer = this.add.container(width/2, height * 0.45);
+        
+        // Create market state indicator
+        this.marketStateText = this.add.text(width/2, height * 0.25, 'Market: Stable', {
+            fontFamily: 'Roboto',
+            fontSize: '24px',
+            color: '#00ffff'
+        }).setOrigin(0.5);
+        
+        // Initialize the shadow grid
+        this.initShadowGridPhaser();
+        
         // Add resize listener
         this.scale.on('resize', this.resize, this);
+    }
+    
+    // Initialize the Phaser version of shadow grid
+    initShadowGridPhaser() {
+        // Clear previous grid if it exists
+        this.gridCells.forEach(sprite => sprite.destroy());
+        this.gridTexts.forEach(text => text.destroy());
+        this.tooltips.forEach(tooltip => tooltip.destroy());
+        this.gridCells = [];
+        this.gridTexts = [];
+        this.tooltips = [];
+        
+        // Initialize cells if needed
+        if (shadowGrid.cells.length === 0) {
+            for (let i = 0; i < shadowGrid.size * shadowGrid.size; i++) {
+                shadowGrid.cells.push({
+                    id: i,
+                    state: 'empty',
+                    stage: 0,
+                    maxStage: 3,
+                    supply: Math.floor(Math.random() * 5) + 3,  // Random supply value between 3-7
+                    demand: Math.floor(Math.random() * 5) + 3   // Random demand value between 3-7
+                });
+            }
+        }
+        
+        // Grid configuration
+        const gridSize = shadowGrid.size;
+        const cellSize = 80;
+        const padding = 10;
+        const totalWidth = (cellSize + padding) * gridSize;
+        
+        // Calculate the starting position (top-left of the grid)
+        const startX = -totalWidth / 2 + cellSize / 2;
+        const startY = -totalWidth / 2 + cellSize / 2;
+        
+        // Create the grid cells
+        for (let row = 0; row < gridSize; row++) {
+            for (let col = 0; col < gridSize; col++) {
+                const cellIndex = row * gridSize + col;
+                const cell = shadowGrid.cells[cellIndex];
+                const x = startX + col * (cellSize + padding);
+                const y = startY + row * (cellSize + padding);
+                
+                // Determine which sprite to use based on state
+                let spriteName = 'cell-empty';
+                if (cell.state === 'brewing') spriteName = 'cell-brewing';
+                if (cell.state === 'distilling') spriteName = 'cell-distilling';
+                if (cell.state === 'ready') spriteName = 'cell-ready';
+                
+                // Create cell sprite
+                const cellSprite = this.add.sprite(x, y, spriteName);
+                cellSprite.setDisplaySize(cellSize, cellSize);
+                cellSprite.setInteractive({ useHandCursor: true });
+                
+                // Add cell to our container
+                this.gridContainer.add(cellSprite);
+                this.gridCells.push(cellSprite);
+                
+                // Add stage indicator text for non-empty cells
+                if (cell.state !== 'empty') {
+                    const stageText = this.add.text(x, y, `${cell.stage}/${cell.maxStage}`, {
+                        fontFamily: 'Roboto',
+                        fontSize: '14px',
+                        color: '#ffffff',
+                        stroke: '#000000',
+                        strokeThickness: 3
+                    }).setOrigin(0.5);
+                    
+                    this.gridContainer.add(stageText);
+                    this.gridTexts.push(stageText);
+                } else {
+                    // Add empty text to keep the arrays aligned
+                    const emptyText = this.add.text(x, y, '', {
+                        fontFamily: 'Roboto',
+                        fontSize: '14px'
+                    }).setOrigin(0.5);
+                    this.gridContainer.add(emptyText);
+                    this.gridTexts.push(emptyText);
+                }
+                
+                // Create tooltip but hide it initially
+                const tooltipBg = this.add.image(x, y - 60, 'tooltip-bg');
+                tooltipBg.setDisplaySize(120, 70);
+                tooltipBg.setAlpha(0.9);
+                tooltipBg.visible = false;
+                
+                const supplyDemandText = this.add.text(x, y - 60, 
+                    `Supply: ${cell.supply}\nDemand: ${cell.demand}`, {
+                    fontFamily: 'Roboto',
+                    fontSize: '12px',
+                    color: '#ffffff',
+                    align: 'center'
+                }).setOrigin(0.5);
+                supplyDemandText.visible = false;
+                
+                // Group tooltip elements
+                const tooltip = { bg: tooltipBg, text: supplyDemandText };
+                this.tooltips.push(tooltip);
+                this.gridContainer.add([tooltipBg, supplyDemandText]);
+                
+                // Hover events for tooltip
+                cellSprite.on('pointerover', () => {
+                    tooltipBg.visible = true;
+                    supplyDemandText.visible = true;
+                    
+                    // Update tooltip text with current values
+                    supplyDemandText.setText(
+                        `Supply: ${cell.supply}\nDemand: ${cell.demand}\n${this.getMarketTip(cell)}`
+                    );
+                });
+                
+                cellSprite.on('pointerout', () => {
+                    tooltipBg.visible = false;
+                    supplyDemandText.visible = false;
+                });
+                
+                // Click event for cell interaction
+                cellSprite.on('pointerdown', () => {
+                    handleShadowCellClick(cellIndex);
+                    
+                    // Update cell appearance after click
+                    this.updateCellAppearance(cellIndex);
+                });
+                
+                // Add animations for brewing state
+                if (cell.state === 'brewing') {
+                    this.addBrewingAnimation(cellSprite, x, y);
+                }
+                
+                // Add glow for ready state
+                if (cell.state === 'ready') {
+                    this.addReadyGlow(cellSprite);
+                }
+            }
+        }
+        
+        // Update market state display
+        this.updateMarketStateDisplay();
+        
+        // Ensure grid cycle is running
+        if (!shadowGrid.cycleInterval) {
+            startShadowMarketCycle();
+        }
+    }
+    
+    // Helper to get market tip based on supply and demand
+    getMarketTip(cell) {
+        if (cell.supply > cell.demand) {
+            return "Low value, wait";
+        } else if (cell.supply < cell.demand) {
+            return "High value, sell!";
+        } else {
+            return "Balanced market";
+        }
+    }
+    
+    // Add bubbling animation to brewing cells
+    addBrewingAnimation(cellSprite, x, y) {
+        // Create bubbles that rise up
+        const bubble1 = this.add.image(x - 15, y + 10, 'bubble');
+        const bubble2 = this.add.image(x + 10, y + 20, 'bubble');
+        bubble1.setDisplaySize(12, 12);
+        bubble2.setDisplaySize(8, 8);
+        this.gridContainer.add([bubble1, bubble2]);
+        
+        // Animate the bubbles rising
+        this.tweens.add({
+            targets: bubble1,
+            y: y - 30,
+            alpha: { from: 0.7, to: 0 },
+            duration: 2000,
+            repeat: -1,
+            ease: 'Sine.easeOut'
+        });
+        
+        this.tweens.add({
+            targets: bubble2,
+            y: y - 30,
+            alpha: { from: 0.7, to: 0 },
+            duration: 2500,
+            delay: 500,
+            repeat: -1,
+            ease: 'Sine.easeOut'
+        });
+    }
+    
+    // Add glow effect to ready cells
+    addReadyGlow(cellSprite) {
+        // Add a subtle pulsing glow
+        this.tweens.add({
+            targets: cellSprite,
+            alpha: { from: 1, to: 0.7 },
+            duration: 800,
+            repeat: -1,
+            yoyo: true,
+            ease: 'Sine.easeInOut'
+        });
+    }
+    
+    // Update the appearance of a specific cell
+    updateCellAppearance(cellIndex) {
+        const cell = shadowGrid.cells[cellIndex];
+        const cellSprite = this.gridCells[cellIndex];
+        const stageText = this.gridTexts[cellIndex];
+        
+        // Update sprite based on state
+        if (cell.state === 'empty') {
+            cellSprite.setTexture('cell-empty');
+            stageText.setText('');
+            // Remove any animations
+            this.tweens.killTweensOf(cellSprite);
+        } else if (cell.state === 'brewing') {
+            cellSprite.setTexture('cell-brewing');
+            stageText.setText(`${cell.stage}/${cell.maxStage}`);
+            // Add brewing animation
+            this.addBrewingAnimation(
+                cellSprite, 
+                cellSprite.x, 
+                cellSprite.y
+            );
+        } else if (cell.state === 'distilling') {
+            cellSprite.setTexture('cell-distilling');
+            stageText.setText(`${cell.stage}/${cell.maxStage}`);
+            // Remove any animations
+            this.tweens.killTweensOf(cellSprite);
+        } else if (cell.state === 'ready') {
+            cellSprite.setTexture('cell-ready');
+            stageText.setText(`${cell.stage}/${cell.maxStage}`);
+            // Add ready glow
+            this.addReadyGlow(cellSprite);
+        }
+    }
+    
+    // Update market state display based on current state
+    updateMarketStateDisplay() {
+        let stateText = '';
+        let stateColor = '';
+        
+        switch (shadowGrid.marketState) {
+            case 'stable':
+                stateText = 'Market: Stable';
+                stateColor = '#00ffff';
+                break;
+            case 'volatile':
+                stateText = 'Market: Volatile';
+                stateColor = '#ffaa00';
+                break;
+            case 'booming':
+                stateText = 'Market: Booming';
+                stateColor = '#00ff00';
+                break;
+        }
+        
+        this.marketStateText.setText(stateText);
+        this.marketStateText.setColor(stateColor);
+    }
+    
+    // Update all cells with current data
+    updateAllCells() {
+        shadowGrid.cells.forEach((cell, index) => {
+            this.updateCellAppearance(index);
+        });
+        
+        this.updateMarketStateDisplay();
     }
     
     resize(gameSize) {
@@ -392,6 +695,17 @@ class NightScene extends Phaser.Scene {
             this.bg.setPosition(width/2, height/2);
             this.bg.setDisplaySize(width, height);
         }
+        
+        if (this.overlay) {
+            this.overlay.setPosition(width/2, height/2);
+            this.overlay.width = width;
+            this.overlay.height = height;
+        }
+        
+        // Reposition title and container
+        if (this.marketTitle) this.marketTitle.setPosition(width/2, height * 0.1);
+        if (this.marketStateText) this.marketStateText.setPosition(width/2, height * 0.25);
+        if (this.gridContainer) this.gridContainer.setPosition(width/2, height * 0.45);
     }
 }
 
@@ -1453,17 +1767,11 @@ function initRanchGrid() {
     updateButtonStates();
 }
 
-// Initialize the shadow market grid
+// Initialize the shadow market grid - now uses Phaser scene
 function initShadowGrid() {
-    // Get the grid container
-    const gridContainer = document.getElementById('shadow-grid');
-    if (!gridContainer) {
-        console.error('Shadow grid container not found');
-        return;
-    }
-    
-    // Clear any existing content
-    gridContainer.innerHTML = '';
+    // Update resources and button displays in the HTML UI
+    updateShadowResourceDisplay();
+    updateButtonStates();
     
     // Initialize the cells array if it's empty
     if (shadowGrid.cells.length === 0) {
@@ -1472,41 +1780,28 @@ function initShadowGrid() {
                 id: i,
                 state: 'empty',
                 stage: 0,
-                maxStage: 3
+                maxStage: 3,
+                supply: Math.floor(Math.random() * 5) + 3,  // Random supply value between 3-7
+                demand: Math.floor(Math.random() * 5) + 3   // Random demand value between 3-7
             });
         }
     }
     
-    // Create the grid cells
-    shadowGrid.cells.forEach((cell, index) => {
-        const cellElement = document.createElement('div');
-        cellElement.className = `grid-cell ${cell.state}`;
-        cellElement.id = `shadow-cell-${index}`;
-        
-        // Add stage indicator for non-empty cells
-        if (cell.state !== 'empty') {
-            const indicator = document.createElement('div');
-            indicator.className = 'growth-indicator';
-            indicator.textContent = `${cell.stage}/${cell.maxStage}`;
-            cellElement.appendChild(indicator);
+    // If the night scene is active, update its grid
+    if (game && game.scene && game.scene.isActive('NightScene')) {
+        const nightScene = game.scene.getScene('NightScene');
+        if (nightScene && nightScene.initShadowGridPhaser) {
+            // If the scene has an updated grid implementation, use it
+            nightScene.initShadowGridPhaser();
         }
-        
-        // Add click handler for cell interactions
-        cellElement.addEventListener('click', () => handleShadowCellClick(index));
-        
-        // Add to grid
-        gridContainer.appendChild(cellElement);
-    });
-    
-    // Update the resources display
-    updateShadowResourceDisplay();
+    }
     
     // Start market cycle if not already running
     if (!shadowGrid.cycleInterval) {
         startShadowMarketCycle();
     }
     
-    // Set up the distill all button
+    // Set up the distill all button in the HTML UI
     const distillAllButton = document.getElementById('distill-all');
     if (distillAllButton) {
         // Remove any existing event listeners
@@ -1517,8 +1812,8 @@ function initShadowGrid() {
         newButton.addEventListener('click', distillAllShadowCells);
     }
     
-    // Update button states
-    updateButtonStates();
+    // Log initialization
+    console.log("Shadow Market Grid initialized with Phaser integration");
 }
 
 // Handle clicking on a ranch grid cell
