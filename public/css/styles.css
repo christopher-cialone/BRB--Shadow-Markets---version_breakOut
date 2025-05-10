@@ -1979,7 +1979,7 @@ body {
     border-radius: 3px;
 }
 
-.pasture-info, .market-info {
+.pasture-info, .market-info, .network-status {
     padding: 15px;
     margin: 0 auto 20px;
     max-width: 90%;
@@ -1990,6 +1990,18 @@ body {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     color: var(--light-text);
     font-size: 0.95rem;
+}
+
+.network-status #market-state {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #00ffff;
+    margin-bottom: 5px;
+}
+
+.network-status #market-tip {
+    font-size: 0.9rem;
+    color: #aaaaff;
 }
 
 .resources-earned {
