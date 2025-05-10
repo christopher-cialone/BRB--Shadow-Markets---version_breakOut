@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
+  <rect width="100" height="100" rx="5" ry="5" fill="#1a0f33" stroke="#8b00cc" stroke-width="4"/>
+  <rect x="10" y="10" width="80" height="80" rx="3" ry="3" fill="#2a1a44" stroke="#9933cc" stroke-width="2"/>
+  
+  <!-- Digital data flow lines -->
+  <g stroke="#00ccff" stroke-width="1" opacity="0.6" fill="none">
+    <path d="M10,30 H90" />
+    <path d="M10,50 H90" />
+    <path d="M10,70 H90" />
+    <path d="M30,10 V90" />
+    <path d="M50,10 V90" />
+    <path d="M70,10 V90" />
+  </g>
+  
+  <!-- Brewing data crystals -->
+  <g>
+    <!-- Crystal 1 -->
+    <polygon points="30,30 40,25 35,40" fill="#00ffaa" fill-opacity="0.7" />
+    
+    <!-- Crystal 2 -->
+    <polygon points="60,50 70,45 65,60" fill="#00ddff" fill-opacity="0.7" />
+    
+    <!-- Crystal 3 -->
+    <polygon points="40,70 50,65 45,80" fill="#aa00ff" fill-opacity="0.7" />
+  </g>
+  
+  <!-- Bubbles for brewing animation -->
+  <circle cx="35" cy="35" r="3" fill="#ffffff" fill-opacity="0.8" />
+  <circle cx="65" cy="55" r="2" fill="#ffffff" fill-opacity="0.8" />
+  <circle cx="45" cy="75" r="4" fill="#ffffff" fill-opacity="0.8" />
+  
+  <!-- Digital flow indicators -->
+  <rect x="20" y="20" width="2" height="2" fill="#00ffff" />
+  <rect x="40" y="60" width="2" height="2" fill="#00ffff" />
+  <rect x="60" y="40" width="2" height="2" fill="#00ffff" />
+  <rect x="70" y="70" width="2" height="2" fill="#00ffff" />
+</svg>
