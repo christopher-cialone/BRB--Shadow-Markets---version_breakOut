@@ -1989,11 +1989,17 @@ function initRanchGrid() {
     updateButtonStates();
 }
 
-// Initialize the shadow market grid - now uses Phaser scene
+// Initialize the shadow market grid - HTML/CSS based
 function initShadowGrid() {
-    // Update resources and button displays in the HTML UI
-    updateShadowResourceDisplay();
-    updateButtonStates();
+    // Get the grid container
+    const gridContainer = document.getElementById('shadow-grid');
+    if (!gridContainer) {
+        console.error('Shadow grid container not found');
+        return;
+    }
+    
+    // Clear any existing content
+    gridContainer.innerHTML = '';
     
     // Initialize the cells array if it's empty
     if (shadowGrid.cells.length === 0) {
@@ -2009,21 +2015,36 @@ function initShadowGrid() {
         }
     }
     
-    // If the night scene is active, update its grid
-    if (game && game.scene && game.scene.isActive('NightScene')) {
-        const nightScene = game.scene.getScene('NightScene');
-        if (nightScene && nightScene.initShadowGridPhaser) {
-            // If the scene has an updated grid implementation, use it
-            nightScene.initShadowGridPhaser();
+    // Create the grid cells
+    shadowGrid.cells.forEach((cell, index) => {
+        const cellElement = document.createElement('div');
+        cellElement.className = `grid-cell ${cell.state}`;
+        cellElement.id = `shadow-cell-${index}`;
+        
+        // Add stage indicator for non-empty cells
+        if (cell.state !== 'empty') {
+            const indicator = document.createElement('div');
+            indicator.className = 'growth-indicator';
+            indicator.textContent = `${cell.stage}/${cell.maxStage}`;
+            cellElement.appendChild(indicator);
         }
-    }
+        
+        // Add click handler for cell interactions
+        cellElement.addEventListener('click', () => handleShadowCellClick(index));
+        
+        // Add to grid
+        gridContainer.appendChild(cellElement);
+    });
+    
+    // Update the network status display
+    updateShadowMarketStateDisplay();
     
     // Start market cycle if not already running
     if (!shadowGrid.cycleInterval) {
         startShadowMarketCycle();
     }
     
-    // Set up the distill all button in the HTML UI
+    // Set up the distill all button
     const distillAllButton = document.getElementById('distill-all');
     if (distillAllButton) {
         // Remove any existing event listeners
@@ -2034,8 +2055,19 @@ function initShadowGrid() {
         newButton.addEventListener('click', distillAllShadowCells);
     }
     
+    // Update resources and button states
+    updateShadowResourceDisplay();
+    updateButtonStates();
+    
+    // Make night scene visible and start the Phaser scene for background only
+    if (game && game.scene) {
+        game.scene.stop('RanchScene');
+        game.scene.stop('SaloonScene');
+        game.scene.start('NightScene');
+    }
+    
     // Log initialization
-    console.log("Shadow Market Grid initialized with Phaser integration");
+    console.log("Shadow Market Grid initialized with HTML/CSS implementation");
 }
 
 // Handle clicking on a ranch grid cell
@@ -2091,7 +2123,7 @@ function handleShadowCellClick(cellIndex) {
                 cell.state = 'brewing';
                 cell.stage = 0;
                 
-                // Update HTML UI if it exists
+                // Update HTML UI
                 const cellElement = document.getElementById(`shadow-cell-${cellIndex}`);
                 if (cellElement) {
                     cellElement.className = 'grid-cell brewing';
@@ -2101,14 +2133,6 @@ function handleShadowCellClick(cellIndex) {
                     indicator.className = 'growth-indicator';
                     indicator.textContent = `${cell.stage}/${cell.maxStage}`;
                     cellElement.appendChild(indicator);
-                }
-                
-                // Update Phaser scene if active
-                if (game && game.scene && game.scene.isActive('NightScene')) {
-                    const nightScene = game.scene.getScene('NightScene');
-                    if (nightScene && nightScene.updateCellAppearance) {
-                        nightScene.updateCellAppearance(cellIndex);
-                    }
                 }
                 
                 showNotification('Started brewing a potion! -15 Water', 'success');
