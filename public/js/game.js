@@ -780,14 +780,17 @@ class NightScene extends Phaser.Scene {
     preload() {
         // Load background and grid cell states
         this.load.image('shadow-bg', 'img/game-background.jpeg');
-        this.load.image('empty-night', 'img/empty-night.svg');
-        this.load.image('brewing', 'img/brewing.svg');
-        this.load.image('distilling', 'img/distilling.svg');
-        this.load.image('ready', 'img/ready.svg');
         
-        // Load particle textures
-        this.load.image('bubble', 'img/bubble.png');
-        this.load.image('glow', 'img/glow.png');
+        // Create and use colored rectangles for cells instead of SVGs for maximum visibility
+        // This ensures cells are always visible regardless of SVG loading issues
+        this.load.image('empty-night', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAABhGlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpSIVQTuIOGSoThZERRy1CkWoEGqFVh1MbvqhNGlIUlwcBdeCgx+LVQcXZ10dXAVB8APEydFJ0UVK/F9SaBHjwXE/3t173L0DhGaVqWbPOKBqlpFOxMVcflUMvCKIEYQRQFRiZj6XTCbhOb7u4ePrXZxneZ/7c/QrBZMBPpF4jumGRbxBPLNp6Zz3iSOsJKvE58RjJl2Q+JHrisdfOMdcFnhm1Eyn5oljiGXBSqOWz3NBVTnFexXHa9ywWss0OePopUY51RqIImFIRQkZ1KCihiqsBOPRNnVMp9pz/IfdH7NQcq6yNsA4JFiUUCE9fvA/+N2tWZqccJPCcaD7xXE+RoDQLtCqO873seNU4PgJGB75oj/Uk+nP0qut2BQRPwt0drUtWXIb7d0vwMB+pmmQLkqJ5XIp8H5G35QHBm+BwJq7t3Y+Th+ADM16pG3AcB/QHTa09sIdcLAJDI55e0pL3SNAcCbPvA83wuBvwMBlK22PxwBOp4CFgQg/A6Rw+AA+c5Qgz0NvUp9cO+d3p9b7+wGXSXK1dPzKUgAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAAuIwAALiMBeKU/dgAAAAd0SU1FB+YFCgMaNNbEPV4AAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAAC2UlEQVR42u3csWsUQRQG8O8kEGyijZ1WQgQtLCyEQwsV/4FYxCp/QEBsrERsxTqljWBhIXgqFiI2igQbg0UaOYy70wxvh+zsbs7LnBfIZXd25mW/997s7FUURREIoxKIQAgCIQiEIBCCQAgCIQiEoEM0AAB7e3sjLy6KQgEAM9M43YlzrvOYx3JxWuvY0XELu/goPSZijdP+O3PfDzFNtw4jh1HbPG2LXyPzj4mfl8vl6pFi2+ZjL6QNh6x6tOb7E5b2uL5Zq6p+eO986hVTepCqGl8pKRWiHUfO+G0w2mA0TS8JRm53ppk+F0aowmrAaFuVDYHRVFVjaslQGE1Vc8Ag4+kl1YrxYHSBIHF9MJQAg4ynB0YOkDYYXSF0WUE0YXRZcdWT+KXgxGOQ8WSEY9gNxhggqWv3XlA6g4iA4Y8bCkYnEJq7p/rHZcHonUPqVRZJxqn/LyEbhKcwHgd2AxMKTu5i46QQ/OpKDCwUlE4gUjC0oIRVV9KrtD4BPxSUzhWSAkMDSicQXUFI9wVzgzgICEn9wKQVEgGDHsZRHzfwLwTF9P/OHt2TDyOlvZH9kJz9j5yQC4QhXZ6ZqmKQxsacEdgTRO4GSvZNw/e1/vEpLRfqTRLF1bS8DjBDQGRVSO6+SApGDhDv3SFtGLlAiI/FxGGMBiJ3s088DE35h3VNc40GQrMfEjszOWe7RVxlyfpHe/S5YqI2Q+ZAYYuVVYVomxB/G7pI+lVQNuvmEy3rDGCNrMQRnCk5h0VrHdZvzTaE1tqXEXZpY5K2VtU+ISTdLKxQ0qp1VXtZg6AcP2BK2F1aA0kpuYY2/sYyQ9D85w+0XLySNzRo+U7A7YE8pSdlZqrtK79Lz2kNrSbRJH9gqlKM0a2P0VYhJCGEBIEQBEIQCEEgBIEQBEIQCEEgBI3XdxuuVpKbkahSAAAAAElFTkSuQmCC');
+        this.load.image('brewing', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAABhGlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpSIVQTuIOGSoThZERRy1CkWoEGqFVh1MbvqhNGlIUlwcBdeCgx+LVQcXZ10dXAVB8APEydFJ0UVK/F9SaBHjwXE/3t173L0DhGaVqWbPOKBqlpFOxMVcflUMvCKIEYQRQFRiZj6XTCbhOb7u4ePrXZxneZ/7c/QrBZMBPpF4jumGRbxBPLNp6Zz3iSOsJKvE58RjJl2Q+JHrisdfOMdcFnhm1Eyn5oljiGXBSqOWz3NBVTnFexXHa9ywWss0OePopUY51RqIImFIRQkZ1KCihiqsBOPRNnVMp9pz/IfdH7NQcq6yNsA4JFiUUCE9fvA/+N2tWZqccJPCcaD7xXE+RoDQLtCqO873seNU4PgJGB75oj/Uk+nP0qut2BQRPwt0drUtWXIb7d0vwMB+pmmQLkqJ5XIp8H5G35QHBm+BwJq7t3Y+Th+ADM16pG3AcB/QHTa09sIdcLAJDI55e0pL3SNAcCbPvA83wuBvwMBlK22PxwBOp4CFgQg/A6Rw+AA+c5Qgz0NvUp9cO+d3p9b7+wGXSXK1dPzKUgAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAAuIwAALiMBeKU/dgAAAAd0SU1FB+YFCgMaAgwQ6H8AAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAADLklEQVR42u2cS2sTURSAvzZBELVq3blwIVRwoeLOP6BudOUPEBQ3KuJOXArufIIbVyL4WLgRtKBVRKELH4jSdE4zdyaZZO7czDnJPZCbZubMzJ37zbnnnHuSirIsi3Aai0AIBIBBIASC60gDMMasfHK2fKHzpQIwxugTnUuMMW598jHPdeNMOraEXb4vXadirCq+z+VytSNJtS2eeMJWSLnj2B5EK+OXxvhVx7wfvX1rjOml+2KMYKnW38tBV5WT6niyTofQxbPdZ9OoMZrzM8aoArECcQEE6BfYYrFo/Tp3795F93N67ZOTk/LHjp1fa5yTk5MAJPv7+yuN1G63iS3C0J1kKJCpQFKSJGu9nslkeqEJBUTdVbgzBpHzWIJsz06bUGKIzH6vZhAQ6aIeAsRmP9cYhMiiMTEIkZE3cgzRZC4H9QLIMeQ3KCm5rIpOMCDmiV0Odx0EKDhE+IXnuoC8SoJRQXRdQYaZmKq/LZe1Rk6rP6eYPpC65tRRNZAuTa0jS1tC0nKJ/hxCuoK8ArJeQCRUSJ2BfMcTVaCy6TxCiDGGIfFCQpU1RpVlGchGgbjucmprEEI2iI+mkLHFD/EuS1I8qcJlrXtVhBCRgrgn2mUp9BPWgIcGEmsAtwIi1WXVDkhs1SE2cUWqy6pdQJf2fE5anLbpQKS4raBAYt62HRRIzNvAQWKIRBDSYogIIH3DMaHtkAIBiQ1E4ubH2AK77f6trmvrvEZpQHxJPy3Px9YJ5F8rrXzGENe3d5fDu9vGgNs6JQ7zyTrLfG5+kNXHJt0eyO1eV0+QsQXzWCqqOsYQKVnvXEF8nOFdDOnJt+Zv27LbFHuhQNQwQKn8HiuQ2F3X0EBiT317qxCPsHVZDpbMt8r9XUG2ybAB6mPo4t5XH21ZbQGSTCbRr//5+Ji76QLpuiybmNE3Cd/vZFAK9ZjT4dhBSYu+B/J8AamMT/l8nkKhACBiEVFAlCqB6KpEuSQZOwBVjL3zjQLS0a8R36p3I+V4cD+Hh4eALkG0JYjCNxQIgUAIBEIgEC5jCW7J78fMEwJBIAQCIRCIm/gDhVqWHeVQN7MAAAAASUVORK5CYII=');
+        this.load.image('distilling', 'data:image/png;base64,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');
+        this.load.image('ready', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAABhGlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpSIVQTuIOGSoThZERRy1CkWoEGqFVh1MbvqhNGlIUlwcBdeCgx+LVQcXZ10dXAVB8APEydFJ0UVK/F9SaBHjwXE/3t173L0DhGaVqWbPOKBqlpFOxMVcflUMvCKIEYQRQFRiZj6XTCbhOb7u4ePrXZxneZ/7c/QrBZMBPpF4jumGRbxBPLNp6Zz3iSOsJKvE58RjJl2Q+JHrisdfOMdcFnhm1Eyn5oljiGXBSqOWz3NBVTnFexXHa9ywWss0OePopUY51RqIImFIRQkZ1KCihiqsBOPRNnVMp9pz/IfdH7NQcq6yNsA4JFiUUCE9fvA/+N2tWZqccJPCcaD7xXE+RoDQLtCqO873seNU4PgJGB75oj/Uk+nP0qut2BQRPwt0drUtWXIb7d0vwMB+pmmQLkqJ5XIp8H5G35QHBm+BwJq7t3Y+Th+ADM16pG3AcB/QHTa09sIdcLAJDI55e0pL3SNAcCbPvA83wuBvwMBlK22PxwBOp4CFgQg/A6Rw+AA+c5Qgz0NvUp9cO+d3p9b7+wGXSXK1dPzKUgAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAAuIwAALiMBeKU/dgAAAAd0SU1FB+YFCgMaG/48ifsAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAADf0lEQVR42u2cz0sUYRjHv5MZFtFiuXjpUhAYdCg69AdEp07+AUFI5y7RpT+gLh2jg5fumh2CoItQhyA6dIgK2XLHmXlmd3Z+POOzDyu77Mw7886+z8x3Bpbd92XmeWff7/t8n58jKYoiBFiEECAIgAAEIAACbKM73TFE+9jaP13vGiGE6BvZFCGEXZ/8mFW509q8S9i118l1SEiJnJ9kfsuyHPekLmynL54khFJPE98AaCT/aGRew/FZbFsrQlRkx4X0MPGLHN9EezrxIq5EzMUzIzNj5qCVeR6XS28gWQFZAiFVQHrT1bIs5esCgABgbm4Orr87R9u2LT8+ZJuvTcfCwgIA0OnpaTLI8fFxgFWh4Cqpa4XBiQiK6tYGg52iDsEEJbvL0lQh0lM9UTzxUpIOwZUVlDsUSQgQVaqqvMtS6bKiPCVeOUE9lFQuEPQqDKzz5JnelEDz7PSxBBqLz6YC6fNktDIKUk1yvgSy8uwSyG9QhgWIbgV09vLl1YKucthFuCwV7x8ZiLj60iCU96pVUqXCQXQAERvsfQIZIv6xVIhs5xkqU1UlhOzuXuHDZgL62QkR34c0E01jL22xzLBPIP+GjU8BIiFAAalcKO7R5kWPgiH3HiEVh5J8F+CyViAIgZA/A5kWxAhAKn72CQmIkCxftcuSMRxnxBDo2YGsMKwAEt8wIQGRXQDrHk9kBJDKAtG9pL7wMYQbCKv12VqGwyQgMhaw8g7sLQOymHPPkmVZKIoi1wFYVhZpGrDnspIu640uIEsWkuuRXSHwYI8XZJfYQPCEEK3UBTMQHcWXsYAgDdFv1FlCbEE0VtUnpMFkLyFgIY0EUkgg3e1ub7QPhCqjwMJC2jK3rRQIz8zJWdVkKhCvVcwdR2QUrdKDuk7PkGG0XSAgQTahXAuZlcfXHAj+O1kNIQpklwNIlgshU4EUtajX6+XKiEHjKkvcv+qBLOt2NvE5xG+pBFILIFnmx35NUMc5EfE0NWwE9vf3sbKyMva4+/v7pTEjAVGFCzCk6xEzIiJcAGPtKwTklTBa7FUZSFdDnCYKDARc1go0ELgsAIMCQejRQNoBCETQqINAIBD5gXANBnJmURAQBIEgCAJBEAgZtgsNpABBEAiCQCAIBAFJtv8AQYD4P5mfYGUAAAAASUVORK5CYII=');
+        
+        // Load particle textures - simple circle as fallback
+        this.load.image('bubble', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAHsSURBVFiF7Ze9ThtBFIU/EApESpAskLJdWQ0FD5AHIE9AYaVLQZUOCR4gokFCikQRKUWkPEHKFEkFBQ1SJIoUAQk/LWfWs8uuZ9a7VhpzJMszc8+958ydH7PQaoUqBXwGvgAD4AVwCzwCYzk/AhPgAFiXfRMYqeZS9v+XPgIfgDPgN7DI8V3gm/JfCj0OAXbk8FnOsgy/A9vKaQvgCXiSPWkS4AK4Lgg+B3rAO2AHWAV6MfuG+PtkIycbJtB5gQPztg/sAe+B38Cq7Os+J8COrh9jSgCclP0WYTZMYmwhBHZUuwA2Y8aVmPMV4HvZb+CeHFwDB7HCsmJgDfgp300fYFfjbgzggY5q+r4AnnVmC2A4IwAlIy8A77p2fQAjjYMKHfi0GCsA21tDH8Cdxk5NKYf43gn4QHztHtkR+y8KYVoAfgXsk7xRxbQkm8UHcK1xq6YUW/Ot+fUA/BL7CXii6H1iEUaqGfkAJgrvGU7HnQznZe6K8F/jXUGAEeGLOAZOCVOXpZ4P91dDYRaNhYZ5vbmj2v6iNdNWXHcU60mTADaNfYVT4EdBgF3V2xR/AjZeBV5ilfCwtOMgzwnoA2/luyDnF/JlZ/7kzf0zWpbOMvAROCLM9YwwMnPgN3bY/CsHC+CofvltlVADrFOLWoYtAzcAAAAASUVORK5CYII=');
+        this.load.image('glow', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAHsSURBVFiF7Ze9ThtBFIU/EApESpAskLJdWQ0FD5AHIE9AYaVLQZUOCR4gokFCikQRKUWkPEHKFEkFBQ1SJIoUAQk/LWfWs8uuZ9a7VhpzJMszc8+958ydH7PQaoUqBXwGvgAD4AVwCzwCYzk/AhPgAFiXfRMYqeZS9v+XPgIfgDPgN7DI8V3gm/JfCj0OAXbk8FnOsgy/A9vKaQvgCXiSPWkS4AK4Lgg+B3rAO2AHWAV6MfuG+PtkIycbJtB5gQPztg/sAe+B38Cq7Os+J8COrh9jSgCclP0WYTZMYmwhBHZUuwA2Y8aVmPMV4HvZb+CeHFwDB7HCsmJgDfgp300fYFfjbgzggY5q+r4AnnVmC2A4IwAlIy8A77p2fQAjjYMKHfi0GCsA21tDH8Cdxk5NKYf43gn4QHztHtkR+y8KYVoAfgXsk7xRxbQkm8UHcK1xq6YUW/Ot+fUA/BL7CXii6H1iEUaqGfkAJgrvGU7HnQznZe6K8F/jXUGAEeGLOAZOCVOXpZ4P91dDYRaNhYZ5vbmj2v6iNdNWXHcU60mTADaNfYVT4EdBgF3V2xR/AjZeBV5ilfCwtOMgzwnoA2/luyDnF/JlZ/7kzf0zWpbOMvAROCLM9YwwMnPgN3bY/CsHC+CofvltlVADrFOLWoYtAzcAAAAASUVORK5CYII=');
         
         console.log("Night scene preloaded assets");
     }
@@ -2674,15 +2677,31 @@ function handleRanchCellClick(cellIndex) {
             // Plant a new crop
             if (playerData.hay >= 10) {
                 playerData.hay -= 10;
-                cell.state = 'planted';
-                cell.growthStage = 0;
+                // IMPORTANT: Changed growth stage to show crops immediately by setting to growing (skip "planted" state)
+                cell.state = 'growing';  // Changed from 'planted' to 'growing' for immediate visibility
+                cell.growthStage = 1;   // Set to 1 not 0 to ensure visibility
                 
-                // IMMEDIATE VISUAL FEEDBACK: Update the Phaser cell appearance
+                // IMMEDIATE VISUAL FEEDBACK: Update the Phaser cell appearance with high priority
                 if (game && game.scene) {
                     const ranchScene = game.scene.getScene('RanchScene');
                     if (ranchScene) {
                         // Force immediate visual update with animation
                         ranchScene.updateCellAppearance(cellIndex);
+                        
+                        // Add extra emphasis/scale animation to draw attention to planted crop
+                        const cellObj = ranchScene.gridCells[cellIndex];
+                        if (cellObj && cellObj.sprite) {
+                            ranchScene.tweens.add({
+                                targets: cellObj.sprite,
+                                scale: { from: 0.7, to: 1.1 },
+                                duration: 500,
+                                yoyo: true,
+                                ease: 'Back.easeOut',
+                                onComplete: () => {
+                                    cellObj.sprite.setScale(1);
+                                }
+                            });
+                        }
                         
                         // Add a planting animation effect
                         const { startX, startY, cellSize, padding, size } = ranchScene.gridConfig;
@@ -2692,18 +2711,28 @@ function handleRanchCellClick(cellIndex) {
                         const y = startY + row * (cellSize + padding);
                         
                         // Add particle effect for planting
-                        const particles = ranchScene.add.particles(x, y, 'hay-icon', {
-                            speed: 50,
-                            scale: { start: 0.2, end: 0 },
-                            quantity: 5,
-                            lifespan: 800,
-                            gravityY: 200
-                        });
-                        
-                        // Auto-destroy particles after animation completes
-                        ranchScene.time.delayedCall(1000, () => {
-                            particles.destroy();
-                        });
+                        try {
+                            // Create a simpler particle effect that works reliably
+                            for (let i = 0; i < 8; i++) {
+                                const particleX = x + (Math.random() * 20 - 10);
+                                const particleY = y + (Math.random() * 20 - 10);
+                                
+                                const particle = ranchScene.add.image(particleX, particleY, 'hay-icon');
+                                particle.setScale(0.2);
+                                
+                                ranchScene.tweens.add({
+                                    targets: particle,
+                                    y: particleY - 30,
+                                    alpha: 0,
+                                    scale: 0,
+                                    duration: 800,
+                                    ease: 'Power2',
+                                    onComplete: () => particle.destroy()
+                                });
+                            }
+                        } catch (err) {
+                            console.error('Particle effect error:', err);
+                        }
                     }
                 }
                 
