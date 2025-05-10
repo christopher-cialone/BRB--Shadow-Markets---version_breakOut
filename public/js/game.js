@@ -372,13 +372,17 @@ class NightScene extends Phaser.Scene {
     preload() {
         // Load background and grid assets
         this.load.image('game-bg', 'img/game-background.jpeg');
-        this.load.image('cell-empty', 'img/shadow-cell-empty.png');
-        this.load.image('cell-brewing', 'img/shadow-cell-brewing.png');
-        this.load.image('cell-distilling', 'img/shadow-cell-distilling.png');
-        this.load.image('cell-ready', 'img/shadow-cell-ready.png');
-        this.load.image('potion', 'img/potion.png');
-        this.load.image('bubble', 'img/bubble.png');
-        this.load.image('tooltip-bg', 'img/tooltip-bg.png');
+        
+        // Load shadow grid assets (using PNG format for better compatibility)
+        this.load.image('cell-empty', 'img/png/shadow-cell-empty.png');
+        this.load.image('cell-brewing', 'img/png/shadow-cell-brewing.png');
+        this.load.image('cell-distilling', 'img/shadow-cell-distilling.svg');
+        this.load.image('cell-ready', 'img/shadow-cell-ready.svg');
+        this.load.image('potion', 'img/potion.svg');
+        this.load.image('bubble', 'img/bubble.svg');
+        this.load.image('tooltip-bg', 'img/tooltip-bg.svg');
+        
+        console.log("Night scene preloaded assets");
     }
     
     create() {
@@ -447,10 +451,10 @@ class NightScene extends Phaser.Scene {
             }
         }
         
-        // Grid configuration
+        // Grid configuration for container
         const gridSize = shadowGrid.size;
-        const cellSize = 80;
-        const padding = 10;
+        const cellSize = 70; // Smaller cell size to fit in container
+        const padding = 8;  // Slightly smaller padding
         const totalWidth = (cellSize + padding) * gridSize;
         
         // Calculate the starting position (top-left of the grid)
@@ -689,25 +693,28 @@ class NightScene extends Phaser.Scene {
     }
     
     resize(gameSize) {
-        const width = gameSize.width;
-        const height = gameSize.height;
+        // Use fixed dimensions for container instead of full screen
+        const containerWidth = 450;
+        const containerHeight = 450;
         
-        // Resize background
+        // No need to resize the background as it stays fixed within the container
         if (this.bg) {
-            this.bg.setPosition(width/2, height/2);
-            this.bg.setDisplaySize(width, height);
+            this.bg.setPosition(containerWidth/2, containerHeight/2);
+            this.bg.setDisplaySize(containerWidth, containerHeight);
         }
         
         if (this.overlay) {
-            this.overlay.setPosition(width/2, height/2);
-            this.overlay.width = width;
-            this.overlay.height = height;
+            this.overlay.setPosition(containerWidth/2, containerHeight/2);
+            this.overlay.width = containerWidth;
+            this.overlay.height = containerHeight;
         }
         
-        // Reposition title and container
-        if (this.marketTitle) this.marketTitle.setPosition(width/2, height * 0.1);
-        if (this.marketStateText) this.marketStateText.setPosition(width/2, height * 0.25);
-        if (this.gridContainer) this.gridContainer.setPosition(width/2, height * 0.45);
+        // Keep elements at fixed positions within the container
+        if (this.marketTitle) this.marketTitle.setPosition(containerWidth/2, 40);
+        if (this.marketStateText) this.marketStateText.setPosition(containerWidth/2, 80);
+        if (this.gridContainer) this.gridContainer.setPosition(containerWidth/2, containerHeight/2);
+        
+        console.log("NightScene resized to container dimensions:", containerWidth, containerHeight);
     }
 }
 
