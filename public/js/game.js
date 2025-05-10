@@ -766,10 +766,10 @@ class NightScene extends Phaser.Scene {
         // Grid configuration for this scene
         this.gridConfig = {
             size: 4, // 4x4 grid
-            startX: 400,
-            startY: 250,
             cellSize: 90,
-            padding: 10
+            padding: 10,
+            startX: 0, // Will be calculated in create based on screen size
+            startY: 0  // Will be calculated in create based on screen size
         };
         
         // Animation timers
@@ -831,11 +831,43 @@ class NightScene extends Phaser.Scene {
         this.cellSprites = [];
         this.cellIndicators = [];
         
-        // Center the grid
-        const { startX, startY, cellSize, padding, size } = this.gridConfig;
+        // Calculate grid dimensions based on screen size
+        const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
+        const { cellSize, padding, size } = this.gridConfig;
+        
+        // Calculate total grid dimensions
+        const totalGridWidth = (cellSize + padding) * size;
+        const totalGridHeight = (cellSize + padding) * size;
+        
+        // Position grid in center of screen
+        this.gridConfig.startX = width / 2 - totalGridWidth / 2 + cellSize / 2;
+        this.gridConfig.startY = height / 2 - totalGridHeight / 2 + cellSize / 2;
         
         // Create grid container
         this.gridContainer = this.add.container(0, 0);
+        
+        // Add grid header text
+        const gridHeader = this.add.text(
+            width / 2, 
+            this.gridConfig.startY - 60,
+            'Ether Range Grid', 
+            {
+                fontFamily: 'Anta',
+                fontSize: '28px',
+                color: '#00ffff',
+                stroke: '#000000',
+                strokeThickness: 4,
+                shadow: { 
+                    color: '#6a2ca0', 
+                    fill: true, 
+                    offsetX: 2, 
+                    offsetY: 2, 
+                    blur: 8 
+                }
+            }
+        ).setOrigin(0.5);
+        this.gridContainer.add(gridHeader);
         
         // Create all cells
         this.createGridCells();
@@ -849,9 +881,45 @@ class NightScene extends Phaser.Scene {
             }
         });
         
+        // Add "Distill All" button below grid
+        const distillAllBtnX = width / 2;
+        const distillAllBtnY = this.gridConfig.startY + totalGridHeight + 40;
+        
+        const distillAllBtn = this.add.text(
+            distillAllBtnX, 
+            distillAllBtnY, 
+            '⚗️ Distill All', 
+            {
+                fontFamily: 'Anta',
+                fontSize: '20px',
+                color: '#ffffff',
+                backgroundColor: '#6a2ca0',
+                padding: { x: 15, y: 8 },
+                shadow: { 
+                    color: '#000000', 
+                    fill: true, 
+                    offsetX: 2, 
+                    offsetY: 2, 
+                    blur: 4 
+                }
+            }
+        ).setOrigin(0.5);
+        
+        distillAllBtn.setInteractive({ useHandCursor: true })
+            .on('pointerdown', () => distillAllShadowCells());
+            
+        this.gridContainer.add(distillAllBtn);
+        
         // Mark night UI as using Phaser
         const nightUI = document.getElementById('night-screen');
         if (nightUI) nightUI.classList.add('phaser-active');
+        
+        // Hide the original HTML grid
+        const htmlGrid = document.getElementById('shadow-grid');
+        if (htmlGrid) {
+            htmlGrid.style.visibility = 'hidden';
+            htmlGrid.style.height = '0';
+        }
     }
     
     createGridCells() {
@@ -900,13 +968,37 @@ class NightScene extends Phaser.Scene {
             }
         }
         
-        // Create the cell sprite
+        // Create the cell sprite with enhanced visuals
         const cellSprite = this.add.sprite(x, y, spriteKey);
         cellSprite.setDisplaySize(this.gridConfig.cellSize, this.gridConfig.cellSize);
-        cellSprite.setInteractive();
+        cellSprite.setInteractive({ useHandCursor: true });
+        
+        // Add entrance animation for all cells
+        cellSprite.alpha = 0;
+        cellSprite.scale = 0.7;
+        
+        this.tweens.add({
+            targets: cellSprite,
+            alpha: 1,
+            scale: 1,
+            duration: 400,
+            ease: 'Back.easeOut',
+            delay: index * 50 // Staggered appearance
+        });
         
         // Store reference
         this.cellSprites[index] = cellSprite;
+        
+        // Add shadow outline to enhance visibility
+        const outline = this.add.graphics();
+        outline.lineStyle(2, 0x6a2ca0, 0.8);
+        outline.strokeRect(
+            x - this.gridConfig.cellSize/2,
+            y - this.gridConfig.cellSize/2,
+            this.gridConfig.cellSize,
+            this.gridConfig.cellSize
+        );
+        this.gridContainer.add(outline);
         
         // Add growth stage indicator for non-empty cells
         if (cell && cell.state !== 'empty') {
@@ -915,13 +1007,23 @@ class NightScene extends Phaser.Scene {
                 y + (this.gridConfig.cellSize / 2) - 15, 
                 `${cell.stage}/${cell.maxStage}`,
                 { 
-                    font: '14px Arial', 
+                    fontFamily: 'Share Tech Mono', 
+                    fontSize: '16px',
                     fill: '#FFFFFF',
                     stroke: '#000000',
                     strokeThickness: 2
                 }
             );
             indicator.setOrigin(0.5);
+            indicator.alpha = 0;
+            
+            this.tweens.add({
+                targets: indicator,
+                alpha: 1,
+                duration: 400,
+                delay: index * 50 + 200
+            });
+            
             this.cellIndicators[index] = indicator;
         }
         
@@ -1229,7 +1331,66 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // RANCH UI EVENTS
     addClickListener('breed-cattle', () => {
-        socket.emit('breed-cattle');
+        // Check if player has enough resources
+        if (playerData.hay >= 10 && playerData.water >= 10) {
+            // Decrease resources
+            playerData.hay -= 10;
+            playerData.water -= 10;
+            
+            // Show breeding animation immediately before server response
+            if (game && game.scene) {
+                const ranchScene = game.scene.getScene('RanchScene');
+                if (ranchScene) {
+                    // Create a temporary cattle object
+                    const tempCattle = {
+                        id: 'temp-' + Date.now(),
+                        speed: Math.floor(Math.random() * 5) + 1,
+                        milk: Math.floor(Math.random() * 5) + 1
+                    };
+                    
+                    // Add a visual cattle sprite immediately
+                    const cattleSprite = ranchScene.addCattleSprite(tempCattle);
+                    
+                    // Add a breeding effect
+                    ranchScene.tweens.add({
+                        targets: cattleSprite,
+                        scale: { from: 0, to: 0.2 },
+                        alpha: { from: 0, to: 1 },
+                        duration: 800,
+                        ease: 'Back.easeOut'
+                    });
+                    
+                    // Add particle effect around the new cattle
+                    const particles = ranchScene.add.particles(cattleSprite.x, cattleSprite.y, 'hay-icon', {
+                        speed: 50,
+                        scale: { start: 0.1, end: 0 },
+                        quantity: 10,
+                        lifespan: 1000,
+                        emitting: false
+                    });
+                    
+                    // Emit particles once
+                    particles.explode(10, cattleSprite.x, cattleSprite.y);
+                    
+                    // Auto-destroy particles after animation completes
+                    ranchScene.time.delayedCall(1000, () => {
+                        particles.destroy();
+                    });
+                }
+            }
+            
+            // Send actual breeding request to server
+            socket.emit('breed-cattle');
+            
+            // Update UI to reflect resource changes
+            updateRanchResourceDisplay();
+            
+            // Show immediate feedback to user
+            showNotification('Breeding cattle... -10 Hay, -10 Water', 'info');
+        } else {
+            // Not enough resources
+            showNotification('Not enough resources! Breeding requires 10 Hay and 10 Water.', 'error');
+        }
     });
     
     addClickListener('upgrade-barn', () => {
