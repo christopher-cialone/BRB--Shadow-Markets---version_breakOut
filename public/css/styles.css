@@ -2025,6 +2025,21 @@ body {
     margin: 25px auto;
 }
 
+.phaser-shadow-container {
+    width: 450px;
+    height: 450px;
+    margin: 15px auto;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Hide the HTML grid when Phaser is active */
+.phaser-active #shadow-grid {
+    display: none;
+}
+
 #shadow-grid {
     grid-template-columns: repeat(4, 105px);
     grid-template-rows: repeat(4, 105px);
