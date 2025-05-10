@@ -411,6 +411,7 @@ class NightScene extends Phaser.Scene {
             this.bg.setDisplaySize(width, height);
         }
         
+        // Resize overlay
         if (this.overlay) {
             this.overlay.setPosition(width/2, height/2);
             this.overlay.width = width;
