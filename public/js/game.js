@@ -358,125 +358,65 @@ class SaloonScene extends Phaser.Scene {
     }
 }
 
-// Define the NightScene class with shadow grid integration
+// Define the NightScene class - simplified to just provide the background
 class NightScene extends Phaser.Scene {
     constructor() {
         super('NightScene');
-        
-        // Store grid cell sprites and text objects
-        this.gridCells = [];
-        this.gridTexts = [];
-        this.tooltips = [];
     }
     
     preload() {
-        // Load background and grid assets
-        this.load.image('game-bg', 'img/game-background.jpeg');
-        
-        // Load shadow grid assets (using PNG format for better compatibility)
-        this.load.image('cell-empty', 'img/png/shadow-cell-empty.png');
-        this.load.image('cell-brewing', 'img/png/shadow-cell-brewing.png');
-        this.load.image('cell-distilling', 'img/shadow-cell-distilling.svg');
-        this.load.image('cell-ready', 'img/shadow-cell-ready.svg');
-        this.load.image('potion', 'img/potion.svg');
-        this.load.image('bubble', 'img/bubble.svg');
-        this.load.image('tooltip-bg', 'img/tooltip-bg.svg');
-        
+        // Load only the background
+        this.load.image('shadow-bg', 'img/game-background.jpeg');
         console.log("Night scene preloaded assets");
     }
     
     create() {
-        // Get dimensions - use fixed dimensions for the shadow grid container
-        const containerWidth = 450;
-        const containerHeight = 450;
-        
-        // Set up simple background with gradient that matches the grid cells style
-        this.bg = this.add.rectangle(containerWidth/2, containerHeight/2, containerWidth, containerHeight, 0x1a0f33);
-        
-        // Add a grid pattern background instead of image
-        const gridPattern = this.add.grid(
-            containerWidth/2, 
-            containerHeight/2,
-            containerWidth, 
-            containerHeight, 
-            20, 
-            20, 
-            0, 
-            0, 
-            0x3a2066, 
-            0.2
+        // Create a simple background for night scene
+        this.bg = this.add.image(
+            this.cameras.main.width / 2,
+            this.cameras.main.height / 2,
+            'shadow-bg'
         );
         
-        // Create shadow market title at the top of the container
-        this.marketTitle = this.add.text(containerWidth/2, 40, 'Intelligence Network', {
-            fontFamily: 'Anta',
-            fontSize: '28px',
-            color: '#cc00ff',
-            stroke: '#000000',
-            strokeThickness: 2,
-            shadow: { color: '#aa00ff', fill: true, offsetX: 1, offsetY: 1, blur: 4 }
-        }).setOrigin(0.5);
+        // Set the background to fill the screen with dark tint for night feel
+        this.bg.setDisplaySize(
+            this.cameras.main.width,
+            this.cameras.main.height
+        );
+        this.bg.setTint(0x1a0f33); // Deep purple/blue tint for night scene
         
-        // Create an instruction text
-        this.instructionText = this.add.text(containerWidth/2, 80, 'Gather data crystals to craft potions', {
-            fontFamily: 'Roboto',
-            fontSize: '16px',
-            color: '#ffffff',
-            stroke: '#000000',
-            strokeThickness: 1
-        }).setOrigin(0.5);
-        
-        // Create a container for our Shadow Grid in the center
-        this.gridContainer = this.add.container(containerWidth/2, containerHeight/2);
-        
-        // Create market state indicator
-        this.marketStateText = this.add.text(containerWidth/2, containerHeight - 60, 'Network: Stable', {
-            fontFamily: 'Roboto',
-            fontSize: '18px',
-            color: '#00ffff'
-        }).setOrigin(0.5);
-        
-        // Add helpful tip text
-        this.tipText = this.add.text(containerWidth/2, containerHeight - 30, 'Click empty cells to start crystal formation', {
-            fontFamily: 'Roboto',
-            fontSize: '14px',
-            color: '#aaaaff',
-            stroke: '#000000',
-            strokeThickness: 1
-        }).setOrigin(0.5);
-        
-        // Initialize the shadow grid
-        this.initShadowGridPhaser();
+        // Add a darker overlay for better text readability
+        this.overlay = this.add.rectangle(
+            this.cameras.main.width / 2, 
+            this.cameras.main.height / 2,
+            this.cameras.main.width,
+            this.cameras.main.height,
+            0x000000, 
+            0.5
+        );
         
         // Add resize listener
         this.scale.on('resize', this.resize, this);
         
-        console.log("NightScene created with container dimensions:", containerWidth, containerHeight);
+        console.log("NightScene created with simplified background only");
     }
     
-    // Initialize the Phaser version of shadow grid
-    initShadowGridPhaser() {
-        // Clear previous grid if it exists
-        this.gridCells.forEach(sprite => sprite.destroy());
-        this.gridTexts.forEach(text => text.destroy());
-        this.tooltips.forEach(tooltip => tooltip.destroy());
-        this.gridCells = [];
-        this.gridTexts = [];
-        this.tooltips = [];
+    resize(gameSize) {
+        const width = gameSize.width;
+        const height = gameSize.height;
         
-        // Initialize cells if needed
-        if (shadowGrid.cells.length === 0) {
-            for (let i = 0; i < shadowGrid.size * shadowGrid.size; i++) {
-                shadowGrid.cells.push({
-                    id: i,
-                    state: 'empty',
-                    stage: 0,
-                    maxStage: 3,
-                    supply: Math.floor(Math.random() * 5) + 3,  // Random supply value between 3-7
-                    demand: Math.floor(Math.random() * 5) + 3   // Random demand value between 3-7
-                });
-            }
+        // Resize and reposition background
+        if (this.bg) {
+            this.bg.setPosition(width/2, height/2);
+            this.bg.setDisplaySize(width, height);
         }
+        
+        if (this.overlay) {
+            this.overlay.setPosition(width/2, height/2);
+            this.overlay.width = width;
+            this.overlay.height = height;
+        }
+    }
         
         // Grid configuration for container
         const gridSize = shadowGrid.size;
@@ -2214,23 +2154,17 @@ function distillShadowCell(cellIndex) {
     cell.state = 'empty';
     cell.stage = 0;
     
-    // Update HTML UI if it exists
+    // Update HTML UI
     const cellElement = document.getElementById(`shadow-cell-${cellIndex}`);
     if (cellElement) {
         cellElement.className = 'grid-cell empty';
         cellElement.innerHTML = '';
     }
     
-    // Update Phaser scene if active
-    if (game && game.scene && game.scene.isActive('NightScene')) {
-        const nightScene = game.scene.getScene('NightScene');
-        if (nightScene && nightScene.updateCellAppearance) {
-            nightScene.updateCellAppearance(cellIndex);
-        }
-    }
-    
     // Play distillation sound
-    playSoundEffect('bubbling');
+    if (typeof playSoundEffect === 'function') {
+        playSoundEffect('bubbling');
+    }
     
     // Show notification
     showNotification(`Distilled potion! +${etherReward.toFixed(0)} Ether, +${cattleReward.toFixed(2)} $CATTLE`, 'success');
