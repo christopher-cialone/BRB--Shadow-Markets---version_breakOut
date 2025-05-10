@@ -2516,11 +2516,33 @@ function handleRanchCellClick(cellIndex) {
                 cell.state = 'planted';
                 cell.growthStage = 0;
                 
-                // Update the Phaser cell appearance
+                // IMMEDIATE VISUAL FEEDBACK: Update the Phaser cell appearance
                 if (game && game.scene) {
                     const ranchScene = game.scene.getScene('RanchScene');
                     if (ranchScene) {
+                        // Force immediate visual update with animation
                         ranchScene.updateCellAppearance(cellIndex);
+                        
+                        // Add a planting animation effect
+                        const { startX, startY, cellSize, padding, size } = ranchScene.gridConfig;
+                        const row = Math.floor(cellIndex / size);
+                        const col = cellIndex % size;
+                        const x = startX + col * (cellSize + padding);
+                        const y = startY + row * (cellSize + padding);
+                        
+                        // Add particle effect for planting
+                        const particles = ranchScene.add.particles(x, y, 'hay-icon', {
+                            speed: 50,
+                            scale: { start: 0.2, end: 0 },
+                            quantity: 5,
+                            lifespan: 800,
+                            gravityY: 200
+                        });
+                        
+                        // Auto-destroy particles after animation completes
+                        ranchScene.time.delayedCall(1000, () => {
+                            particles.destroy();
+                        });
                     }
                 }
                 
