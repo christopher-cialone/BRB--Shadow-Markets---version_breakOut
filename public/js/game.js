@@ -2496,6 +2496,12 @@ function handleRanchCellClick(cellIndex) {
 function handleShadowCellClick(cellIndex) {
     const cell = shadowGrid.cells[cellIndex];
     
+    // Get the NightScene if available
+    let nightScene = null;
+    if (game && game.scene) {
+        nightScene = game.scene.getScene('NightScene');
+    }
+    
     switch (cell.state) {
         case 'empty':
             // Start brewing a potion
@@ -2504,16 +2510,31 @@ function handleShadowCellClick(cellIndex) {
                 cell.state = 'brewing';
                 cell.stage = 0;
                 
-                // Update HTML UI
-                const cellElement = document.getElementById(`shadow-cell-${cellIndex}`);
-                if (cellElement) {
-                    cellElement.className = 'grid-cell brewing';
+                // Update Phaser UI via the scene
+                if (nightScene) {
+                    nightScene.updateCellAppearance(cellIndex);
                     
-                    // Add stage indicator
-                    const indicator = document.createElement('div');
-                    indicator.className = 'growth-indicator';
-                    indicator.textContent = `${cell.stage}/${cell.maxStage}`;
-                    cellElement.appendChild(indicator);
+                    // Add particle effect for starting a brew
+                    const { startX, startY, cellSize, padding, size } = nightScene.gridConfig;
+                    const row = Math.floor(cellIndex / size);
+                    const col = cellIndex % size;
+                    const x = startX + col * (cellSize + padding);
+                    const y = startY + row * (cellSize + padding);
+                    
+                    // Create a sparkle effect for brewing start
+                    const particles = nightScene.add.particles(x, y, 'bubble', {
+                        scale: { start: 0.1, end: 0.5 },
+                        speed: { min: 30, max: 80 },
+                        quantity: 10,
+                        lifespan: 800,
+                        alpha: { start: 0.8, end: 0 },
+                        blendMode: 'ADD'
+                    });
+                    
+                    // Auto-destroy particles after animation
+                    nightScene.time.delayedCall(1000, () => {
+                        particles.destroy();
+                    });
                 }
                 
                 showNotification('Started brewing a potion! -15 Water', 'success');
@@ -2629,6 +2650,12 @@ function distillShadowCell(cellIndex) {
     
     if (cell.state !== 'ready') return;
     
+    // Get the NightScene if available
+    let nightScene = null;
+    if (game && game.scene) {
+        nightScene = game.scene.getScene('NightScene');
+    }
+    
     // Calculate distill rewards based on supply/demand
     let rewardMultiplier = 1.0;
     
@@ -2640,24 +2667,87 @@ function distillShadowCell(cellIndex) {
     // Apply market multiplier
     rewardMultiplier *= shadowGrid.multiplier;
     
-    // Calculate final rewards
-    const etherReward = Math.floor(10 + Math.random() * 15) * rewardMultiplier;
-    const cattleReward = Math.floor(5 + Math.random() * 10) * rewardMultiplier;
+    // Calculate final rewards based on market conditions
+    const baseReward = 25 + Math.floor(Math.random() * 10); // 25-35 base value
+    const cattleReward = Math.floor(baseReward * rewardMultiplier);
+    const etherReward = Math.floor((10 + Math.random() * 15) * rewardMultiplier);
     
     // Add resources to player
     playerData.ether = (playerData.ether || 0) + etherReward;
     playerData.cattleBalance += cattleReward;
     playerData.stats.potionsDistilled = (playerData.stats.potionsDistilled || 0) + 1;
     
+    // Create a distilled potion in the inventory with potency
+    if (!playerData.potionCollection) {
+        playerData.potionCollection = [];
+    }
+    
+    // Add to potion inventory with value based on market conditions
+    const potionId = Date.now();
+    const potency = Math.floor(Math.random() * 10) + 1; // 1-10 potency
+    
+    playerData.potionCollection.push({
+        id: potionId,
+        potency: potency,
+        value: cattleReward,
+        created: Date.now()
+    });
+    
     // Reset cell
     cell.state = 'empty';
     cell.stage = 0;
     
-    // Update HTML UI
-    const cellElement = document.getElementById(`shadow-cell-${cellIndex}`);
-    if (cellElement) {
-        cellElement.className = 'grid-cell empty';
-        cellElement.innerHTML = '';
+    // Update Phaser UI
+    if (nightScene) {
+        nightScene.updateCellAppearance(cellIndex);
+        
+        // Add particle effect for distillation
+        const { startX, startY, cellSize, padding, size } = nightScene.gridConfig;
+        const row = Math.floor(cellIndex / size);
+        const col = cellIndex % size;
+        const x = startX + col * (cellSize + padding);
+        const y = startY + row * (cellSize + padding);
+        
+        // Create a sparkle/explosion effect for distillation
+        const particles = nightScene.add.particles(x, y, 'glow', {
+            scale: { start: 0.8, end: 0.1 },
+            speed: { min: 50, max: 200 },
+            quantity: 20,
+            lifespan: 1000,
+            alpha: { start: 1, end: 0 },
+            blendMode: 'ADD',
+            angle: { min: 0, max: 360 }
+        });
+        
+        // Add floating text for rewards
+        const rewardText = nightScene.add.text(
+            x, 
+            y - 30, 
+            `+${cattleReward} $CATTLE`, 
+            { 
+                font: 'bold 16px Arial',
+                fill: '#00ff00',
+                stroke: '#000000',
+                strokeThickness: 3
+            }
+        );
+        rewardText.setOrigin(0.5);
+        
+        // Animate the text floating up and fading
+        nightScene.tweens.add({
+            targets: rewardText,
+            y: y - 80,
+            alpha: 0,
+            duration: 1500,
+            onComplete: () => {
+                rewardText.destroy();
+            }
+        });
+        
+        // Auto-destroy particles after animation completes
+        nightScene.time.delayedCall(1500, () => {
+            particles.destroy();
+        });
     }
     
     // Play distillation sound
@@ -2666,14 +2756,15 @@ function distillShadowCell(cellIndex) {
     }
     
     // Show notification
-    showNotification(`Distilled potion! +${etherReward.toFixed(0)} Ether, +${cattleReward.toFixed(2)} $CATTLE`, 'success');
+    showNotification(`Distilled potion! +${etherReward.toFixed(0)} Ether, +${cattleReward.toFixed(0)} $CATTLE`, 'success');
     
     // Update UI
+    updatePotionInventory();
     updateShadowResourceDisplay();
     updateUI();
     
     // Show win celebration for bigger rewards
-    if (cattleReward > 10) {
+    if (cattleReward > 20) {
         showWinCelebration(cattleReward);
     }
 }
