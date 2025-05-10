@@ -59,150 +59,527 @@ const profileUI = document.getElementById('profile-ui');
 const notification = document.getElementById('notification');
 const resultModal = document.getElementById('result-modal');
 
-// Initialize Phaser game
+// Define the MainMenuScene class
+class MainMenuScene extends Phaser.Scene {
+    constructor() {
+        super('MainMenuScene');
+    }
+    
+    preload() {
+        // Load desert background for the main menu
+        this.load.image('menu-bg', 'img/game-background.jpeg');
+        
+        // Load character sprites for archetype selection
+        this.load.image('entrepreneur', 'img/characters/the-kid.jpeg');
+        this.load.image('adventurer', 'img/characters/the-hacker.jpeg');
+    }
+    
+    create() {
+        // Get the canvas dimensions
+        const width = this.scale.width;
+        const height = this.scale.height;
+        
+        // Set up background with desert tint
+        this.bg = this.add.image(0, 0, 'menu-bg').setOrigin(0, 0);
+        this.bg.displayWidth = width;
+        this.bg.displayHeight = height;
+        this.bg.setTint(0xf5deb3); // Warm desert tint
+        
+        // Add a semi-transparent overlay to make UI more readable
+        this.overlay = this.add.rectangle(0, 0, width, height, 0x000000, 0.3).setOrigin(0, 0);
+        
+        // Title text - "Bull Run Boost"
+        this.titleText = this.add.text(width / 2, height * 0.15, 'Bull Run Boost', {
+            fontFamily: 'Anta',
+            fontSize: '64px',
+            color: '#ffffff',
+            stroke: '#6a2ca0',
+            strokeThickness: 6,
+            shadow: { color: '#000000', fill: true, offsetX: 2, offsetY: 2, blur: 8 }
+        }).setOrigin(0.5);
+        
+        // Subtitle - "Shadow Markets"
+        this.subtitleText = this.add.text(width / 2, this.titleText.y + 80, 'Shadow Markets', {
+            fontFamily: 'Anta',
+            fontSize: '36px',
+            color: '#00ccff',
+            stroke: '#000000',
+            strokeThickness: 4,
+            shadow: { color: '#000000', fill: true, offsetX: 1, offsetY: 1, blur: 4 }
+        }).setOrigin(0.5);
+        
+        // Player name input field hint
+        this.nameText = this.add.text(width / 2, height * 0.35, 'Enter your name:', {
+            fontFamily: 'Roboto',
+            fontSize: '24px',
+            color: '#ffffff'
+        }).setOrigin(0.5);
+        
+        // Note: We'll use the HTML input for the actual name entry
+        // Update the value in the HTML input element
+        const nameInput = document.getElementById('player-name');
+        if (nameInput) {
+            nameInput.value = playerData.name;
+        }
+        
+        // Archetype selection title
+        this.archetypeTitle = this.add.text(width / 2, height * 0.5, 'Choose Your Archetype:', {
+            fontFamily: 'Roboto',
+            fontSize: '28px',
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 2
+        }).setOrigin(0.5);
+        
+        // Create Entrepreneur option
+        this.entrepreneurCard = this.createArchetypeCard(
+            width * 0.35, 
+            height * 0.65, 
+            'Entrepreneur', 
+            '+10% $CATTLE earning rate',
+            'entrepreneur'
+        );
+        
+        // Create Adventurer option
+        this.adventurerCard = this.createArchetypeCard(
+            width * 0.65, 
+            height * 0.65, 
+            'Adventurer', 
+            '+10% heist success rate',
+            'adventurer',
+            true // disabled
+        );
+        
+        // Start button
+        this.startButton = this.add.container(width / 2, height * 0.85);
+        
+        // Button background
+        const buttonBg = this.add.rectangle(0, 0, 200, 60, 0x6a2ca0, 1).setOrigin(0.5);
+        buttonBg.setStrokeStyle(2, 0xff44cc);
+        
+        // Button text
+        const buttonText = this.add.text(0, 0, 'Start Game', {
+            fontFamily: 'Anta',
+            fontSize: '28px',
+            color: '#ffffff'
+        }).setOrigin(0.5);
+        
+        // Add elements to button container
+        this.startButton.add([buttonBg, buttonText]);
+        
+        // Make button interactive
+        buttonBg.setInteractive({ useHandCursor: true })
+            .on('pointerover', () => {
+                buttonBg.fillColor = 0x8a3cc0;
+                this.tweens.add({
+                    targets: this.startButton,
+                    scaleX: 1.05,
+                    scaleY: 1.05,
+                    duration: 50
+                });
+            })
+            .on('pointerout', () => {
+                buttonBg.fillColor = 0x6a2ca0;
+                this.tweens.add({
+                    targets: this.startButton,
+                    scaleX: 1,
+                    scaleY: 1,
+                    duration: 50
+                });
+            })
+            .on('pointerdown', () => {
+                buttonBg.fillColor = 0x5a1c90;
+                this.tweens.add({
+                    targets: this.startButton,
+                    scaleX: 0.95,
+                    scaleY: 0.95,
+                    duration: 50
+                });
+            })
+            .on('pointerup', () => {
+                buttonBg.fillColor = 0x8a3cc0;
+                this.tweens.add({
+                    targets: this.startButton,
+                    scaleX: 1.05,
+                    scaleY: 1.05,
+                    duration: 50,
+                    onComplete: () => {
+                        this.startGame();
+                    }
+                });
+            });
+            
+        // Add particles for desert dust effect
+        this.particles = this.add.particles('menu-bg');
+        
+        this.dustEmitter = this.particles.createEmitter({
+            frame: { frames: [0], cycle: true },
+            x: { min: 0, max: width },
+            y: height,
+            lifespan: 5000,
+            speed: { min: 20, max: 50 },
+            angle: { min: 250, max: 290 },
+            gravityY: -10,
+            scale: { start: 0.05, end: 0 },
+            alpha: { start: 0.2, end: 0 },
+            quantity: 1,
+            tint: 0xffe2c9,
+            blendMode: 'ADD'
+        });
+        
+        // Add resize listener
+        this.scale.on('resize', this.resize, this);
+        
+        // Check if archetype is already selected (from previous session)
+        this.updateArchetypeSelection(playerData.archetype);
+    }
+    
+    createArchetypeCard(x, y, title, description, key, disabled = false) {
+        const cardContainer = this.add.container(x, y);
+        
+        // Card background
+        const cardBg = this.add.rectangle(0, 0, 250, 200, 0x222222, 0.7).setOrigin(0.5);
+        cardBg.setStrokeStyle(3, disabled ? 0x555555 : 0x00ffff);
+        
+        // Card title
+        const cardTitle = this.add.text(0, -70, title, {
+            fontFamily: 'Roboto',
+            fontSize: '24px',
+            color: disabled ? '#888888' : '#ffffff',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        
+        // Card icon - use character sprite
+        const cardIcon = this.add.image(0, -20, key).setOrigin(0.5);
+        cardIcon.setDisplaySize(100, 100);
+        cardIcon.setAlpha(disabled ? 0.5 : 1);
+        
+        // Card description
+        const cardDesc = this.add.text(0, 60, description, {
+            fontFamily: 'Roboto',
+            fontSize: '16px',
+            color: disabled ? '#888888' : '#00ffff',
+            align: 'center'
+        }).setOrigin(0.5);
+        
+        // Add disabled overlay if needed
+        let disabledText;
+        if (disabled) {
+            disabledText = this.add.text(0, 0, 'Coming Soon', {
+                fontFamily: 'Roboto',
+                fontSize: '20px',
+                color: '#ff0000',
+                backgroundColor: '#000000',
+                padding: { x: 10, y: 5 }
+            }).setOrigin(0.5).setAngle(-15);
+        }
+        
+        // Add all elements to the container
+        const elements = [cardBg, cardTitle, cardIcon, cardDesc];
+        if (disabledText) elements.push(disabledText);
+        cardContainer.add(elements);
+        
+        // Make card interactive if not disabled
+        if (!disabled) {
+            cardBg.setInteractive({ useHandCursor: true })
+                .on('pointerover', () => {
+                    cardBg.fillColor = 0x333333;
+                    this.tweens.add({
+                        targets: cardContainer,
+                        y: y - 10,
+                        duration: 200
+                    });
+                })
+                .on('pointerout', () => {
+                    cardBg.fillColor = 0x222222;
+                    this.tweens.add({
+                        targets: cardContainer,
+                        y: y,
+                        duration: 200
+                    });
+                })
+                .on('pointerdown', () => {
+                    // Select this archetype
+                    this.updateArchetypeSelection(title);
+                });
+        }
+        
+        return cardContainer;
+    }
+    
+    updateArchetypeSelection(archetype) {
+        // Reset both cards
+        const entrepreneurCard = this.entrepreneurCard.getAt(0);
+        entrepreneurCard.setStrokeStyle(3, 0x00ffff);
+        
+        // Update selected card
+        if (archetype === 'Entrepreneur') {
+            entrepreneurCard.setStrokeStyle(3, 0x00ff00);
+            playerData.archetype = 'Entrepreneur';
+            
+            // Update HTML selection too
+            const htmlCards = document.querySelectorAll('.archetype-card');
+            htmlCards.forEach(card => {
+                if (card.dataset.archetype === 'Entrepreneur') {
+                    card.classList.add('selected');
+                } else {
+                    card.classList.remove('selected');
+                }
+            });
+        }
+    }
+    
+    startGame() {
+        // Get player name from HTML input
+        const nameInput = document.getElementById('player-name');
+        if (nameInput) {
+            playerData.name = nameInput.value || 'Cowboy';
+        }
+        
+        // Send to server
+        socket.emit('new-player', {
+            name: playerData.name,
+            archetype: playerData.archetype
+        });
+        
+        // Hide the main menu HTML element
+        const mainMenuElement = document.getElementById('main-menu');
+        if (mainMenuElement) {
+            mainMenuElement.classList.add('hidden');
+        }
+        
+        // Switch to ranch scene through the HTML interface
+        switchScene('ranch');
+        
+        // Start RanchScene in Phaser too
+        this.scene.start('RanchScene');
+    }
+    
+    resize(gameSize) {
+        const width = gameSize.width;
+        const height = gameSize.height;
+        
+        // Resize background
+        if (this.bg) {
+            this.bg.displayWidth = width;
+            this.bg.displayHeight = height;
+        }
+        
+        if (this.overlay) {
+            this.overlay.width = width;
+            this.overlay.height = height;
+        }
+        
+        // Reposition elements
+        if (this.titleText) this.titleText.setPosition(width / 2, height * 0.15);
+        if (this.subtitleText) this.subtitleText.setPosition(width / 2, this.titleText.y + 80);
+        if (this.nameText) this.nameText.setPosition(width / 2, height * 0.35);
+        if (this.archetypeTitle) this.archetypeTitle.setPosition(width / 2, height * 0.5);
+        
+        // Reposition archetype cards
+        if (this.entrepreneurCard) this.entrepreneurCard.setPosition(width * 0.35, height * 0.65);
+        if (this.adventurerCard) this.adventurerCard.setPosition(width * 0.65, height * 0.65);
+        
+        // Reposition start button
+        if (this.startButton) this.startButton.setPosition(width / 2, height * 0.85);
+        
+        // Update dust emitter
+        if (this.dustEmitter) {
+            this.dustEmitter.setPosition({ min: 0, max: width }, height);
+        }
+    }
+}
+
+// Define the RanchScene class
+class RanchScene extends Phaser.Scene {
+    constructor() {
+        super('RanchScene');
+    }
+    
+    preload() {
+        // Load assets for ranch scene
+        this.load.image('game-bg', 'img/game-background.jpeg');
+        this.load.image('character', 'img/characters/the-kid.jpeg');
+        this.load.image('cattle', 'img/cattle.png');
+        this.load.image('barn', 'https://i.imgur.com/t32QEZB.png');
+    }
+    
+    create() {
+        // Set up Ranch scene with tinted background
+        this.ranchBg = this.add.image(0, 0, 'game-bg').setOrigin(0, 0);
+        this.ranchBg.displayWidth = this.scale.width;
+        this.ranchBg.displayHeight = this.scale.height;
+        this.ranchBg.setTint(0xffeedd); // Warm, daylight tint
+        
+        // Add barn to ranch scene
+        this.barn = this.add.image(this.scale.width * 0.7, this.scale.height * 0.4, 'barn');
+        this.barn.setScale(0.5);
+        
+        // Add character to ranch scene
+        this.character = this.add.image(this.scale.width * 0.3, this.scale.height * 0.6, 'character');
+        this.character.setScale(0.15);
+        
+        // Make character slightly animated
+        this.tweens.add({
+            targets: this.character,
+            y: '+=10',
+            duration: 1000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+        
+        // Add resize listener
+        this.scale.on('resize', this.resize, this);
+    }
+    
+    resize(gameSize) {
+        const width = gameSize.width;
+        const height = gameSize.height;
+        
+        // Resize background
+        if (this.ranchBg) {
+            this.ranchBg.displayWidth = width;
+            this.ranchBg.displayHeight = height;
+        }
+        
+        // Reposition elements
+        if (this.barn) {
+            this.barn.x = width * 0.7;
+            this.barn.y = height * 0.4;
+        }
+        
+        if (this.character) {
+            this.character.x = width * 0.3;
+            this.character.y = height * 0.6;
+        }
+    }
+}
+
+// Define the SaloonScene class
+class SaloonScene extends Phaser.Scene {
+    constructor() {
+        super('SaloonScene');
+    }
+    
+    preload() {
+        this.load.image('game-bg', 'img/game-background.jpeg');
+        this.load.image('character', 'img/characters/the-kid.jpeg');
+    }
+    
+    create() {
+        // Set up Saloon scene with tinted background
+        this.saloonBg = this.add.image(0, 0, 'game-bg').setOrigin(0, 0);
+        this.saloonBg.displayWidth = this.scale.width;
+        this.saloonBg.displayHeight = this.scale.height;
+        this.saloonBg.setTint(0xddbb88); // Warm indoor lighting tint
+        
+        // Add character to saloon scene
+        this.character = this.add.image(this.scale.width * 0.3, this.scale.height * 0.6, 'character');
+        this.character.setScale(0.15);
+        
+        // Make character slightly animated
+        this.tweens.add({
+            targets: this.character,
+            y: '+=10',
+            duration: 1000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+        
+        // Add resize listener
+        this.scale.on('resize', this.resize, this);
+    }
+    
+    resize(gameSize) {
+        const width = gameSize.width;
+        const height = gameSize.height;
+        
+        // Resize background
+        if (this.saloonBg) {
+            this.saloonBg.displayWidth = width;
+            this.saloonBg.displayHeight = height;
+        }
+        
+        // Reposition elements
+        if (this.character) {
+            this.character.x = width * 0.3;
+            this.character.y = height * 0.6;
+        }
+    }
+}
+
+// Define the NightScene class
+class NightScene extends Phaser.Scene {
+    constructor() {
+        super('NightScene');
+    }
+    
+    preload() {
+        this.load.image('game-bg', 'img/game-background.jpeg');
+        this.load.image('character', 'img/characters/the-kid.jpeg');
+        this.load.image('potion', 'https://i.imgur.com/BWZHIOJ.png');
+    }
+    
+    create() {
+        // Set up Night scene with tinted background
+        this.nightBg = this.add.image(0, 0, 'game-bg').setOrigin(0, 0);
+        this.nightBg.displayWidth = this.scale.width;
+        this.nightBg.displayHeight = this.scale.height;
+        this.nightBg.setTint(0x5566aa); // Cool blue night tint
+        
+        // Add character to night scene
+        this.character = this.add.image(this.scale.width * 0.3, this.scale.height * 0.6, 'character');
+        this.character.setScale(0.15);
+        
+        // Make character slightly animated
+        this.tweens.add({
+            targets: this.character,
+            y: '+=10',
+            duration: 1000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+        
+        // Add resize listener
+        this.scale.on('resize', this.resize, this);
+    }
+    
+    resize(gameSize) {
+        const width = gameSize.width;
+        const height = gameSize.height;
+        
+        // Resize background
+        if (this.nightBg) {
+            this.nightBg.displayWidth = width;
+            this.nightBg.displayHeight = height;
+        }
+        
+        // Reposition elements
+        if (this.character) {
+            this.character.x = width * 0.3;
+            this.character.y = height * 0.6;
+        }
+    }
+}
+
+// Initialize Phaser game with scene management
 const config = {
     type: Phaser.AUTO,
     width: window.innerWidth,
     height: window.innerHeight,
     parent: 'game-container',
-    scene: {
-        preload: preload,
-        create: create,
-        update: update
+    scene: [MainMenuScene, RanchScene, SaloonScene, NightScene],
+    scale: {
+        mode: Phaser.Scale.RESIZE,
+        autoCenter: Phaser.Scale.CENTER_BOTH
     }
 };
 
 // Create game instance
 const game = new Phaser.Game(config);
-
-// Preload game assets
-function preload() {
-    // Load new shared background image
-    this.load.image('game-bg', 'img/game-background.jpeg'); // Shared background with tinting
-    
-    // Load sprites
-    this.load.image('character', 'https://i.imgur.com/h5Yxbqk.png'); // Character sprite
-    this.load.image('cattle', 'https://i.imgur.com/PCh2a3k.png'); // Cattle sprite
-    this.load.image('potion', 'https://i.imgur.com/BWZHIOJ.png'); // Potion sprite
-    this.load.image('barn', 'https://i.imgur.com/t32QEZB.png'); // Barn sprite
-}
-
-// Create game objects
-function create() {
-    // Create scenes
-    this.ranchScene = this.add.container();
-    this.saloonScene = this.add.container();
-    this.nightScene = this.add.container();
-    
-    // Set up Ranch scene with tinted background
-    this.ranchBg = this.add.image(0, 0, 'game-bg').setOrigin(0, 0);
-    this.ranchBg.displayWidth = window.innerWidth;
-    this.ranchBg.displayHeight = window.innerHeight;
-    this.ranchBg.setTint(0xffeedd); // Warm, daylight tint
-    this.ranchScene.add(this.ranchBg);
-    
-    // Add barn to ranch scene
-    this.barn = this.add.image(window.innerWidth * 0.7, window.innerHeight * 0.4, 'barn');
-    this.barn.setScale(0.5);
-    this.ranchScene.add(this.barn);
-    
-    // Add character to ranch scene
-    this.character = this.add.image(window.innerWidth * 0.3, window.innerHeight * 0.6, 'character');
-    this.character.setScale(0.15);
-    this.ranchScene.add(this.character);
-    
-    // Set up Saloon scene with tinted background
-    this.saloonBg = this.add.image(0, 0, 'game-bg').setOrigin(0, 0);
-    this.saloonBg.displayWidth = window.innerWidth;
-    this.saloonBg.displayHeight = window.innerHeight;
-    this.saloonBg.setTint(0xddbb88); // Warm indoor lighting tint
-    this.saloonScene.add(this.saloonBg);
-    
-    // Add character to saloon scene
-    this.saloonCharacter = this.add.image(window.innerWidth * 0.3, window.innerHeight * 0.6, 'character');
-    this.saloonCharacter.setScale(0.15);
-    this.saloonScene.add(this.saloonCharacter);
-    
-    // Set up Night scene with tinted background
-    this.nightBg = this.add.image(0, 0, 'game-bg').setOrigin(0, 0);
-    this.nightBg.displayWidth = window.innerWidth;
-    this.nightBg.displayHeight = window.innerHeight;
-    this.nightBg.setTint(0x5566aa); // Cool blue night tint
-    this.nightScene.add(this.nightBg);
-    
-    // Add character to night scene
-    this.nightCharacter = this.add.image(window.innerWidth * 0.3, window.innerHeight * 0.6, 'character');
-    this.nightCharacter.setScale(0.15);
-    this.nightScene.add(this.nightCharacter);
-    
-    // Hide all scenes initially
-    this.ranchScene.visible = false;
-    this.saloonScene.visible = false;
-    this.nightScene.visible = false;
-    
-    // Make character slightly animated
-    this.tweens.add({
-        targets: [this.character, this.saloonCharacter, this.nightCharacter],
-        y: '+=10',
-        duration: 1000,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut'
-    });
-    
-    // Add resize listener
-    window.addEventListener('resize', () => {
-        this.resize();
-    });
-}
-
-// Update game state
-function update() {
-    // Update game based on current scene
-}
-
-// Resize handler
-Phaser.Scene.prototype.resize = function() {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    
-    // Resize background images
-    if (this.ranchBg) {
-        this.ranchBg.displayWidth = w;
-        this.ranchBg.displayHeight = h;
-    }
-    
-    if (this.saloonBg) {
-        this.saloonBg.displayWidth = w;
-        this.saloonBg.displayHeight = h;
-    }
-    
-    if (this.nightBg) {
-        this.nightBg.displayWidth = w;
-        this.nightBg.displayHeight = h;
-    }
-    
-    // Reposition elements
-    if (this.barn) {
-        this.barn.x = w * 0.7;
-        this.barn.y = h * 0.4;
-    }
-    
-    if (this.character) {
-        this.character.x = w * 0.3;
-        this.character.y = h * 0.6;
-    }
-    
-    if (this.saloonCharacter) {
-        this.saloonCharacter.x = w * 0.3;
-        this.saloonCharacter.y = h * 0.6;
-    }
-    
-    if (this.nightCharacter) {
-        this.nightCharacter.x = w * 0.3;
-        this.nightCharacter.y = h * 0.6;
-    }
-};
 
 // Initialize UI event listeners
 document.addEventListener('DOMContentLoaded', () => {
@@ -824,7 +1201,7 @@ socket.on('error-message', data => {
 
 // Helper Functions
 function switchScene(scene) {
-    // Add null checks for UI screens
+    // Map HTML UI elements
     const screens = {
         'main-menu': mainMenu,
         'ranch': ranchUI,
@@ -833,58 +1210,58 @@ function switchScene(scene) {
         'profile': profileUI
     };
     
-    // Hide all UI screens that exist
+    // Hide all HTML UI screens
     Object.values(screens).forEach(screen => {
         if (screen) screen.classList.add('hidden');
     });
     
-    // Check if game is initialized before accessing scenes
-    if (game && game.scene && game.scene.scenes && game.scene.scenes[0]) {
-        // Hide all game scenes with null checks
-        const gameScene = game.scene.scenes[0];
-        if (gameScene.ranchScene) gameScene.ranchScene.visible = false;
-        if (gameScene.saloonScene) gameScene.saloonScene.visible = false;
-        if (gameScene.nightScene) gameScene.nightScene.visible = false;
+    // Map scene types to Phaser scene keys
+    const phaser_scenes = {
+        'main-menu': 'MainMenuScene',
+        'ranch': 'RanchScene',
+        'saloon': 'SaloonScene',
+        'night': 'NightScene'
+    };
+    
+    // Store current scene
+    currentScene = scene;
+    
+    // Update the HTML UI
+    if (screens[scene]) {
+        screens[scene].classList.remove('hidden');
     }
     
-    // Show selected scene
+    // Start the corresponding Phaser scene if available
+    if (phaser_scenes[scene] && game && game.scene) {
+        // Stop all running scenes
+        if (scene !== 'main-menu') game.scene.stop('MainMenuScene');
+        if (scene !== 'ranch') game.scene.stop('RanchScene');
+        if (scene !== 'saloon') game.scene.stop('SaloonScene');
+        if (scene !== 'night') game.scene.stop('NightScene');
+        
+        // Start the new scene
+        if (!game.scene.isActive(phaser_scenes[scene])) {
+            game.scene.start(phaser_scenes[scene]);
+        }
+    }
+    
+    // Initialize scene-specific logic
     switch (scene) {
-        case 'main-menu':
-            if (screens['main-menu']) screens['main-menu'].classList.remove('hidden');
-            break;
         case 'ranch':
-            if (screens['ranch']) screens['ranch'].classList.remove('hidden');
-            if (game && game.scene && game.scene.scenes && game.scene.scenes[0] && game.scene.scenes[0].ranchScene) {
-                game.scene.scenes[0].ranchScene.visible = true;
-            }
             initRanchGrid(); // Initialize or update ranch grid
             break;
         case 'saloon':
-            if (screens['saloon']) screens['saloon'].classList.remove('hidden');
-            if (game && game.scene && game.scene.scenes && game.scene.scenes[0] && game.scene.scenes[0].saloonScene) {
-                game.scene.scenes[0].saloonScene.visible = true;
-            }
-            
-            // Initialize saloon-specific elements
-            initSaloonScene();
+            initSaloonScene(); // Initialize saloon-specific elements
             break;
         case 'profile':
-            if (screens['profile']) screens['profile'].classList.remove('hidden');
             updateProfileUI();
             break;
         case 'night':
-            if (screens['night']) screens['night'].classList.remove('hidden');
-            if (game && game.scene && game.scene.scenes && game.scene.scenes[0] && game.scene.scenes[0].nightScene) {
-                game.scene.scenes[0].nightScene.visible = true;
-            }
             initShadowGrid(); // Initialize or update shadow market grid
             break;
     }
     
-    // Update current scene
-    currentScene = scene;
-    
-    // Update UI for new scene
+    // Update UI with current player data
     updateUI();
     
     console.log(`Switched to scene: ${scene}`);
