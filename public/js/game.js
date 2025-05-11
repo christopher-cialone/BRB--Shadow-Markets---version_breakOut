@@ -1214,27 +1214,6 @@ class NightScene extends Phaser.Scene {
         // Add to scene
         this.gridContainer.add(cellContainer);
     }
-                case 'brewing':
-                    this.addBubblingAnimation(cellSprite, index);
-                    break;
-                case 'distilling':
-                    // Add subtle pulsing for distilling
-                    this.tweens.add({
-                        targets: cellSprite,
-                        scaleX: 1.05,
-                        scaleY: 1.05,
-                        duration: 1000,
-                        yoyo: true,
-                        repeat: -1,
-                        ease: 'Sine.easeInOut'
-                    });
-                    break;
-                case 'ready':
-                    this.addGlowAnimation(cellSprite, index);
-                    break;
-            }
-        }
-    }
     
     updateCellAppearance(cellIndex) {
         const cell = shadowGrid.cells[cellIndex];
