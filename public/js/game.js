@@ -1416,22 +1416,58 @@ document.addEventListener('DOMContentLoaded', () => {
                         ease: 'Back.easeOut'
                     });
                     
-                    // Add particle effect around the new cattle
-                    const particles = ranchScene.add.particles(cattleSprite.x, cattleSprite.y, 'hay-icon', {
-                        speed: 50,
-                        scale: { start: 0.1, end: 0 },
-                        quantity: 10,
-                        lifespan: 1000,
-                        emitting: false
-                    });
+                    // Create a better, more reliable animation with multiple particles
+                    // Add a sparkle effect around the new cattle
+                    for (let i = 0; i < 10; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const distance = Math.random() * 30;
+                        const x = cattleSprite.x + Math.cos(angle) * distance;
+                        const y = cattleSprite.y + Math.sin(angle) * distance;
+                        
+                        // Create sparkle particle
+                        const sparkle = ranchScene.add.image(x, y, 'hay-icon');
+                        sparkle.setScale(0.1);
+                        sparkle.setTint(0xFFFF00); // Yellow tint
+                        
+                        // Animate the sparkle
+                        ranchScene.tweens.add({
+                            targets: sparkle,
+                            scale: { from: 0.1, to: 0.2 },
+                            alpha: { from: 1, to: 0 },
+                            x: x + Math.cos(angle) * 20,
+                            y: y + Math.sin(angle) * 20,
+                            duration: 800,
+                            ease: 'Sine.easeOut',
+                            onComplete: () => sparkle.destroy()
+                        });
+                    }
                     
-                    // Emit particles once
-                    particles.explode(10, cattleSprite.x, cattleSprite.y);
-                    
-                    // Auto-destroy particles after animation completes
-                    ranchScene.time.delayedCall(1000, () => {
-                        particles.destroy();
-                    });
+                    // Also add a cattle icon in the "Your Cattle" section
+                    const cattleInventory = document.getElementById('cattle-inventory');
+                    if (cattleInventory) {
+                        // Create a temporary element
+                        const tempCattleEl = document.createElement('div');
+                        tempCattleEl.className = 'cattle-card';
+                        tempCattleEl.innerHTML = `
+                            <img src="img/cattle.png" alt="Cattle">
+                            <div class="cattle-stats">
+                                <div>Speed: ${tempCattle.speed}</div>
+                                <div>Milk: ${tempCattle.milk}</div>
+                            </div>
+                        `;
+                        
+                        // Add animation class
+                        tempCattleEl.classList.add('cattle-appear');
+                        
+                        // Add to inventory
+                        cattleInventory.appendChild(tempCattleEl);
+                        
+                        // Remove "no cattle" message if it exists
+                        const emptyMessage = cattleInventory.querySelector('.empty-message');
+                        if (emptyMessage) {
+                            emptyMessage.remove();
+                        }
+                    }
                 }
             }
             
