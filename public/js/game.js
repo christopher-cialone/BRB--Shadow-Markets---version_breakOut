@@ -1061,6 +1061,9 @@ class NightScene extends Phaser.Scene {
     createGridCells() {
         const { startX, startY, cellSize, padding, size } = this.gridConfig;
         
+        // Initialize shadow grid cells
+        initShadowCells();
+        
         // Clear existing cell sprites if any
         if (this.cellSprites.length > 0) {
             this.cellSprites.forEach(sprite => sprite.destroy());
@@ -1080,13 +1083,11 @@ class NightScene extends Phaser.Scene {
                 const x = startX + col * (cellSize + padding);
                 const y = startY + row * (cellSize + padding);
                 
-                // Create cell and store reference
-                this.createCell(x, y, index);
+                // Create cell using our new utility function
+                const cellContainer = renderShadowCell(this, x, y, index);
+                this.cellSprites[index] = cellContainer;
             }
         }
-        
-        // Update appearance of all cells
-        this.updateAllCells();
     }
     
     createCell(x, y, index) {
@@ -1238,111 +1239,8 @@ class NightScene extends Phaser.Scene {
         const cellContainer = this.cellSprites[cellIndex];
         if (!cellContainer) return;
         
-        // Find parts in the container
-        let bg = null;
-        let border = null;
-        let stateLabel = null;
-        let indicator = null;
-        
-        // Find the components within the container
-        for (let i = 0; i < cellContainer.list.length; i++) {
-            const item = cellContainer.list[i];
-            
-            if (item.type === 'Graphics' && !item._lineWidth) {
-                // This is the background fill
-                bg = item;
-            }
-            else if (item.type === 'Graphics' && item._lineWidth) {
-                // This is the border/glow
-                border = item;
-            }
-            else if (item.type === 'Text' && !item.text.includes('/')) {
-                // This is the state label
-                stateLabel = item;
-            }
-            else if (item.type === 'Text' && item.text.includes('/')) {
-                // This is the progress indicator
-                indicator = item;
-            }
-        }
-        
-        // Determine colors based on state
-        let fillColor, strokeColor, labelText;
-        switch(cell.state) {
-            case 'brewing': 
-                fillColor = 0x442288;
-                strokeColor = 0xbb44ff;
-                labelText = "BREWING";
-                break;
-            case 'distilling': 
-                fillColor = 0x553399;
-                strokeColor = 0xcc66ff;
-                labelText = "DISTILLING";
-                break;
-            case 'ready': 
-                fillColor = 0x664488;
-                strokeColor = 0xff88ff;
-                labelText = "READY!";
-                break;
-            default: // empty-night
-                fillColor = 0x2a1155;
-                strokeColor = 0x6622aa;
-                labelText = "EMPTY";
-        }
-        
-        // Update background color
-        if (bg) {
-            bg.clear();
-            bg.fillStyle(fillColor, 1);
-            bg.fillRect(-this.gridConfig.cellSize/2, -this.gridConfig.cellSize/2, 
-                      this.gridConfig.cellSize, this.gridConfig.cellSize);
-        }
-        
-        // Update border color
-        if (border) {
-            border.clear();
-            border.lineStyle(3, strokeColor, 0.8);
-            border.strokeRect(-this.gridConfig.cellSize/2, -this.gridConfig.cellSize/2, 
-                           this.gridConfig.cellSize, this.gridConfig.cellSize);
-        }
-        
-        // Update state label text
-        if (stateLabel) {
-            stateLabel.setText(labelText);
-        }
-        
-        // Update progress indicator
-        if (cell.state !== 'empty-night') {
-            if (indicator) {
-                indicator.setText(`${cell.stage || 0}/${cell.maxStage || 3}`);
-                indicator.visible = true;
-            } else {
-                // Create a new progress indicator if it doesn't exist
-                const progress = this.add.text(
-                    0, 
-                    this.gridConfig.cellSize/2 - 15, 
-                    `${cell.stage || 0}/${cell.maxStage || 3}`,
-                    { 
-                        fontFamily: 'Share Tech Mono', 
-                        fontSize: '14px',
-                        fill: '#FFFFFF',
-                        stroke: '#000000',
-                        strokeThickness: 2
-                    }
-                );
-                progress.setOrigin(0.5);
-                cellContainer.add(progress);
-            }
-        } else if (indicator) {
-            indicator.visible = false;
-        }
-        
-        // Add animation effects based on state
-        if (cell.state === 'brewing') {
-            this.addBubblingAnimation(cellContainer, cellIndex);
-        } else if (cell.state === 'ready') {
-            this.addGlowAnimation(cellContainer, cellIndex);
-        }
+        // Use our utility function to update the cell appearance
+        updateShadowCell(this, cellContainer, cellIndex);
     }
         
         if (this.glowTimers[cellIndex]) {
