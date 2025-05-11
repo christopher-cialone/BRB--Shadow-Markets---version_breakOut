@@ -817,14 +817,67 @@ class NightScene extends Phaser.Scene {
             this.cameras.main.width,
             this.cameras.main.height,
             0x000000, 
-            0.5
+            0.6
         );
+        
+        // Add a highly visible title to draw attention to the Shadow Market Grid
+        const title = this.add.text(
+            this.cameras.main.width / 2,
+            160,
+            "SHADOW MARKET GRID",
+            {
+                fontFamily: 'Share Tech Mono',
+                fontSize: '36px',
+                color: '#cc33ff',
+                stroke: '#000000',
+                strokeThickness: 4
+            }
+        );
+        title.setOrigin(0.5);
+        
+        // Make the title pulse to draw attention
+        this.tweens.add({
+            targets: title,
+            scale: { from: 1, to: 1.1 },
+            alpha: { from: 0.8, to: 1 },
+            duration: 1200,
+            yoyo: true,
+            repeat: -1
+        });
+        
+        // Add a big, visible grid container with border
+        const gridWidth = 380;
+        const gridHeight = 380;
+        const gridX = this.cameras.main.width / 2 - gridWidth / 2;
+        const gridY = 210;
+        
+        // Create a background panel for the grid area
+        const gridBg = this.add.graphics();
+        gridBg.fillStyle(0x2a0f44, 0.8);
+        gridBg.fillRoundedRect(gridX, gridY, gridWidth, gridHeight, 15);
+        gridBg.lineStyle(4, 0x8800cc, 1);
+        gridBg.strokeRoundedRect(gridX, gridY, gridWidth, gridHeight, 15);
         
         // Initialize the grid cells
         this.initPhaserGrid();
         
         // Add resize listener
         this.scale.on('resize', this.resize, this);
+        
+        // Add instructions below the grid
+        const instructions = this.add.text(
+            this.cameras.main.width / 2,
+            gridY + gridHeight + 20,
+            "Click on cells to craft potions for 20 $CATTLE (50% burned)",
+            {
+                fontFamily: 'Share Tech Mono',
+                fontSize: '16px',
+                color: '#FFFFFF',
+                stroke: '#000000',
+                strokeThickness: 3
+            }
+        );
+        instructions.setOrigin(0.5);
         
         console.log("NightScene created with Phaser grid");
     }
@@ -2712,24 +2765,44 @@ function handleRanchCellClick(cellIndex) {
                         
                         // Add particle effect for planting
                         try {
-                            // Create a simpler particle effect that works reliably
-                            for (let i = 0; i < 8; i++) {
-                                const particleX = x + (Math.random() * 20 - 10);
-                                const particleY = y + (Math.random() * 20 - 10);
-                                
-                                const particle = ranchScene.add.image(particleX, particleY, 'hay-icon');
-                                particle.setScale(0.2);
-                                
-                                ranchScene.tweens.add({
-                                    targets: particle,
-                                    y: particleY - 30,
-                                    alpha: 0,
-                                    scale: 0,
-                                    duration: 800,
-                                    ease: 'Power2',
-                                    onComplete: () => particle.destroy()
-                                });
-                            }
+                            // Create a dirt animation effect
+                        // Add central dirt puff
+                        const dirtPuff = ranchScene.add.image(x, y, 'hay-icon');
+                        dirtPuff.setScale(0.4);
+                        dirtPuff.setTint(0x8B4513); // Brown tint for dirt
+                        
+                        // Create dirt animation
+                        ranchScene.tweens.add({
+                            targets: dirtPuff,
+                            alpha: { from: 1, to: 0 },
+                            scale: { from: 0.4, to: 0.8 },
+                            duration: 600,
+                            ease: 'Power2',
+                            onComplete: () => dirtPuff.destroy()
+                        });
+                        
+                        // Add multiple dirt particles
+                        for (let i = 0; i < 8; i++) {
+                            const angle = Math.random() * Math.PI * 2;
+                            const distance = Math.random() * 20 + 10;
+                            const particleX = x + Math.cos(angle) * distance;
+                            const particleY = y + Math.sin(angle) * distance;
+                            
+                            const particle = ranchScene.add.image(particleX, particleY, 'hay-icon');
+                            particle.setScale(0.2);
+                            particle.setTint(0x8B4513); // Brown tint for dirt
+                            
+                            ranchScene.tweens.add({
+                                targets: particle,
+                                x: particleX + Math.cos(angle) * 20,
+                                y: particleY + Math.sin(angle) * 20,
+                                alpha: 0,
+                                scale: 0,
+                                duration: 800,
+                                ease: 'Power2',
+                                onComplete: () => particle.destroy()
+                            });
+                        }
                         } catch (err) {
                             console.error('Particle effect error:', err);
                         }
