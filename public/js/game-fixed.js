@@ -2,6 +2,19 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log("Initializing game button handlers...");
     
+    // Initialize player data if needed
+    if (typeof playerData === 'undefined') {
+        window.playerData = {
+            name: 'Cowboy',
+            archetype: 'entrepreneur',
+            cattleBalance: 100,
+            hay: 50,
+            water: 50,
+            cattle: [],
+            potions: []
+        };
+    }
+    
     // Helper function to add click listeners
     function addClickListener(elementId, callback) {
         const element = document.getElementById(elementId);
@@ -227,6 +240,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Go to saloon from ranch
     addClickListener('go-to-saloon', () => {
         switchScene('saloon');
+        // Initialize betting UI after switching to saloon
+        setTimeout(() => setupBettingUI(), 100);
     });
     
     // Go to night scene from ranch
@@ -242,6 +257,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Go to saloon from night
     addClickListener('go-to-saloon-from-night', () => {
         switchScene('saloon');
+        // Initialize betting UI after switching to saloon
+        setTimeout(() => setupBettingUI(), 100);
     });
     
     // Go to profile from various scenes
