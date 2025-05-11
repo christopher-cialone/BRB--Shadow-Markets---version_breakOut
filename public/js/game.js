@@ -782,13 +782,17 @@ class NightScene extends Phaser.Scene {
     preload() {
         // Load background and grid cell states
         this.load.image('shadow-bg', 'img/game-background.jpeg');
+        this.load.image('empty-night', 'img/empty-night.svg');
+        this.load.image('brewing', 'img/brewing.svg');
+        this.load.image('distilling', 'img/distilling.svg');
+        this.load.image('ready', 'img/ready.svg');
         
         // Colors we'll use for the cells (direct rendering without image assets)
         // We'll create all cells using graphics objects directly
         
         // Load particle textures for effects
-        this.load.image('bubble', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAHsSURBVFiF7Ze9ThtBFIU/EApESpAskLJdWQ0FD5AHIE9AYaVLQZUOCR4gokFCikQRKUWkPEHKFEkFBQ1SJIoUAQk/LWfWs8uuZ9a7VhpzJMszc8+958ydH7PQaoUqBXwGvgAD4AVwCzwCYzk/AhPgAFiXfRMYqeZS9v+XPgIfgDPgN7DI8V3gm/JfCj0OAXbk8FnOsgy/A9vKaQvgCXiSPWkS4AK4Lgg+B3rAO2AHWAV6MfuG+PtkIycbJtB5gQPztg/sAe+B38Cq7Os+J8COrh9jSgCclP0WYTZMYmwhBHZUuwA2Y8aVmPMV4HvZb+CeHFwDB7HCsmJgDfgp300fYFfjbgzggY5q+r4AnnVmC2A4IwAlIy8A77p2fQAjjYMKHfi0GCsA21tDH8Cdxk5NKYf43gn4QHztHtkR+y8KYVoAfgXsk7xRxbQkm8UHcK1xq6YUW/Ot+fUA/BL7CXii6H1iEUaqGfkAJgrvGU7HnQznZe6K8F/jXUGAEeGLOAZOCVOXpZ4P91dDYRaNhYZ5vbmj2v6iNdNWXHcU60mTADaNfYVT4EdBgF3V2xR/AjZeBV5ilfCwtOMgzwnoA2/luyDnF/JlZ/7kzf0zWpbOMvAROCLM9YwwMnPgN3bY/CsHC+CofvltlVADrFOLWoYtAzcAAAAASUVORK5CYII=');
-        this.load.image('glow', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAHsSURBVFiF7Ze9ThtBFIU/EApESpAskLJdWQ0FD5AHIE9AYaVLQZUOCR4gokFCikQRKUWkPEHKFEkFBQ1SJIoUAQk/LWfWs8uuZ9a7VhpzJMszc8+958ydH7PQaoUqBXwGvgAD4AVwCzwCYzk/AhPgAFiXfRMYqeZS9v+XPgIfgDPgN7DI8V3gm/JfCj0OAXbk8FnOsgy/A9vKaQvgCXiSPWkS4AK4Lgg+B3rAO2AHWAV6MfuG+PtkIycbJtB5gQPztg/sAe+B38Cq7Os+J8COrh9jSgCclP0WYTZMYmwhBHZUuwA2Y8aVmPMV4HvZb+CeHFwDB7HCsmJgDfgp300fYFfjbgzggY5q+r4AnnVmC2A4IwAlIy8A77p2fQAjjYMKHfi0GCsA21tDH8Cdxk5NKYf43gn4QHztHtkR+y8KYVoAfgXsk7xRxbQkm8UHcK1xq6YUW/Ot+fUA/BL7CXii6H1iEUaqGfkAJgrvGU7HnQznZe6K8F/jXUGAEeGLOAZOCVOXpZ4P91dDYRaNhYZ5vbmj2v6iNdNWXHcU60mTADaNfYVT4EdBgF3V2xR/AjZeBV5ilfCwtOMgzwnoA2/luyDnF/JlZ/7kzf0zWpbOMvAROCLM9YwwMnPgN3bY/CsHC+CofvltlVADrFOLWoYtAzcAAAAASUVORK5CYII=');
+        this.load.image('bubble', 'img/bubble.png');
+        this.load.image('glow', 'img/glow.png');
         
         console.log("Night scene preloaded assets");
     }
@@ -807,6 +811,18 @@ class NightScene extends Phaser.Scene {
             this.cameras.main.height
         );
         this.bg.setTint(0x1a0f33); // Deep purple/blue tint for night scene
+        
+        // Initialize shadow grid if needed
+        if (shadowGrid.cells.length === 0) {
+            console.log("Initializing Shadow Grid cells");
+            for (let i = 0; i < shadowGrid.size * shadowGrid.size; i++) {
+                shadowGrid.cells.push({
+                    state: 'empty-night',
+                    stage: 0,
+                    maxStage: 3
+                });
+            }
+        }
         
         // Add a darker overlay for better text readability
         this.overlay = this.add.rectangle(
