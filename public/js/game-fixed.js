@@ -91,6 +91,115 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // Setup betting sliders functionality
+    function setupBettingUI() {
+        console.log("Setting up betting UI");
+        // Get elements
+        const betButtons = document.querySelectorAll('.bet-button');
+        const betSliderOverlay = document.getElementById('bet-slider-overlay');
+        
+        if (!betButtons.length || !betSliderOverlay) {
+            console.warn("Betting UI elements not found");
+            return;
+        }
+        
+        const betSlider = document.getElementById('bet-slider');
+        const betSliderValue = document.getElementById('bet-slider-value');
+        const confirmBetBtn = document.getElementById('confirm-bet');
+        const cancelBetBtn = document.getElementById('cancel-bet');
+        let currentSuit = '';
+        
+        console.log(`Setting up ${betButtons.length} bet buttons`);
+        
+        // Set up bet button clicks
+        betButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const suit = this.getAttribute('data-suit');
+                currentSuit = suit;
+                console.log(`Bet button clicked for suit: ${suit}`);
+                
+                // Set slider title with capitalized suit name
+                const capitalizedSuit = suit.charAt(0).toUpperCase() + suit.slice(1);
+                document.getElementById('bet-slider-title').textContent = `Place Bet on ${capitalizedSuit}`;
+                
+                // Get current bet value for this suit
+                const betDisplay = document.getElementById(`${suit}-bet-display`);
+                const currentBet = betDisplay ? parseInt(betDisplay.textContent) || 0 : 0;
+                
+                betSlider.value = currentBet;
+                betSliderValue.textContent = currentBet;
+                
+                // Set max value based on player balance
+                betSlider.max = Math.min(50, Math.floor(playerData.cattleBalance));
+                
+                // Show the slider overlay
+                betSliderOverlay.classList.remove('hidden');
+            });
+        });
+        
+        // Update slider value display as it changes
+        if (betSlider) {
+            betSlider.addEventListener('input', function() {
+                betSliderValue.textContent = this.value;
+            });
+        }
+        
+        // Handle confirm bet
+        if (confirmBetBtn) {
+            confirmBetBtn.addEventListener('click', function() {
+                if (currentSuit) {
+                    console.log(`Confirming bet of ${betSlider.value} on ${currentSuit}`);
+                    
+                    // Update bet display
+                    const betDisplay = document.getElementById(`${currentSuit}-bet-display`);
+                    if (betDisplay) {
+                        betDisplay.textContent = betSlider.value;
+                    }
+                    
+                    // Update total bet
+                    updateTotalBet();
+                    
+                    // Hide the slider overlay
+                    betSliderOverlay.classList.add('hidden');
+                }
+            });
+        }
+        
+        // Handle cancel bet
+        if (cancelBetBtn) {
+            cancelBetBtn.addEventListener('click', function() {
+                console.log("Canceling bet");
+                betSliderOverlay.classList.add('hidden');
+            });
+        }
+    }
+    
+    // Function to update total bet
+    function updateTotalBet() {
+        let total = 0;
+        
+        // Get all bet values
+        const suitsList = ['hearts', 'diamonds', 'clubs', 'spades'];
+        suitsList.forEach(suit => {
+            const betDisplay = document.getElementById(`${suit}-bet-display`);
+            if (betDisplay) {
+                total += parseInt(betDisplay.textContent) || 0;
+            }
+        });
+        
+        // Update total display
+        const totalDisplay = document.getElementById('total-bet-amount');
+        if (totalDisplay) {
+            totalDisplay.textContent = total;
+        }
+        
+        // Update burn amount (10%)
+        const burnDisplay = document.getElementById('burn-amount');
+        if (burnDisplay) {
+            burnDisplay.textContent = Math.floor(total * 0.1);
+        }
+    }
+    
     // Start Game button
     addClickListener('start-game', () => {
         console.log("Start Game button clicked");
