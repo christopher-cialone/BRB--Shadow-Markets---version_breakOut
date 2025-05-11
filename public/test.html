@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Button Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #222;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        button {
+            background-color: #5d3fd3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #status {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #333;
+            border-radius: 5px;
+            min-height: 100px;
+            width: 80%;
+            max-width: 500px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Button Test</h1>
+    <div>
+        <button id="test-button">Test Button</button>
+        <button id="start-game">Start Game</button>
+    </div>
+    <div id="status">Status: Ready</div>
+
+    <script>
+        // Test basic button functionality
+        document.getElementById('test-button').addEventListener('click', function() {
+            document.getElementById('status').textContent = 'Test button clicked at ' + new Date().toLocaleTimeString();
+        });
+        
+        document.getElementById('start-game').addEventListener('click', function() {
+            document.getElementById('status').textContent = 'Start Game button clicked at ' + new Date().toLocaleTimeString();
+        });
+    </script>
+</body>
+</html>
