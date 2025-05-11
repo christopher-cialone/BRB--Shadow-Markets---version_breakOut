@@ -2489,8 +2489,8 @@ function updateCattleInventory() {
     // Clear inventory
     cattleInventory.innerHTML = '';
     
-    // Check if empty
-    if (!playerData.cattle || playerData.cattle.length === 0) {
+    // Check if cattle is defined and has forEach method (it should be an array)
+    if (!playerData.cattle || !Array.isArray(playerData.cattle) || playerData.cattle.length === 0) {
         cattleInventory.innerHTML = '<div class="empty-message">No cattle yet. Start breeding!</div>';
         return;
     }
