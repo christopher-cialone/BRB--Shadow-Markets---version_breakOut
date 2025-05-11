@@ -1240,9 +1240,7 @@ class NightScene extends Phaser.Scene {
         if (!cellContainer) return;
         
         // Use our utility function to update the cell appearance
-        if (typeof updateShadowCell === 'function') {
-            updateShadowCell(this, cellContainer, cellIndex);
-        }
+        updateShadowCell(this, cellContainer, cellIndex);
         
         // Clean up any existing timers
         if (this.glowTimers && this.glowTimers[cellIndex]) {
@@ -1250,6 +1248,27 @@ class NightScene extends Phaser.Scene {
             this.glowTimers[cellIndex] = null;
         }
     }
+        // Add appropriate new animation based on state
+        switch(cell.state) {
+            case 'brewing':
+                this.addBubblingAnimation(cellSprite, cellIndex);
+                break;
+            case 'distilling':
+                // Add subtle pulsing for distilling
+                this.tweens.add({
+                    targets: cellSprite,
+                    scaleX: 1.05,
+                    scaleY: 1.05,
+                    duration: 1000,
+                    yoyo: true,
+                    repeat: -1,
+                    ease: 'Sine.easeInOut'
+                });
+                break;
+            case 'ready':
+                this.addGlowAnimation(cellSprite, cellIndex);
+                break;
+        }
     }
     
     updateAllCells() {
