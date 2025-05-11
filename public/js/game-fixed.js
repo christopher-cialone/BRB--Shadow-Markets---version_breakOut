@@ -1,39 +1,8 @@
-// Connect to server
-const socket = io();
-
-// Game state
-let playerData = {
-    name: 'Cowboy',
-    archetype: 'Entrepreneur',
-    characterType: 'the-kid',
-    cattleBalance: 100,
-    hay: 100,
-    water: 100,
-    ether: 0,
-    barnCapacity: 100,
-    cattle: [],
-    potionCollection: [],
-    stats: {
-        racesWon: 0,
-        racesLost: 0,
-        cattleBred: 0,
-        potionsCrafted: 0,
-        totalEarned: 0,
-        totalBurned: 0,
-        plantsHarvested: 0,
-        potionsDistilled: 0
-    }
-};
-
-let marketPrice = 1.0;
-let currentScene = 'main-menu';
-let wagerAmount = 10;
-
-// Initialize game elements when DOM is loaded
+// Simple game start handler to fix the broken UI
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, initializing game...');
+    console.log("Initializing game button handlers...");
     
-    // Helper function to safely add click event listeners
+    // Helper function to add click listeners
     function addClickListener(elementId, callback) {
         const element = document.getElementById(elementId);
         if (element) {
@@ -51,39 +20,64 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Helper function to switch between game screens
+    // Function to switch between scenes
     function switchScene(sceneName) {
         console.log(`Switching to scene: ${sceneName}`);
+        
         // Hide all screens
         document.querySelectorAll('.screen').forEach(screen => {
             screen.classList.add('hidden');
         });
         
-        // Show the target screen
-        const targetScreen = document.getElementById(`${sceneName}-ui`);
-        if (targetScreen) {
-            targetScreen.classList.remove('hidden');
-            currentScene = sceneName;
-            console.log(`Scene switched to ${sceneName}`);
-        } else if (sceneName === 'main-menu') {
-            // Special case for main menu which doesn't have the -ui suffix
-            const mainMenu = document.getElementById('main-menu');
-            if (mainMenu) {
-                mainMenu.classList.remove('hidden');
-                currentScene = 'main-menu';
-                console.log('Scene switched to main-menu');
-            } else {
-                console.error('Main menu element not found');
-            }
-        } else {
-            console.error(`Target scene element not found: ${sceneName}-ui`);
+        // Show the requested screen
+        let screenElement;
+        switch(sceneName) {
+            case 'main-menu':
+                screenElement = document.getElementById('main-menu');
+                break;
+            case 'ranch':
+                screenElement = document.getElementById('ranch-ui');
+                break;
+            case 'saloon':
+                screenElement = document.getElementById('saloon-ui');
+                break;
+            case 'night':
+                screenElement = document.getElementById('night-ui');
+                break;
+            case 'profile':
+                screenElement = document.getElementById('profile-ui');
+                break;
+            default:
+                console.error(`Unknown scene: ${sceneName}`);
+                return;
         }
+        
+        if (screenElement) {
+            screenElement.classList.remove('hidden');
+            console.log(`UI updated for scene: ${sceneName}`);
+        }
+    }
+    
+    // Function to update all displays
+    function updateAllDisplays() {
+        // Update cattle balance display
+        const cattleBalanceElements = document.querySelectorAll('#cattle-balance, #saloon-cattle-balance');
+        cattleBalanceElements.forEach(element => {
+            if (element) element.textContent = playerData.cattleBalance;
+        });
+        
+        // Update resource displays
+        const hayElement = document.getElementById('hay');
+        const waterElement = document.getElementById('water');
+        
+        if (hayElement) hayElement.textContent = playerData.hay;
+        if (waterElement) waterElement.textContent = playerData.water;
     }
     
     // Set up archetype selection
     document.querySelectorAll('.archetype-card').forEach(card => {
         card.addEventListener('click', () => {
-            // Remove selected class from all cards
+            // Deselect all cards
             document.querySelectorAll('.archetype-card').forEach(c => {
                 c.classList.remove('selected');
             });
@@ -93,62 +87,70 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Set archetype
             playerData.archetype = card.dataset.archetype;
+            console.log(`Selected archetype: ${playerData.archetype}`);
         });
     });
     
     // Start Game button
     addClickListener('start-game', () => {
+        console.log("Start Game button clicked");
+        
         // Get player name
         const playerNameInput = document.getElementById('player-name');
-        playerData.name = playerNameInput ? (playerNameInput.value || 'Cowboy') : 'Cowboy';
+        if (playerNameInput) {
+            playerData.name = playerNameInput.value || 'Cowboy';
+        }
         
-        // Connect to server
-        socket.emit('new-player', {
-            name: playerData.name,
-            archetype: playerData.archetype
-        });
+        // Connect to server (if needed)
+        if (typeof socket !== 'undefined' && socket) {
+            socket.emit('new-player', {
+                name: playerData.name,
+                archetype: playerData.archetype
+            });
+        }
         
         // Switch to ranch scene
         switchScene('ranch');
+        updateAllDisplays();
     });
     
-    // RANCH UI EVENTS
-    addClickListener('breed-cattle', () => {
-        console.log("Breed cattle button clicked");
-        alert("Breed cattle button works!");
+    // TRAVEL BUTTONS
+    // Go to saloon from ranch
+    addClickListener('go-to-saloon', () => {
+        switchScene('saloon');
     });
     
-    // Initialize display of game state
-    updateAllDisplays();
+    // Go to night scene from ranch
+    addClickListener('go-to-night', () => {
+        switchScene('night');
+    });
     
-    // Function to update all UI displays with current state
-    function updateAllDisplays() {
-        // Update cattle balance displays
-        document.querySelectorAll('#cattle-balance, #saloon-cattle-balance, #night-cattle-balance').forEach(el => {
-            if (el) el.textContent = playerData.cattleBalance;
+    // Go back to ranch from night
+    addClickListener('back-to-ranch-night', () => {
+        switchScene('ranch');
+    });
+    
+    // Go to saloon from night
+    addClickListener('go-to-saloon-from-night', () => {
+        switchScene('saloon');
+    });
+    
+    // Go to profile from various scenes
+    ['go-to-profile-from-ranch', 'go-to-profile-from-saloon', 'go-to-profile-from-night'].forEach(id => {
+        addClickListener(id, () => {
+            switchScene('profile');
         });
-        
-        // Update resource displays
-        const hayEl = document.getElementById('hay');
-        const waterEl = document.getElementById('water');
-        if (hayEl) hayEl.textContent = playerData.hay;
-        if (waterEl) waterEl.textContent = playerData.water;
-        
-        // Update barn capacity displays
-        document.querySelectorAll('#barn-capacity, #barn-capacity-2').forEach(el => {
-            if (el) el.textContent = playerData.barnCapacity;
-        });
-    }
-    
-    // Socket event handlers
-    socket.on('connect', () => {
-        console.log('Connected to server');
     });
     
-    socket.on('disconnect', () => {
-        console.log('Disconnected from server');
+    // Go back to ranch from profile
+    addClickListener('back-to-ranch-profile', () => {
+        switchScene('ranch');
     });
     
-    // Log that initialization is complete
-    console.log('Game initialization complete');
+    // Go back to ranch from saloon
+    addClickListener('back-to-ranch-saloon', () => {
+        switchScene('ranch');
+    });
+    
+    console.log("Game button handlers initialized");
 });
