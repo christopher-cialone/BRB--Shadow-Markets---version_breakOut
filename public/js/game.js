@@ -1250,12 +1250,13 @@ class NightScene extends Phaser.Scene {
             this.glowTimers[cellIndex] = null;
         }
     }
-    }
     
     updateAllCells() {
-        shadowGrid.cells.forEach((cell, index) => {
-            this.updateCellAppearance(index);
-        });
+        if (this.updateCellAppearance) {
+            shadowGrid.cells.forEach((cell, index) => {
+                this.updateCellAppearance(index);
+            });
+        }
     }
     
     addBubblingAnimation(cellSprite, cellIndex) {
@@ -1352,7 +1353,7 @@ const config = {
     width: window.innerWidth,
     height: window.innerHeight,
     parent: 'game-container',
-    scene: [MainMenuScene, RanchScene, SaloonScene, NightScene],
+    scene: [MainMenuScene, RanchScene, SaloonScene],
     scale: {
         mode: Phaser.Scale.RESIZE,
         autoCenter: Phaser.Scale.CENTER_BOTH
