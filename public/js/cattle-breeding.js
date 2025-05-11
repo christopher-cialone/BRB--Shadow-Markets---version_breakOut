@@ -1,0 +1,228 @@
+// Cattle breeding functionality
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("Initializing cattle breeding functionality");
+    
+    // Helper function to generate a random ID
+    function generateID() {
+        return Math.random().toString(36).substring(2, 15);
+    }
+    
+    // Setup breed cattle button functionality
+    function setupBreedingUI() {
+        const breedButton = document.getElementById('breed-cattle-btn');
+        const cattleInventory = document.getElementById('cattle-inventory');
+        
+        if (!breedButton) {
+            console.warn("Breed cattle button not found");
+            return;
+        }
+        
+        breedButton.addEventListener('click', function() {
+            console.log("Breed cattle button clicked");
+            
+            // Check if player has enough resources
+            if (playerData.hay < 10 || playerData.water < 10) {
+                showNotification("Not enough resources to breed cattle. Need 10 hay and 10 water.", 'error');
+                return;
+            }
+            
+            // Deduct resources
+            playerData.hay -= 10;
+            playerData.water -= 10;
+            
+            // Create new cattle
+            const newCattle = {
+                id: generateID(),
+                name: `Cattle ${playerData.cattle.length + 1}`,
+                milk: 0,
+                maxMilk: 20,
+                milkRate: 1,
+                milkValue: 3
+            };
+            
+            // Add to player's cattle
+            if (!Array.isArray(playerData.cattle)) {
+                playerData.cattle = [];
+            }
+            playerData.cattle.push(newCattle);
+            
+            // Update displays
+            updateResourceDisplay();
+            updateCattleInventory();
+            
+            // Show notification
+            showNotification(`Successfully bred a new cattle: ${newCattle.name}!`, 'success');
+            
+            // Try to add to scene if in Ranch scene
+            if (typeof addCattleToScene === 'function') {
+                try {
+                    addCattleToScene(newCattle);
+                } catch (e) {
+                    console.error("Could not add cattle to scene:", e);
+                }
+            }
+        });
+    }
+    
+    // Function to update the cattle inventory display
+    function updateCattleInventory() {
+        const cattleInventory = document.getElementById('cattle-inventory');
+        if (!cattleInventory) return;
+        
+        // Clear existing inventory
+        cattleInventory.innerHTML = '';
+        
+        // Check if cattle array exists and is an array
+        if (!playerData.cattle || !Array.isArray(playerData.cattle) || playerData.cattle.length === 0) {
+            cattleInventory.innerHTML = '<div class="empty-inventory">No cattle yet. Breed some!</div>';
+            return;
+        }
+        
+        // Add each cattle to the inventory
+        playerData.cattle.forEach(cattle => {
+            const cattleElement = document.createElement('div');
+            cattleElement.className = 'cattle-item';
+            cattleElement.dataset.id = cattle.id;
+            
+            // Create cattle image
+            const cattleImg = document.createElement('img');
+            cattleImg.src = 'img/cattle.svg';
+            cattleImg.alt = cattle.name;
+            cattleImg.className = 'cattle-image';
+            
+            // Create cattle info
+            const cattleInfo = document.createElement('div');
+            cattleInfo.className = 'cattle-info';
+            cattleInfo.innerHTML = `
+                <div class="cattle-name">${cattle.name}</div>
+                <div class="cattle-milk-bar">
+                    <div class="milk-progress" style="width: ${(cattle.milk / cattle.maxMilk) * 100}%"></div>
+                </div>
+                <div class="cattle-stats">
+                    <span>Milk: ${cattle.milk}/${cattle.maxMilk}</span>
+                    <span>Value: ${cattle.milkValue} $CATTLE</span>
+                </div>
+            `;
+            
+            // Create sell button
+            const sellButton = document.createElement('button');
+            sellButton.className = 'sell-cattle-btn';
+            sellButton.textContent = 'Sell';
+            sellButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                sellCattle(cattle.id);
+            });
+            
+            // Assemble cattle element
+            cattleElement.appendChild(cattleImg);
+            cattleElement.appendChild(cattleInfo);
+            cattleElement.appendChild(sellButton);
+            
+            // Add to inventory
+            cattleInventory.appendChild(cattleElement);
+        });
+    }
+    
+    // Function to sell a cattle
+    function sellCattle(cattleId) {
+        // Find the cattle in the player's inventory
+        const cattleIndex = playerData.cattle.findIndex(c => c.id === cattleId);
+        if (cattleIndex === -1) return;
+        
+        const cattle = playerData.cattle[cattleIndex];
+        
+        // Calculate sell value (base + milk)
+        const sellValue = 10 + (cattle.milk * cattle.milkValue);
+        
+        // Remove the cattle from inventory
+        playerData.cattle.splice(cattleIndex, 1);
+        
+        // Add cattle value to player balance
+        playerData.cattleBalance += sellValue;
+        
+        // Update displays
+        updateCattleInventory();
+        updateResourceDisplay();
+        
+        // Show notification
+        showNotification(`Sold ${cattle.name} for ${sellValue} $CATTLE!`, 'success');
+    }
+    
+    // Function to update resource display
+    function updateResourceDisplay() {
+        // Update cattle balance
+        const cattleBalanceElements = document.querySelectorAll('#cattle-balance, #saloon-cattle-balance');
+        cattleBalanceElements.forEach(element => {
+            if (element) element.textContent = playerData.cattleBalance;
+        });
+        
+        // Update hay and water
+        const hayElement = document.getElementById('hay');
+        const waterElement = document.getElementById('water');
+        
+        if (hayElement) hayElement.textContent = playerData.hay;
+        if (waterElement) waterElement.textContent = playerData.water;
+    }
+    
+    // Function to show notification
+    function showNotification(message, type = 'info') {
+        // Use existing notification system if available
+        if (typeof window.showNotification === 'function') {
+            window.showNotification(message, type);
+            return;
+        }
+        
+        // Create a basic notification if none exists
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+        
+        const notifications = document.getElementById('notifications');
+        if (notifications) {
+            notifications.appendChild(notification);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                notifications.removeChild(notification);
+            }, 5000);
+        } else {
+            // Just alert if no notification container
+            alert(message);
+        }
+    }
+    
+    // Initialize breeding functionality when we're in Ranch scene
+    function initBreedingWhenInRanch() {
+        const ranchUI = document.getElementById('ranch-ui');
+        if (ranchUI && !ranchUI.classList.contains('hidden')) {
+            console.log("In Ranch scene, setting up breeding UI");
+            setupBreedingUI();
+            updateCattleInventory();
+        }
+    }
+    
+    // Add a listener to the ranch navigation button to initialize breeding
+    const goToRanchButtons = [
+        document.getElementById('back-to-ranch-saloon'),
+        document.getElementById('back-to-ranch-night'),
+        document.getElementById('back-to-ranch-profile')
+    ];
+    
+    goToRanchButtons.forEach(button => {
+        if (button) {
+            const originalClick = button.onclick;
+            button.onclick = function(e) {
+                if (originalClick) originalClick.call(this, e);
+                setTimeout(initBreedingWhenInRanch, 100);
+            };
+        }
+    });
+    
+    // Initialize immediately if we're already on the Ranch screen
+    initBreedingWhenInRanch();
+    
+    // Make functions available globally
+    window.updateCattleInventory = updateCattleInventory;
+    window.sellCattle = sellCattle;
+    window.setupBreedingUI = setupBreedingUI;
+});
