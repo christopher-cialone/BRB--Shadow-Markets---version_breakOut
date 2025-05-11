@@ -772,23 +772,21 @@ class NightScene extends Phaser.Scene {
             startY: 0  // Will be calculated in create based on screen size
         };
         
-        // Animation timers
+        // Animation timers and cell references
         this.bubblingTimers = [];
         this.glowTimers = [];
+        this.cellSprites = [];
+        this.cellIndicators = [];
     }
     
     preload() {
         // Load background and grid cell states
         this.load.image('shadow-bg', 'img/game-background.jpeg');
         
-        // Create and use colored rectangles for cells instead of SVGs for maximum visibility
-        // This ensures cells are always visible regardless of SVG loading issues
-        this.load.image('empty-night', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAABhGlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpSIVQTuIOGSoThZERRy1CkWoEGqFVh1MbvqhNGlIUlwcBdeCgx+LVQcXZ10dXAVB8APEydFJ0UVK/F9SaBHjwXE/3t173L0DhGaVqWbPOKBqlpFOxMVcflUMvCKIEYQRQFRiZj6XTCbhOb7u4ePrXZxneZ/7c/QrBZMBPpF4jumGRbxBPLNp6Zz3iSOsJKvE58RjJl2Q+JHrisdfOMdcFnhm1Eyn5oljiGXBSqOWz3NBVTnFexXHa9ywWss0OePopUY51RqIImFIRQkZ1KCihiqsBOPRNnVMp9pz/IfdH7NQcq6yNsA4JFiUUCE9fvA/+N2tWZqccJPCcaD7xXE+RoDQLtCqO873seNU4PgJGB75oj/Uk+nP0qut2BQRPwt0drUtWXIb7d0vwMB+pmmQLkqJ5XIp8H5G35QHBm+BwJq7t3Y+Th+ADM16pG3AcB/QHTa09sIdcLAJDI55e0pL3SNAcCbPvA83wuBvwMBlK22PxwBOp4CFgQg/A6Rw+AA+c5Qgz0NvUp9cO+d3p9b7+wGXSXK1dPzKUgAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAAuIwAALiMBeKU/dgAAAAd0SU1FB+YFCgMaNNbEPV4AAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAAC2UlEQVR42u3csWsUQRQG8O8kEGyijZ1WQgQtLCyEQwsV/4FYxCp/QEBsrERsxTqljWBhIXgqFiI2igQbg0UaOYy70wxvh+zsbs7LnBfIZXd25mW/997s7FUURREIoxKIQAgCIQiEIBCCQAgCIQiEoEM0AAB7e3sjLy6KQgEAM9M43YlzrvOYx3JxWuvY0XELu/goPSZijdP+O3PfDzFNtw4jh1HbPG2LXyPzj4mfl8vl6pFi2+ZjL6QNh6x6tOb7E5b2uL5Zq6p+eO986hVTepCqGl8pKRWiHUfO+G0w2mA0TS8JRm53ppk+F0aowmrAaFuVDYHRVFVjaslQGE1Vc8Ag4+kl1YrxYHSBIHF9MJQAg4ynB0YOkDYYXSF0WUE0YXRZcdWT+KXgxGOQ8WSEY9gNxhggqWv3XlA6g4iA4Y8bCkYnEJq7p/rHZcHonUPqVRZJxqn/LyEbhKcwHgd2AxMKTu5i46QQ/OpKDCwUlE4gUjC0oIRVV9KrtD4BPxSUzhWSAkMDSicQXUFI9wVzgzgICEn9wKQVEgGDHsZRHzfwLwTF9P/OHt2TDyOlvZH9kJz9j5yQC4QhXZ6ZqmKQxsacEdgTRO4GSvZNw/e1/vEpLRfqTRLF1bS8DjBDQGRVSO6+SApGDhDv3SFtGLlAiI/FxGGMBiJ3s088DE35h3VNc40GQrMfEjszOWe7RVxlyfpHe/S5YqI2Q+ZAYYuVVYVomxB/G7pI+lVQNuvmEy3rDGCNrMQRnCk5h0VrHdZvzTaE1tqXEXZpY5K2VtU+ISTdLKxQ0qp1VXtZg6AcP2BK2F1aA0kpuYY2/sYyQ9D85w+0XLySNzRo+U7A7YE8pSdlZqrtK79Lz2kNrSbRJH9gqlKM0a2P0VYhJCGEBIEQBEIQCEEgBIEQBEIQCEEgBI3XdxuuVpKbkahSAAAAAElFTkSuQmCC');
-        this.load.image('brewing', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAABhGlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpSIVQTuIOGSoThZERRy1CkWoEGqFVh1MbvqhNGlIUlwcBdeCgx+LVQcXZ10dXAVB8APEydFJ0UVK/F9SaBHjwXE/3t173L0DhGaVqWbPOKBqlpFOxMVcflUMvCKIEYQRQFRiZj6XTCbhOb7u4ePrXZxneZ/7c/QrBZMBPpF4jumGRbxBPLNp6Zz3iSOsJKvE58RjJl2Q+JHrisdfOMdcFnhm1Eyn5oljiGXBSqOWz3NBVTnFexXHa9ywWss0OePopUY51RqIImFIRQkZ1KCihiqsBOPRNnVMp9pz/IfdH7NQcq6yNsA4JFiUUCE9fvA/+N2tWZqccJPCcaD7xXE+RoDQLtCqO873seNU4PgJGB75oj/Uk+nP0qut2BQRPwt0drUtWXIb7d0vwMB+pmmQLkqJ5XIp8H5G35QHBm+BwJq7t3Y+Th+ADM16pG3AcB/QHTa09sIdcLAJDI55e0pL3SNAcCbPvA83wuBvwMBlK22PxwBOp4CFgQg/A6Rw+AA+c5Qgz0NvUp9cO+d3p9b7+wGXSXK1dPzKUgAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAAuIwAALiMBeKU/dgAAAAd0SU1FB+YFCgMaAgwQ6H8AAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAADLklEQVR42u2cS2sTURSAvzZBELVq3blwIVRwoeLOP6BudOUPEBQ3KuJOXArufIIbVyL4WLgRtKBVRKELH4jSdE4zdyaZZO7czDnJPZCbZubMzJ37zbnnnHuSirIsi3Aai0AIBIBBIASC60gDMMasfHK2fKHzpQIwxugTnUuMMW598jHPdeNMOraEXb4vXadirCq+z+VytSNJtS2eeMJWSLnj2B5EK+OXxvhVx7wfvX1rjOml+2KMYKnW38tBV5WT6niyTofQxbPdZ9OoMZrzM8aoArECcQEE6BfYYrFo/Tp3795F93N67ZOTk/LHjp1fa5yTk5MAJPv7+yuN1G63iS3C0J1kKJCpQFKSJGu9nslkeqEJBUTdVbgzBpHzWIJsz06bUGKIzH6vZhAQ6aIeAsRmP9cYhMiiMTEIkZE3cgzRZC4H9QLIMeQ3KCm5rIpOMCDmiV0Odx0EKDhE+IXnuoC8SoJRQXRdQYaZmKq/LZe1Rk6rP6eYPpC65tRRNZAuTa0jS1tC0nKJ/hxCuoK8ArJeQCRUSJ2BfMcTVaCy6TxCiDGGIfFCQpU1RpVlGchGgbjucmprEEI2iI+mkLHFD/EuS1I8qcJlrXtVhBCRgrgn2mUp9BPWgIcGEmsAtwIi1WXVDkhs1SE2cUWqy6pdQJf2fE5anLbpQKS4raBAYt62HRRIzNvAQWKIRBDSYogIIH3DMaHtkAIBiQ1E4ubH2AK77f6trmvrvEZpQHxJPy3Px9YJ5F8rrXzGENe3d5fDu9vGgNs6JQ7zyTrLfG5+kNXHJt0eyO1eV0+QsQXzWCqqOsYQKVnvXEF8nOFdDOnJt+Zv27LbFHuhQNQwQKn8HiuQ2F3X0EBiT317qxCPsHVZDpbMt8r9XUG2ybAB6mPo4t5XH21ZbQGSTCbRr//5+Ji76QLpuiybmNE3Cd/vZFAK9ZjT4dhBSYu+B/J8AamMT/l8nkKhACBiEVFAlCqB6KpEuSQZOwBVjL3zjQLS0a8R36p3I+V4cD+Hh4eALkG0JYjCNxQIgUAIBEIgEC5jCW7J78fMEwJBIAQCIRCIm/gDhVqWHeVQN7MAAAAASUVORK5CYII=');
-        this.load.image('distilling', 'data:image/png;base64,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');
-        this.load.image('ready', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAABhGlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpSIVQTuIOGSoThZERRy1CkWoEGqFVh1MbvqhNGlIUlwcBdeCgx+LVQcXZ10dXAVB8APEydFJ0UVK/F9SaBHjwXE/3t173L0DhGaVqWbPOKBqlpFOxMVcflUMvCKIEYQRQFRiZj6XTCbhOb7u4ePrXZxneZ/7c/QrBZMBPpF4jumGRbxBPLNp6Zz3iSOsJKvE58RjJl2Q+JHrisdfOMdcFnhm1Eyn5oljiGXBSqOWz3NBVTnFexXHa9ywWss0OePopUY51RqIImFIRQkZ1KCihiqsBOPRNnVMp9pz/IfdH7NQcq6yNsA4JFiUUCE9fvA/+N2tWZqccJPCcaD7xXE+RoDQLtCqO873seNU4PgJGB75oj/Uk+nP0qut2BQRPwt0drUtWXIb7d0vwMB+pmmQLkqJ5XIp8H5G35QHBm+BwJq7t3Y+Th+ADM16pG3AcB/QHTa09sIdcLAJDI55e0pL3SNAcCbPvA83wuBvwMBlK22PxwBOp4CFgQg/A6Rw+AA+c5Qgz0NvUp9cO+d3p9b7+wGXSXK1dPzKUgAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAAuIwAALiMBeKU/dgAAAAd0SU1FB+YFCgMaG/48ifsAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAADf0lEQVR42u2cz0sUYRjHv5MZFtFiuXjpUhAYdCg69AdEp07+AUFI5y7RpT+gLh2jg5fumh2CoItQhyA6dIgK2XLHmXlmd3Z+POOzDyu77Mw7886+z8x3Bpbd92XmeWff7/t8n58jKYoiBFiEECAIgAAEIAACbKM73TFE+9jaP13vGiGE6BvZFCGEXZ/8mFW509q8S9i118l1SEiJnJ9kfsuyHPekLmynL54khFJPE98AaCT/aGRew/FZbFsrQlRkx4X0MPGLHN9EezrxIq5EzMUzIzNj5qCVeR6XS28gWQFZAiFVQHrT1bIs5esCgABgbm4Orr87R9u2LT8+ZJuvTcfCwgIA0OnpaTLI8fFxgFWh4Cqpa4XBiQiK6tYGg52iDsEEJbvL0lQh0lM9UTzxUpIOwZUVlDsUSQgQVaqqvMtS6bKiPCVeOUE9lFQuEPQqDKzz5JnelEDz7PSxBBqLz6YC6fNktDIKUk1yvgSy8uwSyG9QhgWIbgV09vLl1YKucthFuCwV7x8ZiLj60iCU96pVUqXCQXQAERvsfQIZIv6xVIhs5xkqU1UlhOzuXuHDZgL62QkR34c0E01jL22xzLBPIP+GjU8BIiFAAalcKO7R5kWPgiH3HiEVh5J8F+CyViAIgZA/A5kWxAhAKn72CQmIkCxftcuSMRxnxBDo2YGsMKwAEt8wIQGRXQDrHk9kBJDKAtG9pL7wMYQbCKv12VqGwyQgMhaw8g7sLQOymHPPkmVZKIoi1wFYVhZpGrDnspIu640uIEsWkuuRXSHwYI8XZJfYQPCEEK3UBTMQHcWXsYAgDdFv1FlCbEE0VtUnpMFkLyFgIY0EUkgg3e1ub7QPhCqjwMJC2jK3rRQIz8zJWdVkKhCvVcwdR2QUrdKDuk7PkGG0XSAgQTahXAuZlcfXHAj+O1kNIQpklwNIlgshU4EUtajX6+XKiEHjKkvcv+qBLOt2NvE5xG+pBFILIFnmx35NUMc5EfE0NWwE9vf3sbKyMva4+/v7pTEjAVGFCzCk6xEzIiJcAGPtKwTklTBa7FUZSFdDnCYKDARc1go0ELgsAIMCQejRQNoBCETQqINAIBD5gXANBnJmURAQBIEgCAJBEAgZtgsNpABBEAiCQCAIBAFJtv8AQYD4P5mfYGUAAAAASUVORK5CYII=');
+        // Colors we'll use for the cells (direct rendering without image assets)
+        // We'll create all cells using graphics objects directly
         
-        // Load particle textures - simple circle as fallback
+        // Load particle textures for effects
         this.load.image('bubble', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAHsSURBVFiF7Ze9ThtBFIU/EApESpAskLJdWQ0FD5AHIE9AYaVLQZUOCR4gokFCikQRKUWkPEHKFEkFBQ1SJIoUAQk/LWfWs8uuZ9a7VhpzJMszc8+958ydH7PQaoUqBXwGvgAD4AVwCzwCYzk/AhPgAFiXfRMYqeZS9v+XPgIfgDPgN7DI8V3gm/JfCj0OAXbk8FnOsgy/A9vKaQvgCXiSPWkS4AK4Lgg+B3rAO2AHWAV6MfuG+PtkIycbJtB5gQPztg/sAe+B38Cq7Os+J8COrh9jSgCclP0WYTZMYmwhBHZUuwA2Y8aVmPMV4HvZb+CeHFwDB7HCsmJgDfgp300fYFfjbgzggY5q+r4AnnVmC2A4IwAlIy8A77p2fQAjjYMKHfi0GCsA21tDH8Cdxk5NKYf43gn4QHztHtkR+y8KYVoAfgXsk7xRxbQkm8UHcK1xq6YUW/Ot+fUA/BL7CXii6H1iEUaqGfkAJgrvGU7HnQznZe6K8F/jXUGAEeGLOAZOCVOXpZ4P91dDYRaNhYZ5vbmj2v6iNdNWXHcU60mTADaNfYVT4EdBgF3V2xR/AjZeBV5ilfCwtOMgzwnoA2/luyDnF/JlZ/7kzf0zWpbOMvAROCLM9YwwMnPgN3bY/CsHC+CofvltlVADrFOLWoYtAzcAAAAASUVORK5CYII=');
         this.load.image('glow', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAHsSURBVFiF7Ze9ThtBFIU/EApESpAskLJdWQ0FD5AHIE9AYaVLQZUOCR4gokFCikQRKUWkPEHKFEkFBQ1SJIoUAQk/LWfWs8uuZ9a7VhpzJMszc8+958ydH7PQaoUqBXwGvgAD4AVwCzwCYzk/AhPgAFiXfRMYqeZS9v+XPgIfgDPgN7DI8V3gm/JfCj0OAXbk8FnOsgy/A9vKaQvgCXiSPWkS4AK4Lgg+B3rAO2AHWAV6MfuG+PtkIycbJtB5gQPztg/sAe+B38Cq7Os+J8COrh9jSgCclP0WYTZMYmwhBHZUuwA2Y8aVmPMV4HvZb+CeHFwDB7HCsmJgDfgp300fYFfjbgzggY5q+r4AnnVmC2A4IwAlIy8A77p2fQAjjYMKHfi0GCsA21tDH8Cdxk5NKYf43gn4QHztHtkR+y8KYVoAfgXsk7xRxbQkm8UHcK1xq6YUW/Ot+fUA/BL7CXii6H1iEUaqGfkAJgrvGU7HnQznZe6K8F/jXUGAEeGLOAZOCVOXpZ4P91dDYRaNhYZ5vbmj2v6iNdNWXHcU60mTADaNfYVT4EdBgF3V2xR/AjZeBV5ilfCwtOMgzwnoA2/luyDnF/JlZ/7kzf0zWpbOMvAROCLM9YwwMnPgN3bY/CsHC+CofvltlVADrFOLWoYtAzcAAAAASUVORK5CYII=');
         
@@ -820,64 +818,131 @@ class NightScene extends Phaser.Scene {
             0.6
         );
         
-        // Add a highly visible title to draw attention to the Shadow Market Grid
-        const title = this.add.text(
+        // Create a background panel for the entire screen
+        const screenBg = this.add.graphics();
+        screenBg.fillStyle(0x1a0833, 0.7);
+        screenBg.fillRect(0, 0, this.cameras.main.width, this.cameras.main.height);
+        
+        // Add a title with glow effect
+        const titleText = this.add.text(
             this.cameras.main.width / 2,
-            160,
+            120,
             "SHADOW MARKET GRID",
             {
                 fontFamily: 'Share Tech Mono',
-                fontSize: '36px',
+                fontSize: '32px',
                 color: '#cc33ff',
                 stroke: '#000000',
                 strokeThickness: 4
             }
         );
-        title.setOrigin(0.5);
+        titleText.setOrigin(0.5);
         
-        // Make the title pulse to draw attention
+        // Add pulsing animation to title
         this.tweens.add({
-            targets: title,
-            scale: { from: 1, to: 1.1 },
-            alpha: { from: 0.8, to: 1 },
+            targets: titleText,
+            scale: { from: 1, to: 1.05 },
+            alpha: { from: 0.9, to: 1 },
             duration: 1200,
             yoyo: true,
             repeat: -1
         });
         
-        // Add a big, visible grid container with border
-        const gridWidth = 380;
-        const gridHeight = 380;
-        const gridX = this.cameras.main.width / 2 - gridWidth / 2;
-        const gridY = 210;
+        // Calculate grid dimensions for optimal display
+        const totalWidth = 400;
+        const totalHeight = 400;
+        const gridX = this.cameras.main.width / 2 - totalWidth / 2;
+        const gridY = 180;
         
-        // Create a background panel for the grid area
-        const gridBg = this.add.graphics();
-        gridBg.fillStyle(0x2a0f44, 0.8);
-        gridBg.fillRoundedRect(gridX, gridY, gridWidth, gridHeight, 15);
-        gridBg.lineStyle(4, 0x8800cc, 1);
-        gridBg.strokeRoundedRect(gridX, gridY, gridWidth, gridHeight, 15);
+        // Create a visible grid panel
+        const gridPanel = this.add.graphics();
+        gridPanel.fillStyle(0x220a33, 0.8);
+        gridPanel.fillRoundedRect(gridX, gridY, totalWidth, totalHeight, 12);
+        gridPanel.lineStyle(3, 0xaa33cc, 0.9);
+        gridPanel.strokeRoundedRect(gridX, gridY, totalWidth, totalHeight, 12);
+        
+        // Add a subtle grid pattern
+        const gridLines = this.add.graphics();
+        gridLines.lineStyle(1, 0x6633aa, 0.5);
+        
+        // Draw horizontal grid lines
+        for (let i = 0; i <= 4; i++) {
+            const y = gridY + i * (totalHeight / 4);
+            gridLines.beginPath();
+            gridLines.moveTo(gridX, y);
+            gridLines.lineTo(gridX + totalWidth, y);
+            gridLines.closePath();
+            gridLines.strokePath();
+        }
+        
+        // Draw vertical grid lines
+        for (let i = 0; i <= 4; i++) {
+            const x = gridX + i * (totalWidth / 4);
+            gridLines.beginPath();
+            gridLines.moveTo(x, gridY);
+            gridLines.lineTo(x, gridY + totalHeight);
+            gridLines.closePath();
+            gridLines.strokePath();
+        }
+        
+        // Position grid cells within the panel
+        this.gridConfig = {
+            size: 4,
+            cellSize: 80,
+            padding: 15,
+            startX: gridX + 50,
+            startY: gridY + 50
+        };
         
         // Initialize the grid cells
         this.initPhaserGrid();
         
-        // Add resize listener
-        this.scale.on('resize', this.resize, this);
+        // Add a "Distill All" button with glow effect
+        const distillBtn = this.add.text(
+            this.cameras.main.width / 2,
+            gridY + totalHeight + 40,
+            "💧 DISTILL ALL POTIONS",
+            {
+                fontFamily: 'Share Tech Mono', 
+                fontSize: '22px',
+                color: '#ffffff',
+                backgroundColor: '#6a2ca0',
+                padding: { x: 15, y: 10 },
+                stroke: '#000000',
+                strokeThickness: 2
+            }
+        );
+        distillBtn.setOrigin(0.5);
+        distillBtn.setInteractive({ useHandCursor: true })
+            .on('pointerdown', () => distillAllShadowCells());
         
-        // Add instructions below the grid
+        // Add button glow effect
+        this.tweens.add({
+            targets: distillBtn,
+            alpha: { from: 0.9, to: 1 },
+            scale: { from: 0.98, to: 1.02 },
+            duration: 1500,
+            yoyo: true,
+            repeat: -1
+        });
+        
+        // Add instructions below button
         const instructions = this.add.text(
             this.cameras.main.width / 2,
-            gridY + gridHeight + 20,
-            "Click on cells to craft potions for 20 $CATTLE (50% burned)",
+            gridY + totalHeight + 90,
+            "Click on grid cells to brew potions (costs 20 $CATTLE)",
             {
                 fontFamily: 'Share Tech Mono',
                 fontSize: '16px',
-                color: '#FFFFFF',
+                color: '#ffffff',
                 stroke: '#000000',
-                strokeThickness: 3
+                strokeThickness: 2
             }
         );
         instructions.setOrigin(0.5);
+        
+        // Add resize listener
+        this.scale.on('resize', this.resize, this);
         
         console.log("NightScene created with Phaser grid");
     }
@@ -1013,28 +1078,106 @@ class NightScene extends Phaser.Scene {
         const cell = shadowGrid.cells[index];
         const state = cell ? cell.state : 'empty-night';
         
-        // Determine sprite key based on cell state
-        let spriteKey = 'empty-night';
-        if (cell) {
-            switch(cell.state) {
-                case 'brewing': spriteKey = 'brewing'; break;
-                case 'distilling': spriteKey = 'distilling'; break;
-                case 'ready': spriteKey = 'ready'; break;
-                default: spriteKey = 'empty-night';
-            }
+        // Create simplified cell display using graphics instead of sprites
+        // Create a container for this cell and all its elements
+        const cellContainer = this.add.container(x, y);
+        
+        // Create background rectangle with border
+        let fillColor, strokeColor;
+        
+        // Determine colors based on state
+        switch(cell.state) {
+            case 'brewing':
+                fillColor = 0x442288;
+                strokeColor = 0xbb44ff;
+                break;
+            case 'distilling':
+                fillColor = 0x553399;
+                strokeColor = 0xcc66ff;
+                break;
+            case 'ready':
+                fillColor = 0x664488;
+                strokeColor = 0xff88ff;
+                break;
+            default: // empty-night
+                fillColor = 0x2a1155;
+                strokeColor = 0x6622aa;
         }
         
-        // Create the cell sprite with enhanced visuals
-        const cellSprite = this.add.sprite(x, y, spriteKey);
-        cellSprite.setDisplaySize(this.gridConfig.cellSize, this.gridConfig.cellSize);
-        cellSprite.setInteractive({ useHandCursor: true });
+        // Create the cell background
+        const cellBg = this.add.graphics();
+        cellBg.fillStyle(fillColor, 1);
+        cellBg.fillRect(-this.gridConfig.cellSize/2, -this.gridConfig.cellSize/2, 
+                       this.gridConfig.cellSize, this.gridConfig.cellSize);
         
-        // Add entrance animation for all cells
-        cellSprite.alpha = 0;
-        cellSprite.scale = 0.7;
+        // Add glow effect for visibility
+        const glow = this.add.graphics();
+        glow.lineStyle(3, strokeColor, 0.8);
+        glow.strokeRect(-this.gridConfig.cellSize/2, -this.gridConfig.cellSize/2, 
+                       this.gridConfig.cellSize, this.gridConfig.cellSize);
+        
+        // Add text label based on state
+        let stateText = "";
+        switch(cell.state) {
+            case 'brewing': stateText = "BREWING"; break;
+            case 'distilling': stateText = "DISTILLING"; break;
+            case 'ready': stateText = "READY!"; break;
+            default: stateText = "EMPTY";
+        }
+        
+        // Create state text with drop shadow
+        const text = this.add.text(0, 0, stateText, {
+            fontFamily: 'Share Tech Mono',
+            fontSize: '14px',
+            align: 'center',
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 3
+        });
+        text.setOrigin(0.5);
+        
+        // Add a potion icon if not empty
+        if (cell.state !== 'empty-night') {
+            const potionIcon = this.add.text(0, -10, '🧪', { fontSize: '20px' });
+            potionIcon.setOrigin(0.5);
+            cellContainer.add(potionIcon);
+            
+            // Add growth stage indicator
+            const indicator = this.add.text(
+                0, 
+                this.gridConfig.cellSize/2 - 15, 
+                `${cell.stage || 0}/${cell.maxStage || 3}`,
+                { 
+                    fontFamily: 'Share Tech Mono', 
+                    fontSize: '14px',
+                    fill: '#FFFFFF',
+                    stroke: '#000000',
+                    strokeThickness: 2
+                }
+            );
+            indicator.setOrigin(0.5);
+            cellContainer.add(indicator);
+            this.cellIndicators[index] = indicator;
+        }
+        
+        // Add all elements to the container
+        cellContainer.add(cellBg);
+        cellContainer.add(glow);
+        cellContainer.add(text);
+        
+        // Make container interactive
+        cellContainer.setSize(this.gridConfig.cellSize, this.gridConfig.cellSize);
+        cellContainer.setInteractive({ useHandCursor: true })
+            .on('pointerdown', () => {
+                handleShadowCellClick(index);
+            });
+        
+        // Add entrance animation
+        cellContainer.alpha = 0;
+        cellContainer.scale = 0.7;
         
         this.tweens.add({
-            targets: cellSprite,
+            targets: cellContainer,
             alpha: 1,
             scale: 1,
             duration: 400,
@@ -1042,50 +1185,35 @@ class NightScene extends Phaser.Scene {
             delay: index * 50 // Staggered appearance
         });
         
-        // Store reference
-        this.cellSprites[index] = cellSprite;
-        
-        // Add shadow outline to enhance visibility
-        const outline = this.add.graphics();
-        outline.lineStyle(2, 0x6a2ca0, 0.8);
-        outline.strokeRect(
-            x - this.gridConfig.cellSize/2,
-            y - this.gridConfig.cellSize/2,
-            this.gridConfig.cellSize,
-            this.gridConfig.cellSize
-        );
-        this.gridContainer.add(outline);
-        
-        // Add growth stage indicator for non-empty cells
-        if (cell && cell.state !== 'empty') {
-            const indicator = this.add.text(
-                x, 
-                y + (this.gridConfig.cellSize / 2) - 15, 
-                `${cell.stage}/${cell.maxStage}`,
-                { 
-                    fontFamily: 'Share Tech Mono', 
-                    fontSize: '16px',
-                    fill: '#FFFFFF',
-                    stroke: '#000000',
-                    strokeThickness: 2
-                }
-            );
-            indicator.setOrigin(0.5);
-            indicator.alpha = 0;
-            
+        // Add flashing effect to ready cells
+        if (cell.state === 'ready') {
             this.tweens.add({
-                targets: indicator,
-                alpha: 1,
-                duration: 400,
-                delay: index * 50 + 200
+                targets: glow,
+                alpha: { from: 0.4, to: 1 },
+                duration: 800,
+                yoyo: true,
+                repeat: -1
             });
-            
-            this.cellIndicators[index] = indicator;
         }
         
-        // Add appropriate animation based on state
-        if (cell) {
-            switch(cell.state) {
+        // Add bubbling effect to brewing cells
+        if (cell.state === 'brewing') {
+            this.tweens.add({
+                targets: cellContainer,
+                scaleX: { from: 0.98, to: 1.02 },
+                scaleY: { from: 0.98, to: 1.02 },
+                duration: 800,
+                yoyo: true,
+                repeat: -1
+            });
+        }
+        
+        // Store reference
+        this.cellSprites[index] = cellContainer;
+        
+        // Add to scene
+        this.gridContainer.add(cellContainer);
+    }
                 case 'brewing':
                     this.addBubblingAnimation(cellSprite, index);
                     break;
