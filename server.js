@@ -695,10 +695,11 @@ io.on('connection', (socket) => {
     console.log('Card drawn event emitted');
     
     // If race is finished, calculate winnings and update history
-    if (game.status === 'finished') {
-      console.log('Race finished, calculating results');
+    if (game.status === 'finished' && game.winner) {
+      console.log('Race finished, calculating results for winner:', game.winner);
       
-      // Calculate winnings
+      // Calculate winnings using the saved winner from game state
+      const winner = game.winner;
       const bet = game.bets[winner];
       const winningsMultiplier = odds[winner];
       const winnings = bet * winningsMultiplier;
