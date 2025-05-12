@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 scene: [
                     MainMenuScene, 
                     RanchScene, 
-                    window.SaloonStandalone || window.SaloonSceneFixed || SaloonScene, 
+                    window.SaloonSceneComplete || window.SaloonStandalone || window.SaloonSceneFixed || SaloonScene, 
                     NightScene
                 ],
                 physics: {
