@@ -249,8 +249,10 @@ io.on('connection', (socket) => {
   
   // Initialize a race game
   function initRaceGame(playerId) {
-    const deck = createDeck();
+    // Create and shuffle a new deck
+    const deck = shuffleDeck(createDeck());
     
+    // Initialize race game state with proper tracking
     raceGames[playerId] = {
       deck,
       progress: {
@@ -274,9 +276,14 @@ io.on('connection', (socket) => {
       status: 'betting', // 'betting', 'racing', 'finished'
       winner: null,
       results: [], // Track race history
-      bonusClaimed: false
+      bonusClaimed: false,
+      startTime: Date.now(), // Track when the race was initialized
+      cardsDrawn: 0 // Track how many cards have been drawn
     };
     
+    console.log(`Race game initialized for player ${playerId} with shuffled deck of ${deck.length} cards`);
+    
+    // Calculate and return odds
     return calculateOdds(raceGames[playerId]);
   }
   
@@ -482,16 +489,30 @@ io.on('connection', (socket) => {
       return;
     }
     
+    // Track this card draw
+    game.cardsDrawn = (game.cardsDrawn || 0) + 1;
+    
     // Draw a card
     const card = game.deck.pop();
     const suitName = getSuitName(card.suit);
-    console.log('Card drawn:', card, 'Suit name:', suitName);
+    console.log(`Card #${game.cardsDrawn} drawn:`, card, 'Suit name:', suitName);
+    
+    if (!suitName) {
+      console.error('Invalid suit encountered:', card.suit);
+      socket.emit('error-message', { 
+        message: 'Error processing card. Please try again.'
+      });
+      return;
+    }
     
     // Update remaining cards count
-    game.remainingCards[suitName]--;
+    if (game.remainingCards[suitName] !== undefined) {
+      game.remainingCards[suitName] = Math.max(0, game.remainingCards[suitName] - 1);
+    }
     
-    // Update progress for the corresponding suit
-    game.progress[suitName] += 10; // Each card advances the horse by 10%
+    // Update progress for the corresponding suit - faster progression for better gameplay
+    const progressIncrement = 12; // Each card advances the horse by 12%
+    game.progress[suitName] = Math.min(100, (game.progress[suitName] || 0) + progressIncrement);
     console.log(`Progress updated for ${suitName}: ${game.progress[suitName]}%`);
     
     // Check if any horse finished the race
@@ -501,7 +522,16 @@ io.on('connection', (socket) => {
         winner = suit;
         game.status = 'finished';
         game.winner = winner;
-        console.log(`Winner found: ${winner}`);
+        
+        // Record in history
+        if (!game.results) game.results = [];
+        game.results.push({
+          winner: winner,
+          timestamp: Date.now(),
+          cardsDrawn: game.cardsDrawn
+        });
+        
+        console.log(`Winner found: ${winner} after ${game.cardsDrawn} cards`);
         break;
       }
     }
