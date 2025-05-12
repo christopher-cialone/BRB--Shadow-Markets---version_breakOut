@@ -2331,11 +2331,49 @@ socket.on('race-started', data => {
         }
     }
     
+    // Reset progress display
+    if (data.progress) {
+        try {
+            // Update using racing game module if available
+            if (window.racingGame && typeof window.racingGame.updateProgress === 'function') {
+                window.racingGame.updateProgress(data.progress);
+            } else {
+                // Direct DOM manipulation
+                for (const suit in data.progress) {
+                    const progressBar = document.getElementById(`${suit}-progress`);
+                    if (progressBar) {
+                        progressBar.style.width = `${data.progress[suit]}%`;
+                    }
+                }
+            }
+            
+            // Update in Phaser scene if available
+            if (window.game && window.game.scene) {
+                const saloonScene = window.game.scene.getScene('SaloonScene');
+                if (saloonScene && typeof saloonScene.updateRaceProgress === 'function') {
+                    saloonScene.updateRaceProgress(data.progress);
+                }
+            }
+        } catch (error) {
+            console.error("Error updating race progress:", error);
+        }
+    }
+    
+    // Clear drawn card
+    const drawnCardContainer = document.getElementById('drawn-card');
+    if (drawnCardContainer) {
+        drawnCardContainer.innerHTML = '<div class="card-placeholder">Race is starting! Draw a card</div>';
+    }
+    
     // Show notification
-    showNotification(`Race started! 10% (${data.burnAmount.toFixed(1)} $CATTLE) burned. Draw cards to advance horses.`, 'info');
+    if (typeof showNotification === 'function') {
+        showNotification(`Race started! 10% (${(data.burnAmount || 0).toFixed(1)} $CATTLE) burned. Draw cards to advance horses.`, 'info');
+    }
     
     // Update UI
-    updateUI();
+    if (typeof updateUI === 'function') {
+        updateUI();
+    }
 });
 
 socket.on('card-drawn', data => {
@@ -2345,26 +2383,36 @@ socket.on('card-drawn', data => {
     const card = data.card;
     const progress = data.progress;
     
-    // Create and display the card
-    const drawnCardContainer = document.getElementById('drawn-card');
-    if (drawnCardContainer) {
-        drawnCardContainer.innerHTML = '';
-        
-        const cardElement = createCardElement(card);
-        drawnCardContainer.appendChild(cardElement);
-        console.log('Card displayed:', card);
+    // Use the dedicated racing game module if it exists
+    if (window.racingGame && typeof window.racingGame.updateCardDisplay === 'function') {
+        window.racingGame.updateCardDisplay(card);
     } else {
-        console.error('Drawn card container not found');
+        // Fallback to direct DOM manipulation
+        const drawnCardContainer = document.getElementById('drawn-card');
+        if (drawnCardContainer) {
+            drawnCardContainer.innerHTML = '';
+            
+            const cardElement = createCardElement(card);
+            drawnCardContainer.appendChild(cardElement);
+            console.log('Card displayed:', card);
+        } else {
+            console.error('Drawn card container not found');
+        }
     }
     
-    // Update progress bars
-    for (const suit in progress) {
-        const progressBar = document.getElementById(`${suit}-progress`);
-        if (progressBar) {
-            progressBar.style.width = `${progress[suit]}%`;
-            console.log(`${suit} progress updated to ${progress[suit]}%`);
-        } else {
-            console.error(`Progress bar for ${suit} not found`);
+    // Update progress either through racing game or directly
+    if (window.racingGame && typeof window.racingGame.updateProgress === 'function') {
+        window.racingGame.updateProgress(progress);
+    } else {
+        // Fallback to direct DOM manipulation
+        for (const suit in progress) {
+            const progressBar = document.getElementById(`${suit}-progress`);
+            if (progressBar) {
+                progressBar.style.width = `${progress[suit]}%`;
+                console.log(`${suit} progress updated to ${progress[suit]}%`);
+            } else {
+                console.error(`Progress bar for ${suit} not found`);
+            }
         }
     }
     
@@ -2379,13 +2427,30 @@ socket.on('card-drawn', data => {
             }
         }
     }
+    
+    // Update in Phaser scene if available
+    try {
+        if (window.game && window.game.scene) {
+            const saloonScene = window.game.scene.getScene('SaloonScene');
+            if (saloonScene && typeof saloonScene.updateCardDisplay === 'function') {
+                saloonScene.updateCardDisplay(card);
+            }
+            if (saloonScene && typeof saloonScene.updateRaceProgress === 'function') {
+                saloonScene.updateRaceProgress(progress);
+            }
+        }
+    } catch (error) {
+        console.error("Error updating Phaser scene:", error);
+    }
 });
 
 socket.on('race-finished', data => {
     console.log('Race finished event received:', data);
     
-    // Update player data
-    playerData = data.player;
+    // Update player data if present
+    if (data.player) {
+        playerData = data.player;
+    }
     
     // Disable draw card button
     const drawCardButton = document.getElementById('draw-card');
@@ -2405,24 +2470,59 @@ socket.on('race-finished', data => {
         console.error('Start race button not found in race-finished handler');
     }
     
-    // Add to history
-    const historyContainer = document.getElementById('results-history');
-    if (historyContainer) {
-        const historyItem = document.createElement('div');
-        historyItem.className = `history-item ${data.winner} ${data.bet > 0 ? 'win' : 'loss'}`;
-        historyItem.textContent = data.winner.charAt(0).toUpperCase();
-        historyContainer.appendChild(historyItem);
-        console.log('Added history item for race result:', data.winner);
-    } else {
-        console.error('History container not found');
+    // Add to history - try racing game module first, then fallback to direct DOM manipulation
+    try {
+        if (window.racingGame && typeof window.racingGame.addToHistory === 'function') {
+            window.racingGame.addToHistory(data.winner, data.bet > 0);
+            console.log('Added race result to history using racing game module');
+        } else {
+            const historyContainer = document.getElementById('results-history');
+            if (historyContainer) {
+                const historyItem = document.createElement('div');
+                historyItem.className = `history-item ${data.winner} ${data.bet > 0 ? 'win' : 'loss'}`;
+                historyItem.textContent = data.winner.charAt(0).toUpperCase();
+                historyContainer.appendChild(historyItem);
+                
+                // Limit history to 10 items
+                const historyItems = historyContainer.querySelectorAll('.history-item');
+                if (historyItems.length > 10) {
+                    historyContainer.removeChild(historyItems[0]);
+                }
+                
+                console.log('Added history item for race result:', data.winner);
+            } else {
+                console.error('History container not found');
+            }
+        }
+    } catch (error) {
+        console.error("Error adding race to history:", error);
+    }
+    
+    // Update the scene status if using Phaser
+    try {
+        if (window.game && window.game.scene) {
+            const saloonScene = window.game.scene.getScene('SaloonScene');
+            if (saloonScene) {
+                // Update race status in the scene
+                if (saloonScene.raceData) {
+                    saloonScene.raceData.status = 'finished';
+                    saloonScene.raceData.winner = data.winner;
+                }
+            }
+        }
+    } catch (error) {
+        console.error("Error updating Phaser scene race status:", error);
     }
     
     // Celebration effect for winners
-    if (data.bet > 0) {
+    if (data.bet > 0 && data.winnings > 0) {
         console.log('Player won! Showing celebration for winning bet:', data.bet);
+        
         // Create confetti animation
         try {
-            createConfetti();
+            if (typeof createConfetti === 'function') {
+                createConfetti();
+            }
         } catch (err) {
             console.error('Error creating confetti:', err);
         }
@@ -2431,7 +2531,7 @@ socket.on('race-finished', data => {
         const celebration = document.getElementById('win-celebration');
         const winAmount = document.getElementById('win-amount');
         if (celebration && winAmount) {
-            winAmount.textContent = `+${data.bet.toFixed(2)} $CATTLE`;
+            winAmount.textContent = `+${(data.winnings || data.bet).toFixed(2)} $CATTLE`;
             celebration.classList.remove('hidden');
             
             // Hide celebration after 3.5 seconds
@@ -2443,15 +2543,21 @@ socket.on('race-finished', data => {
         }
         
         // Display result with auto-close
-        showResult('Winner!', `${data.message}`, 'success', true);
+        if (typeof showResult === 'function') {
+            showResult('Winner!', `${data.message || 'You won the race!'}`, 'success', true);
+        }
     } else {
         console.log('Player did not win. Showing regular result message');
         // Display result with auto-close
-        showResult('Race Finished', `${data.message}`, 'error', true);
+        if (typeof showResult === 'function') {
+            showResult('Race Finished', `${data.message || 'The race has finished.'}`, 'info', true);
+        }
     }
     
     // Update UI
-    updateUI();
+    if (typeof updateUI === 'function') {
+        updateUI();
+    }
     
     // Prepare for next race automatically after 4 seconds
     console.log('Scheduling saloon scene reset in 4 seconds');

@@ -441,11 +441,39 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // Update the progress bars directly from Phaser
+    function updateProgress(progress) {
+        if (!progress) return;
+        
+        const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
+        suits.forEach(suit => {
+            const progressBar = document.getElementById(`${suit}-progress`);
+            if (progressBar) {
+                progressBar.style.width = `${progress[suit]}%`;
+                console.log(`${suit} progress updated to ${progress[suit]}%`);
+            }
+        });
+    }
+    
+    // Function to handle updating the card display from DOM
+    function updateCardDisplay(card) {
+        if (!card) return;
+        
+        const drawnCardContainer = document.getElementById('drawn-card');
+        if (drawnCardContainer) {
+            drawnCardContainer.innerHTML = '';
+            const cardElement = createCardElement(card);
+            drawnCardContainer.appendChild(cardElement);
+            console.log('Card displayed in DOM:', card);
+        }
+    }
+    
     // Custom event for initialization
     function triggerInitialization() {
         // If the saloon UI is active or we're on a specific scene, initialize
         if (document.getElementById('saloon-ui') && 
-            window.currentScene === 'saloon') {
+            (window.currentScene === 'saloon' || 
+             document.getElementById('saloon-ui').classList.contains('active-ui'))) {
             console.log("Saloon detected on initialization, setting up racing");
             initRacingGame();
         }
@@ -457,6 +485,8 @@ document.addEventListener('DOMContentLoaded', function() {
         startRace: startRace,
         drawCard: drawCard,
         updateTotalBet: updateTotalBet,
+        updateProgress: updateProgress,
+        updateCardDisplay: updateCardDisplay,
         triggerInitialization: triggerInitialization
     };
     
