@@ -294,23 +294,38 @@ class RanchScene extends Phaser.Scene {
     }
     
     preload() {
-        // Load the background and basic assets
-        this.load.image('game-bg', 'img/game-background.jpeg');
-        this.load.image('barn', 'https://i.imgur.com/t32QEZB.png');
-        
-        // Load ranch grid cell state images
-        this.load.image('cell-empty', 'img/empty.png');
-        this.load.image('cell-planted', 'img/planted.png');
-        this.load.image('cell-growing', 'img/growing.png');
-        this.load.image('cell-harvestable', 'img/harvestable.png');
-        
-        // Load cattle sprite
-        this.load.image('cattle', 'img/cattle.png');
-        
-        // Load additional assets for animations
-        this.load.image('water-drop', 'img/water-drop.png');
-        this.load.image('hay-icon', 'img/hay-icon.png');
-        this.load.image('milk-bottle', 'img/milk-bottle.png');
+        try {
+            // Use the asset preloader to safely load assets if available
+            if (typeof preloadCommonAssets === 'function') {
+                preloadCommonAssets(this);
+            }
+            
+            // Always load the barn (special asset not in common set)
+            if (typeof safePhaserImageLoad === 'function') {
+                safePhaserImageLoad(this, 'barn', 'https://i.imgur.com/t32QEZB.png');
+            } else {
+                this.load.image('barn', 'https://i.imgur.com/t32QEZB.png');
+            }
+            
+            // Create fallback graphics for any missing textures when load completes
+            this.load.on('complete', () => {
+                console.log("RanchScene assets loaded");
+                
+                // Ensure essential textures have fallbacks
+                const essentialTextures = [
+                    'cell-empty', 'cell-planted', 'cell-growing', 'cell-harvestable', 
+                    'cattle', 'water-drop', 'hay-icon', 'milk-bottle'
+                ];
+                
+                essentialTextures.forEach(key => {
+                    if (!this.textures.exists(key) && typeof handleMissingTexture === 'function') {
+                        handleMissingTexture(this, key);
+                    }
+                });
+            });
+        } catch (error) {
+            console.error("Error in RanchScene preload:", error);
+        }
     }
     
     create() {
@@ -806,20 +821,53 @@ class NightScene extends Phaser.Scene {
     }
     
     preload() {
-        // Load background 
-        this.load.image('shadow-bg', 'img/game-background.jpeg');
-        
-        // We don't need to load these SVG files anymore since we'll use graphics approach
-        // this.load.image('empty-night', 'img/empty-night.svg');
-        // this.load.image('brewing', 'img/brewing.svg');
-        // this.load.image('distilling', 'img/distilling.svg'); 
-        // this.load.image('ready', 'img/ready.svg');
-        
-        // Load particle textures for effects
-        this.load.image('bubble', 'img/bubble.png');
-        this.load.image('glow', 'img/glow.png');
-        
-        console.log("Night scene preloaded assets");
+        try {
+            // Use the asset preloader if available
+            if (typeof preloadCommonAssets === 'function') {
+                preloadCommonAssets(this);
+            } else {
+                // Fallback loading
+                this.load.image('shadow-bg', 'img/game-background.jpeg');
+                this.load.image('bubble', 'img/bubble.png');
+                this.load.image('glow', 'img/glow.png');
+                
+                // PNG versions of the grid cell states
+                this.load.image('empty-night', 'img/empty-night.png');
+                this.load.image('brewing', 'img/brewing.png');
+                this.load.image('distilling', 'img/distilling.png'); 
+                this.load.image('ready', 'img/ready.png');
+            }
+            
+            // Create fallback graphics for any missing textures
+            this.load.on('complete', () => {
+                console.log("NightScene assets loaded");
+                
+                // Check and create placeholders for essential textures
+                const essentialTextures = [
+                    'empty-night', 'brewing', 'distilling', 'ready', 
+                    'bubble', 'glow'
+                ];
+                
+                essentialTextures.forEach(key => {
+                    if (!this.textures.exists(key) && typeof handleMissingTexture === 'function') {
+                        // Create colored placeholders based on the key
+                        let color = 0x000000;
+                        if (key === 'empty-night') color = 0x212121;
+                        if (key === 'brewing') color = 0x4a148c;
+                        if (key === 'distilling') color = 0x7c4dff;
+                        if (key === 'ready') color = 0xe040fb;
+                        if (key === 'bubble') color = 0x42a5f5;
+                        if (key === 'glow') color = 0xffeb3b;
+                        
+                        handleMissingTexture(this, key, 64, 64, color);
+                    }
+                });
+            });
+            
+            console.log("Night scene preload started");
+        } catch (error) {
+            console.error("Error in NightScene preload:", error);
+        }
     }
     
     create() {
