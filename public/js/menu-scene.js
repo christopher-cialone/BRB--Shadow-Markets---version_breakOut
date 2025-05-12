@@ -24,12 +24,8 @@ class MainMenuScene extends Phaser.Scene {
         this.bg = this.add.image(width/2, height/2, 'menu-bg');
         this.bg.setDisplaySize(width, height);
         
-        // Add logo
-        this.logo = this.add.image(width/2, height/4, 'game-logo');
-        this.logo.setScale(0.2);
-        
-        // Add title text
-        this.add.text(width/2, height/2 - 50, 'Bull Run Boost', {
+        // Add title text with logo beside it
+        const title = this.add.text(width/2, height/2 - 50, 'Bull Run Boost', {
             fontFamily: 'Arial',
             fontSize: '48px',
             color: '#ffffff',
