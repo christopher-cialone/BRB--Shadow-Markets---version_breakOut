@@ -38,7 +38,7 @@ window.MainMenuScene = class MainMenuScene extends Phaser.Scene {
             this.cameras.main.height / 4,
             'logo'
         );
-        this.logo.setScale(1.2);
+        this.logo.setScale(0.2);
         
         // Add title text
         const titleText = this.add.text(
