@@ -591,21 +591,24 @@ io.on('connection', (socket) => {
       return;
     }
     
+    // Define card variable in outer scope
+    let drawnCard;
+    
     try {
       // Track this card draw
       game.cardsDrawn = (game.cardsDrawn || 0) + 1;
       
       // Draw a card
-      const card = game.deck.pop();
-      if (!card || !card.suit) {
+      drawnCard = game.deck.pop();
+      if (!drawnCard || !drawnCard.suit) {
         throw new Error('Invalid card drawn');
       }
       
-      const suitName = getSuitName(card.suit);
-      console.log(`Card #${game.cardsDrawn} drawn:`, card, 'Suit name:', suitName);
+      const suitName = getSuitName(drawnCard.suit);
+      console.log(`Card #${game.cardsDrawn} drawn:`, drawnCard, 'Suit name:', suitName);
       
       if (!suitName) {
-        console.error('Invalid suit encountered:', card.suit);
+        console.error('Invalid suit encountered:', drawnCard.suit);
         socket.emit('error-message', { 
           message: 'Error processing card. Please try again.'
         });
@@ -681,9 +684,9 @@ io.on('connection', (socket) => {
     // Send card drawn event
     socket.emit('card-drawn', {
       card: {
-        rank: card.rank,
-        suit: card.suit,
-        color: getCardColor(card)
+        rank: drawnCard.rank,
+        suit: drawnCard.suit,
+        color: getCardColor(drawnCard)
       },
       progress: game.progress,
       remainingCards: game.remainingCards,
