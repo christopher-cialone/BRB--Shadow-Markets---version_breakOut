@@ -3,13 +3,18 @@
  * This module handles the rendering of Shadow Market cells for the NightScene
  */
 
-// Global variable to store the shadow grid state
-let shadowGrid = {
-    cells: [],
-    cycleState: 'stable',
-    priceMultiplier: 1.0,
-    lastCycleTime: Date.now()
-};
+// Access or create the shadow grid global state
+if (typeof window.shadowGrid === 'undefined') {
+    window.shadowGrid = {
+        cells: [],
+        cycleState: 'stable',
+        priceMultiplier: 1.0,
+        lastCycleTime: Date.now()
+    };
+}
+
+// Use a reference for convenience
+const shadowGrid = window.shadowGrid;
 
 /**
  * Initialize Shadow Market cells

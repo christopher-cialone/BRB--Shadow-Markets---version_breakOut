@@ -20,15 +20,32 @@ document.addEventListener('DOMContentLoaded', function() {
         breedButton.addEventListener('click', function() {
             console.log("Breed cattle button clicked");
             
+            // Ensure playerData is properly initialized
+            if (!window.playerData) {
+                window.playerData = {
+                    name: 'Cowboy',
+                    archetype: 'Entrepreneur',
+                    cattleBalance: 100,
+                    hay: 100,
+                    water: 100,
+                    cattle: []
+                };
+            }
+            
+            // Ensure cattle array exists
+            if (!window.playerData.cattle || !Array.isArray(window.playerData.cattle)) {
+                window.playerData.cattle = [];
+            }
+            
             // Check if player has enough resources
-            if (playerData.hay < 10 || playerData.water < 10) {
+            if (window.playerData.hay < 10 || window.playerData.water < 10) {
                 showNotification("Not enough resources to breed cattle. Need 10 hay and 10 water.", 'error');
                 return;
             }
             
             // Deduct resources
-            playerData.hay -= 10;
-            playerData.water -= 10;
+            window.playerData.hay -= 10;
+            window.playerData.water -= 10;
             
             // Create new cattle
             const newCattle = {

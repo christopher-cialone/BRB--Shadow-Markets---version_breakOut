@@ -41,6 +41,21 @@ document.addEventListener('DOMContentLoaded', function() {
         marketMultiplier: 1.0
     };
     
+    // Pre-populate shadow grid cells if empty
+    if (Array.isArray(window.shadowGrid.cells) && window.shadowGrid.cells.length === 0) {
+        for (let i = 0; i < 16; i++) {
+            window.shadowGrid.cells.push({
+                index: i,
+                state: 'empty',
+                brewStage: 0,
+                brewMax: 5,
+                type: Math.random() > 0.5 ? 'blue' : 'purple',
+                potency: 0
+            });
+        }
+        console.log("Pre-populated shadow grid with empty cells");
+    }
+    
     // Set up game configuration for Phaser
     const initPhaser = () => {
         if (typeof Phaser === 'undefined') {
