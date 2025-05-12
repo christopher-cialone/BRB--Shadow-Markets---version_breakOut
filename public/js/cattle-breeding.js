@@ -86,9 +86,24 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Create cattle image
             const cattleImg = document.createElement('img');
-            cattleImg.src = 'img/cattle.svg';
+            cattleImg.src = 'img/cattle.png';  // Use PNG instead of SVG
             cattleImg.alt = cattle.name;
             cattleImg.className = 'cattle-image';
+            
+            // Add error handling for image loading
+            cattleImg.onerror = function() {
+                console.warn(`Failed to load cattle image for ${cattle.name}`);
+                // Create a simple colored div as fallback
+                this.style.display = 'none';
+                const fallbackDiv = document.createElement('div');
+                fallbackDiv.className = 'cattle-image cattle-fallback';
+                fallbackDiv.style.backgroundColor = '#8b4513'; 
+                fallbackDiv.style.borderRadius = '50%';
+                fallbackDiv.style.width = '100%';
+                fallbackDiv.style.height = '100%';
+                fallbackDiv.textContent = '🐄';
+                this.parentNode.insertBefore(fallbackDiv, this);
+            };
             
             // Create cattle info
             const cattleInfo = document.createElement('div');

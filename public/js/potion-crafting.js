@@ -178,12 +178,30 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Create potion image
             const potionImg = document.createElement('img');
-            potionImg.src = 'img/potion.svg';
+            potionImg.src = 'img/potion.png';  // Use PNG instead of SVG
             potionImg.alt = potion.name;
             potionImg.className = 'potion-image';
             
             // Add potency indicator
             potionImg.style.filter = `hue-rotate(${potion.potency * 36}deg) brightness(${1 + potion.potency * 0.05})`;
+            
+            // Add error handling for image loading
+            potionImg.onerror = function() {
+                console.warn(`Failed to load potion image for ${potion.name}`);
+                // Create a fallback colored div
+                this.style.display = 'none';
+                const fallbackDiv = document.createElement('div');
+                fallbackDiv.className = 'potion-image potion-fallback';
+                fallbackDiv.style.backgroundColor = `hsl(${potion.potency * 36}, 80%, 50%)`; 
+                fallbackDiv.style.width = '100%';
+                fallbackDiv.style.height = '100%';
+                fallbackDiv.style.borderRadius = '5px';
+                fallbackDiv.textContent = '⚗️';
+                fallbackDiv.style.display = 'flex';
+                fallbackDiv.style.justifyContent = 'center';
+                fallbackDiv.style.alignItems = 'center';
+                this.parentNode.insertBefore(fallbackDiv, this);
+            };
             
             // Create potion info
             const potionInfo = document.createElement('div');
