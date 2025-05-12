@@ -23,6 +23,9 @@ const gameState = {
   marketPrice: 1.0
 };
 
+// For Horse Race Game
+const raceGames = {};
+
 // Socket connection
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
@@ -229,9 +232,6 @@ io.on('connection', (socket) => {
       });
     }
   });
-  
-  // For Horse Race Game
-  const raceGames = {};
   
   // Utility functions for cards
   function createDeck() {
