@@ -653,73 +653,163 @@ class RanchScene extends Phaser.Scene {
     
     // Milk all cattle
     milkAllCattle() {
-        if (!playerData) return;
-        
-        // Ensure cattle is an array
-        if (!Array.isArray(playerData.cattle)) {
-            console.warn("playerData.cattle is not an array:", playerData.cattle);
-            playerData.cattle = [];
-            return;
-        }
-        
-        let totalMilk = 0;
-        
-        // Now safely use forEach since we've verified it's an array
-        playerData.cattle.forEach(cattle => {
-            const milkProduced = cattle.milk * 2;
-            totalMilk += milkProduced;
+        try {
+            // Check if this is being called from an inactive scene
+            if (!this.scene || !this.scene.isActive()) {
+                console.log("milkAllCattle called from inactive scene, skipping");
+                return;
+            }
             
-            // Create milk animation
-            this.createMilkAnimation(cattle.id, milkProduced);
-        });
-        
-        if (totalMilk > 0) {
-            // Update player balance
-            playerData.cattleBalance += totalMilk;
+            // Check if playerData exists
+            if (!window.playerData) {
+                console.log("Player data not initialized, skipping milk production");
+                return;
+            }
             
-            // Show notification
-            showNotification(`Your cattle produced ${totalMilk} $CATTLE!`, 'success');
+            // Initialize if needed - defensive programming
+            if (typeof window.playerData.cattle === 'undefined') {
+                console.log("Initializing empty cattle array");
+                window.playerData.cattle = [];
+                return;
+            }
             
-            // Update UI
-            updateUI();
+            // Ensure cattle is an array
+            if (!Array.isArray(window.playerData.cattle)) {
+                console.warn("playerData.cattle is not an array:", window.playerData.cattle);
+                // Convert to array if possible, or initialize empty array
+                if (typeof window.playerData.cattle === 'object') {
+                    window.playerData.cattle = Object.values(window.playerData.cattle);
+                } else {
+                    window.playerData.cattle = [];
+                }
+                return; // Skip this cycle as we've just fixed the data structure
+            }
+            
+            // Skip if no cattle
+            if (window.playerData.cattle.length === 0) {
+                return;
+            }
+            
+            let totalMilk = 0;
+            
+            // Now safely use forEach since we've verified it's an array
+            window.playerData.cattle.forEach(cattle => {
+                if (!cattle || typeof cattle !== 'object') return;
+                
+                // Default to 1 if milk property isn't set
+                const milkAmount = typeof cattle.milk === 'number' ? cattle.milk : 1;
+                const milkProduced = milkAmount * 2;
+                totalMilk += milkProduced;
+                
+                try {
+                    // Create milk animation only if we're in the proper scene
+                    this.createMilkAnimation(cattle.id, milkProduced);
+                } catch (animError) {
+                    console.warn("Could not create milk animation:", animError);
+                }
+            });
+            
+            if (totalMilk > 0) {
+                // Update player balance
+                window.playerData.cattleBalance += totalMilk;
+                
+                // Show notification
+                if (typeof window.showNotification === 'function') {
+                    window.showNotification(`Your cattle produced ${totalMilk} $CATTLE!`, 'success');
+                }
+                
+                // Update UI
+                if (typeof window.updateUI === 'function') {
+                    window.updateUI();
+                }
+            }
+        } catch (error) {
+            console.error("Error in milkAllCattle:", error);
         }
     }
     
     // Create milk animation for a specific cattle
     createMilkAnimation(cattleId, amount) {
-        // Find the cattle sprite
-        const cattleSprite = this.cattle.find(sprite => 
-            sprite.getData('cattle') && sprite.getData('cattle').id === cattleId
-        );
-        
-        if (!cattleSprite) return;
-        
-        // Create milk bottle icon
-        const milkIcon = this.add.image(cattleSprite.x, cattleSprite.y - 30, 'milk-bottle');
-        milkIcon.setScale(0.15);
-        this.ranchContainer.add(milkIcon);
-        
-        // Create milk amount text
-        const milkText = this.add.text(cattleSprite.x + 20, cattleSprite.y - 30, `+${amount}`, {
-            fontFamily: 'Anta',
-            fontSize: '16px',
-            color: '#ffffff',
-            stroke: '#000000',
-            strokeThickness: 2
-        }).setOrigin(0, 0.5);
-        this.ranchContainer.add(milkText);
-        
-        // Animate milk icon and text
-        this.tweens.add({
-            targets: [milkIcon, milkText],
-            y: '-=50',
-            alpha: { from: 1, to: 0 },
-            duration: 2000,
-            onComplete: () => {
-                milkIcon.destroy();
-                milkText.destroy();
+        try {
+            // Safety check for scene
+            if (!this.scene || !this.scene.isActive()) {
+                console.log("createMilkAnimation called from inactive scene, skipping");
+                return;
             }
-        });
+            
+            // Safety check for cattle array
+            if (!this.cattle || !Array.isArray(this.cattle) || this.cattle.length === 0) {
+                console.log("No cattle sprites in scene, skipping milk animation");
+                return;
+            }
+            
+            // Find the cattle sprite
+            const cattleSprite = this.cattle.find(sprite => 
+                sprite && sprite.getData && typeof sprite.getData === 'function' && 
+                sprite.getData('cattle') && sprite.getData('cattle').id === cattleId
+            );
+            
+            if (!cattleSprite) {
+                console.log(`No cattle sprite found with ID ${cattleId}`);
+                return;
+            }
+            
+            // Check if container exists
+            if (!this.ranchContainer) {
+                console.warn("Ranch container not found, creating fallback container");
+                this.ranchContainer = this.add.container(0, 0);
+            }
+            
+            let milkIcon, milkText;
+            
+            try {
+                // Create milk bottle icon - with fallback
+                if (this.textures.exists('milk-bottle')) {
+                    milkIcon = this.add.image(cattleSprite.x, cattleSprite.y - 30, 'milk-bottle');
+                    milkIcon.setScale(0.15);
+                } else {
+                    // Create a simple milk icon as fallback
+                    const graphics = this.add.graphics();
+                    graphics.fillStyle(0xffffff, 1);
+                    graphics.fillRect(-5, -10, 10, 15);
+                    graphics.generateTexture('milk-bottle-fallback', 20, 30);
+                    graphics.destroy();
+                    
+                    milkIcon = this.add.image(cattleSprite.x, cattleSprite.y - 30, 'milk-bottle-fallback');
+                }
+                
+                this.ranchContainer.add(milkIcon);
+                
+                // Create milk amount text
+                milkText = this.add.text(cattleSprite.x + 20, cattleSprite.y - 30, `+${amount}`, {
+                    fontFamily: '"Anta", "Arial", sans-serif',
+                    fontSize: '16px',
+                    color: '#ffffff',
+                    stroke: '#000000',
+                    strokeThickness: 2
+                }).setOrigin(0, 0.5);
+                this.ranchContainer.add(milkText);
+                
+                // Animate milk icon and text
+                this.tweens.add({
+                    targets: [milkIcon, milkText],
+                    y: '-=50',
+                    alpha: { from: 1, to: 0 },
+                    duration: 2000,
+                    onComplete: () => {
+                        if (milkIcon && milkIcon.destroy) milkIcon.destroy();
+                        if (milkText && milkText.destroy) milkText.destroy();
+                    }
+                });
+            } catch (error) {
+                console.error("Error creating milk animation:", error);
+                // Clean up if error occurs
+                if (milkIcon && milkIcon.destroy) milkIcon.destroy();
+                if (milkText && milkText.destroy) milkText.destroy();
+            }
+        } catch (outerError) {
+            console.error("Fatal error in createMilkAnimation:", outerError);
+        }
     }
     
     resize(gameSize) {
