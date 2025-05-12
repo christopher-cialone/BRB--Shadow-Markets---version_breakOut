@@ -547,44 +547,70 @@ class RanchScene extends Phaser.Scene {
     
     // Add a cattle sprite to the scene with animation
     addCattleSprite(cattle) {
+        // Check if barn exists
+        if (!this.barn) {
+            console.warn("Barn not initialized, cannot place cattle");
+            return null;
+        }
+        
         // Random position near the barn
         const x = this.barn.x + (Math.random() * 200 - 100);
         const y = this.barn.y + (Math.random() * 200 - 50);
         
-        // Create the cattle sprite
-        const cattleSprite = this.add.image(x, y, 'cattle');
-        cattleSprite.setScale(0.2);
-        cattleSprite.setData('cattle', cattle);
+        // Initialize cattle arrays if needed
+        if (!this.cattle) this.cattle = [];
+        if (!this.cattleMilkTimers) this.cattleMilkTimers = [];
         
-        // Add to scene and store reference
-        this.ranchContainer.add(cattleSprite);
-        this.cattle.push(cattleSprite);
-        
-        // Add bouncing animation
-        this.tweens.add({
-            targets: cattleSprite,
-            y: y - 10,
-            duration: 1000,
-            yoyo: true,
-            repeat: -1,
-            ease: 'Sine.easeInOut'
-        });
-        
-        // Set up milk production timer for this cattle
-        this.cattleMilkTimers.push({
-            cattleId: cattle.id,
-            lastMilked: Date.now()
-        });
-        
-        return cattleSprite;
+        try {
+            // Create the cattle sprite
+            const cattleSprite = this.add.image(x, y, 'cattle');
+            cattleSprite.setScale(0.2);
+            cattleSprite.setData('cattle', cattle);
+            
+            // Add to scene and store reference
+            if (this.ranchContainer) {
+                this.ranchContainer.add(cattleSprite);
+            }
+            this.cattle.push(cattleSprite);
+            
+            // Add bouncing animation
+            this.tweens.add({
+                targets: cattleSprite,
+                y: y - 10,
+                duration: 1000,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+            
+            // Set up milk production timer for this cattle
+            this.cattleMilkTimers.push({
+                cattleId: cattle.id,
+                lastMilked: Date.now()
+            });
+            
+            console.log(`Added cattle #cattle-${cattle.id} to scene with milk production`);
+            return cattleSprite;
+        } catch (error) {
+            console.error("Error adding cattle sprite:", error);
+            return null;
+        }
     }
     
     // Milk all cattle
     milkAllCattle() {
-        if (!playerData || !playerData.cattle) return;
+        if (!playerData) return;
+        
+        // Ensure cattle is an array
+        if (!Array.isArray(playerData.cattle)) {
+            console.warn("playerData.cattle is not an array:", playerData.cattle);
+            playerData.cattle = [];
+            return;
+        }
         
         let totalMilk = 0;
         
+        // Now safely use forEach since we've verified it's an array
         playerData.cattle.forEach(cattle => {
             const milkProduced = cattle.milk * 2;
             totalMilk += milkProduced;
