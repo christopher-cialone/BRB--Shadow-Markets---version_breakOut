@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     height: '100%'
                 },
                 parent: 'game-container',
-                scene: [MainMenuScene, RanchScene, SaloonScene, NightScene],
+                scene: [MainMenuScene, RanchScene, window.SaloonSceneFixed || SaloonScene, NightScene],
                 physics: {
                     default: 'arcade',
                     arcade: {
