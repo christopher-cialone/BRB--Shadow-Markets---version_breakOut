@@ -127,6 +127,19 @@ class SaloonSceneComplete extends Phaser.Scene {
         // Cache socket reference
         this.socket = window.socket;
         
+        // Ensure we have a socket connection and a player is initialized
+        if (this.socket) {
+            console.log('Socket connection verified in SaloonScene. Socket ID:', this.socket.id);
+            
+            // Force immediate player initialization if not already done
+            this.socket.emit('new-player', {
+                name: 'Cowboy',
+                archetype: 'Entrepreneur'
+            });
+        } else {
+            console.error('Socket connection not available in SaloonScene!');
+        }
+        
         // Get dimensions
         const width = this.scale.width;
         const height = this.scale.height;

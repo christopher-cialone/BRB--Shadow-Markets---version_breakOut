@@ -27,38 +27,51 @@ const gameState = {
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
   
-  // Create new player
+  // Initialize player with default data immediately on connection
+  // This ensures the player exists for all socket operations
+  gameState.players[socket.id] = {
+    id: socket.id,
+    name: 'Cowboy',
+    archetype: 'Entrepreneur',
+    characterType: 'the-kid', // Default character
+    cattle: 0,
+    cattleBalance: 100,
+    hay: 100,
+    water: 100,
+    barnCapacity: 100,
+    cattleCollection: [],
+    potionCollection: [],
+    stats: {
+      racesWon: 0,
+      racesLost: 0,
+      cattleBred: 0,
+      potionsCrafted: 0,
+      totalEarned: 0,
+      totalBurned: 0
+    }
+  };
+  
+  // Initialize race game immediately for this player
+  initRaceGame(socket.id);
+  
+  // Create new player or update existing one
   socket.on('new-player', (data) => {
-    console.log('New player:', data);
+    console.log('New player data received:', data);
     
-    // Initialize player data
-    gameState.players[socket.id] = {
-      id: socket.id,
-      name: data.name || 'Cowboy',
-      archetype: data.archetype || 'Entrepreneur',
-      characterType: data.characterType || 'the-kid', // Default character
-      cattle: 0,
-      cattleBalance: 100,
-      hay: 100,
-      water: 100,
-      barnCapacity: 100,
-      cattleCollection: [],
-      potionCollection: [],
-      stats: {
-        racesWon: 0,
-        racesLost: 0,
-        cattleBred: 0,
-        potionsCrafted: 0,
-        totalEarned: 0,
-        totalBurned: 0
-      }
-    };
+    // Update player data with received values if player exists
+    if (gameState.players[socket.id]) {
+      gameState.players[socket.id].name = data.name || gameState.players[socket.id].name;
+      gameState.players[socket.id].archetype = data.archetype || gameState.players[socket.id].archetype;
+      gameState.players[socket.id].characterType = data.characterType || gameState.players[socket.id].characterType;
+    }
     
-    // Send current game state to the new player
+    // Send current game state to the player
     socket.emit('game-state', {
       player: gameState.players[socket.id],
       marketPrice: gameState.marketPrice
     });
+    
+    console.log('Player initialized with ID:', socket.id);
   });
   
   // Handle breeding cattle
@@ -317,19 +330,57 @@ io.on('connection', (socket) => {
   
   // Handle player claiming bonus tokens
   socket.on('claim-bonus', () => {
-    const player = gameState.players[socket.id];
+    console.log('Claim bonus request received from client with socket ID:', socket.id);
     
-    if (!player) return;
+    // Get or create player if needed
+    let player = gameState.players[socket.id];
+    
+    // Handle case where player doesn't exist (should never happen with our initialization)
+    if (!player) {
+      console.log('Player not found, creating default player for socket ID:', socket.id);
+      player = gameState.players[socket.id] = {
+        id: socket.id,
+        name: 'Cowboy',
+        archetype: 'Entrepreneur',
+        characterType: 'the-kid',
+        cattle: 0,
+        cattleBalance: 100,
+        hay: 100,
+        water: 100,
+        barnCapacity: 100,
+        cattleCollection: [],
+        potionCollection: [],
+        stats: {
+          racesWon: 0,
+          racesLost: 0,
+          cattleBred: 0,
+          potionsCrafted: 0,
+          totalEarned: 0,
+          totalBurned: 0
+        }
+      };
+    }
     
     // Initialize race game if not exists
     if (!raceGames[socket.id]) {
+      console.log('Race game not found, initializing for socket ID:', socket.id);
       initRaceGame(socket.id);
     }
     
     const game = raceGames[socket.id];
     
+    // Extra safety check in case game wasn't created
+    if (!game) {
+      console.error('Failed to create race game for socket ID:', socket.id);
+      socket.emit('error-message', { 
+        message: 'Server error. Please try again.'
+      });
+      return;
+    }
+    
     // Check if bonus already claimed
     if (game.bonusClaimed) {
+      console.log('Bonus already claimed for socket ID:', socket.id);
       socket.emit('error-message', { 
         message: 'You already claimed your bonus for this session!'
       });
@@ -340,6 +391,8 @@ io.on('connection', (socket) => {
     const bonusAmount = 50;
     player.cattleBalance += bonusAmount;
     game.bonusClaimed = true;
+    
+    console.log(`Bonus claimed: ${bonusAmount} added to player ${socket.id}. New balance: ${player.cattleBalance}`);
     
     // Notify player
     socket.emit('bonus-claimed', {
@@ -352,11 +405,33 @@ io.on('connection', (socket) => {
   socket.on('start-race', (data) => {
     console.log('Start race event received with data:', data);
     
-    const player = gameState.players[socket.id];
+    // Get or create player if needed
+    let player = gameState.players[socket.id];
     
+    // Handle case where player doesn't exist (should never happen with our initialization)
     if (!player) {
-      console.error('Player not found for socket ID:', socket.id);
-      return;
+      console.log('Player not found on race start, creating default player for socket ID:', socket.id);
+      player = gameState.players[socket.id] = {
+        id: socket.id,
+        name: 'Cowboy',
+        archetype: 'Entrepreneur',
+        characterType: 'the-kid',
+        cattle: 0,
+        cattleBalance: 100,
+        hay: 100,
+        water: 100,
+        barnCapacity: 100,
+        cattleCollection: [],
+        potionCollection: [],
+        stats: {
+          racesWon: 0,
+          racesLost: 0,
+          cattleBred: 0,
+          potionsCrafted: 0,
+          totalEarned: 0,
+          totalBurned: 0
+        }
+      };
     }
     
     // Get bets from data - handle both object formats
@@ -454,22 +529,49 @@ io.on('connection', (socket) => {
   
   // Handle player drawing a card
   socket.on('draw-card', () => {
-    console.log('Draw card event received from client');
+    console.log('Draw card event received from client with socket ID:', socket.id);
     
-    const player = gameState.players[socket.id];
-    const game = raceGames[socket.id];
+    // Get or create player if needed
+    let player = gameState.players[socket.id];
     
+    // Handle case where player doesn't exist
     if (!player) {
-      console.error('Player not found for socket ID:', socket.id);
-      return;
+      console.log('Player not found on draw card, creating default player for socket ID:', socket.id);
+      player = gameState.players[socket.id] = {
+        id: socket.id,
+        name: 'Cowboy',
+        archetype: 'Entrepreneur',
+        characterType: 'the-kid',
+        cattle: 0,
+        cattleBalance: 100,
+        hay: 100,
+        water: 100,
+        barnCapacity: 100,
+        cattleCollection: [],
+        potionCollection: [],
+        stats: {
+          racesWon: 0,
+          racesLost: 0,
+          cattleBred: 0,
+          potionsCrafted: 0,
+          totalEarned: 0,
+          totalBurned: 0
+        }
+      };
     }
     
+    // Get or initialize race game if needed
+    let game = raceGames[socket.id];
+    
     if (!game) {
-      console.error('Game not found for socket ID:', socket.id);
-      socket.emit('error-message', { 
-        message: 'No active race. Please start a new race first!'
-      });
-      return;
+      console.log('Race game not found on draw card, initializing for socket ID:', socket.id);
+      initRaceGame(socket.id);
+      game = raceGames[socket.id];
+      
+      // Default to racing state since we're drawing a card
+      if (game) {
+        game.status = 'racing';
+      }
     }
     
     if (game.status !== 'racing') {
