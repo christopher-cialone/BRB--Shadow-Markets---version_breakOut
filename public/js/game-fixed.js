@@ -262,19 +262,19 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Go to profile from various scenes
-    ['go-to-profile-from-ranch', 'go-to-profile-from-saloon', 'go-to-profile-from-night'].forEach(id => {
+    ['go-to-profile-from-ranch', 'go-to-profile', 'go-to-profile-from-night'].forEach(id => {
         addClickListener(id, () => {
             switchScene('profile');
         });
     });
     
     // Go back to ranch from profile
-    addClickListener('back-to-ranch-profile', () => {
+    addClickListener('back-to-ranch-from-profile', () => {
         switchScene('ranch');
     });
     
     // Go back to ranch from saloon
-    addClickListener('back-to-ranch-saloon', () => {
+    addClickListener('back-to-ranch', () => {
         switchScene('ranch');
     });
     
