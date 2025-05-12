@@ -3,15 +3,29 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log("Initializing game...");
     
     // Initialize core game data
-    window.playerData = window.playerData || {
-        name: 'Cowboy',
-        archetype: 'entrepreneur',
-        cattleBalance: 100,
-        hay: 50,
-        water: 50,
-        cattle: [],
-        potions: []
-    };
+    if (!window.playerData) {
+        window.playerData = {
+            name: 'Cowboy',
+            archetype: 'entrepreneur',
+            cattleBalance: 100,
+            hay: 50,
+            water: 50,
+            cattle: [],
+            potions: []
+        };
+    } else {
+        // Ensure cattle is an array (this fixes "playerData.cattle is not an array: 0" error)
+        if (!Array.isArray(window.playerData.cattle)) {
+            console.warn("Fixing playerData.cattle which is not an array:", window.playerData.cattle);
+            window.playerData.cattle = [];
+        }
+        
+        // Ensure potions is an array
+        if (!Array.isArray(window.playerData.potions)) {
+            console.warn("Fixing playerData.potions which is not an array:", window.playerData.potions);
+            window.playerData.potions = [];
+        }
+    }
     
     // Initialize ranch grid if needed
     window.ranchGrid = window.ranchGrid || {

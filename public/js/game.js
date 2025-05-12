@@ -341,10 +341,49 @@ class RanchScene extends Phaser.Scene {
         // Create a container for our ranch elements
         this.ranchContainer = this.add.container(0, 0);
         
-        // Add barn to ranch scene
-        this.barn = this.add.image(width * 0.7, height * 0.4, 'barn');
-        this.barn.setScale(0.5);
-        this.ranchContainer.add(this.barn);
+        // Add barn to ranch scene - with error handling
+        try {
+            // Create a default barn graphic if texture isn't available
+            if (!this.textures.exists('barn')) {
+                console.log("Creating barn placeholder graphic");
+                const barnGraphics = this.add.graphics();
+                barnGraphics.fillStyle(0x8b4513, 1); // Brown
+                barnGraphics.fillRect(-100, -75, 200, 150);
+                barnGraphics.fillStyle(0xff0000, 1); // Red roof
+                barnGraphics.fillTriangle(-110, -75, 110, -75, 0, -150);
+                barnGraphics.generateTexture('barn-placeholder', 220, 200);
+                barnGraphics.destroy();
+                
+                this.barn = this.add.image(width * 0.7, height * 0.4, 'barn-placeholder');
+            } else {
+                this.barn = this.add.image(width * 0.7, height * 0.4, 'barn');
+            }
+            
+            this.barn.setScale(0.5);
+            this.ranchContainer.add(this.barn);
+            console.log("Barn successfully added to scene");
+        } catch (error) {
+            console.error("Error adding barn:", error);
+            // Create a simple barn as a graphics object as fallback
+            const fallbackBarn = this.add.graphics();
+            fallbackBarn.fillStyle(0x8b4513, 1); // Brown
+            fallbackBarn.fillRect(width * 0.7 - 50, height * 0.4 - 40, 100, 80);
+            fallbackBarn.fillStyle(0xff0000, 1); // Red roof
+            fallbackBarn.fillTriangle(width * 0.7 - 60, height * 0.4 - 40, width * 0.7 + 60, height * 0.4 - 40, width * 0.7, height * 0.4 - 80);
+            
+            // Add to container
+            this.ranchContainer.add(fallbackBarn);
+            
+            // Create a reference to it as this.barn for later code
+            this.barn = {
+                x: width * 0.7,
+                y: height * 0.4,
+                // Add minimal methods to avoid null ref errors
+                setScale: function() {},
+                setPosition: function(x, y) { this.x = x; this.y = y; }
+            };
+            console.log("Created fallback barn graphics object");
+        }
         
         // Initialize the Phaser grid
         this.initPhaserGrid();

@@ -15,18 +15,39 @@ function safePhaserImageLoad(scene, key, path) {
     }
     
     try {
+        // Track textures globally across all scenes to avoid conflicts
+        if (!window.loadedTextureKeys) {
+            window.loadedTextureKeys = new Set();
+        }
+        
         // Check if the texture with this key already exists
-        if (scene.textures.exists(key)) {
-            console.warn(`Texture key already in use: ${key}`);
+        if (scene.textures.exists(key) || window.loadedTextureKeys.has(key)) {
+            // Don't log warning for common textures that are expected to be used across scenes
+            const commonTextures = ['game-bg', 'shadow-bg', 'barn', 'cattle', 'milk-bottle'];
+            if (!commonTextures.includes(key)) {
+                console.warn(`Skipping load for existing texture: ${key}`);
+            }
             return true; // Already loaded, no need to load again
         }
         
         // If it doesn't exist, load it
         scene.load.image(key, path);
         loadedAssets.textures.add(key);
+        window.loadedTextureKeys.add(key);
+        
+        // Add error handler in case loading fails
+        scene.load.on('loaderror', function(fileObj) {
+            if (fileObj.key === key) {
+                console.error(`Failed to load texture: ${key} from ${path}`);
+                handleMissingTexture(scene, key);
+            }
+        }, this);
+        
         return true;
     } catch (e) {
         console.error(`Error loading texture ${key} from ${path}:`, e);
+        // Create placeholder on error
+        handleMissingTexture(scene, key);
         return false;
     }
 }

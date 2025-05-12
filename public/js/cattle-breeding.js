@@ -54,12 +54,28 @@ document.addEventListener('DOMContentLoaded', function() {
             showNotification(`Successfully bred a new cattle: ${newCattle.name}!`, 'success');
             
             // Try to add to scene if in Ranch scene
-            if (typeof addCattleToScene === 'function') {
-                try {
-                    addCattleToScene(newCattle);
-                } catch (e) {
-                    console.error("Could not add cattle to scene:", e);
+            try {
+                // First check if we're in the Ranch scene in Phaser
+                if (window.game && window.game.scene) {
+                    const ranchScene = window.game.scene.getScene('RanchScene');
+                    if (ranchScene && ranchScene.sys && ranchScene.sys.settings.active) {
+                        // The Ranch scene exists and is active, add cattle there
+                        if (typeof ranchScene.addCattleSprite === 'function') {
+                            ranchScene.addCattleSprite(newCattle);
+                            console.log(`Added cattle directly to active RanchScene: ${newCattle.name}`);
+                        }
+                    } else {
+                        console.log("Ranch scene is not active, skipping visual cattle addition");
+                    }
+                } 
+                // Fall back to using global function
+                else if (typeof window.addCattleToScene === 'function') {
+                    window.addCattleToScene(newCattle);
+                    console.log(`Added cattle using global function: ${newCattle.name}`);
                 }
+            } catch (e) {
+                console.error("Could not add cattle to scene:", e);
+                // Don't let this error disrupt the game - the cattle is still added to the data model
             }
         });
     }
