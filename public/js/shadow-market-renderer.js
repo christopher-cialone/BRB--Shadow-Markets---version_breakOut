@@ -4,17 +4,24 @@
  */
 
 // Access or create the shadow grid global state
-if (typeof window.shadowGrid === 'undefined') {
-    window.shadowGrid = {
-        cells: [],
-        cycleState: 'stable',
-        priceMultiplier: 1.0,
-        lastCycleTime: Date.now()
-    };
-}
+// We use a function to ensure we don't redeclare variables
+(function() {
+    if (typeof window.shadowGrid === 'undefined') {
+        console.log("Initializing shadow grid global state");
+        window.shadowGrid = {
+            cells: [],
+            cycleState: 'stable',
+            priceMultiplier: 1.0,
+            lastCycleTime: Date.now()
+        };
+    } else {
+        console.log("Shadow grid already initialized");
+    }
+})();
 
-// Use a reference for convenience
-const shadowGrid = window.shadowGrid;
+// Access global reference for use in this file
+// No redeclaration to avoid conflicts
+const shadowGridRef = window.shadowGrid;
 
 /**
  * Initialize Shadow Market cells

@@ -785,6 +785,9 @@ io.on('connection', (socket) => {
     
     // Remove player from game state
     delete gameState.players[socket.id];
+    
+    // Clear race game state which contains bonus claimed status
+    delete raceGames[socket.id];
   });
 });
 
