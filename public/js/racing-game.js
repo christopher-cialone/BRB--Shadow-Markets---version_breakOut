@@ -143,75 +143,90 @@ window.racingGame = {
     },
     
     startRace: function() {
-        if (racingGameState.raceActive) return;
-        
-        // Get total bet
-        const totalBet = this.updateTotalBet();
-        
-        // Check if player has enough balance
-        if (!window.gameState || !window.gameState.player) return;
-        const playerBalance = window.gameState.player.cattleBalance || 0;
-        
-        if (totalBet <= 0) {
+        try {
+            if (racingGameState.raceActive) return;
+            
+            // Get total bet
+            const totalBet = this.updateTotalBet();
+            
+            // Check if player has enough balance
+            if (!window.gameState || !window.gameState.player) return;
+            const playerBalance = window.gameState.player.cattleBalance || 0;
+            
+            if (totalBet <= 0) {
+                if (window.gameManager && window.gameManager.showNotification) {
+                    window.gameManager.showNotification('Place a bet before starting the race!', 'error');
+                }
+                return;
+            }
+            
+            if (totalBet > playerBalance) {
+                if (window.gameManager && window.gameManager.showNotification) {
+                    window.gameManager.showNotification('Not enough $CATTLE to place this bet!', 'error');
+                }
+                return;
+            }
+            
+            // Deduct bet from player's balance
+            window.gameState.player.cattleBalance -= totalBet;
+            
+            // Apply 10% burn
+            const burnAmount = totalBet * 0.1;
+            if (window.gameState.player.stats) {
+                window.gameState.player.stats.totalBurned = (window.gameState.player.stats.totalBurned || 0) + burnAmount;
+            }
+            
+            // Update UI
+            if (window.gameManager && window.gameManager.updateUI) {
+                window.gameManager.updateUI();
+            }
+            
+            // Start race
+            racingGameState.raceActive = true;
+            racingGameState.progress = { hearts: 0, diamonds: 0, clubs: 0, spades: 0 };
+            racingGameState.winner = null;
+            
+            // Notify player
             if (window.gameManager && window.gameManager.showNotification) {
-                window.gameManager.showNotification('Place a bet before starting the race!', 'error');
+                window.gameManager.showNotification('The race has begun!', 'info');
             }
-            return;
-        }
-        
-        if (totalBet > playerBalance) {
+            
+            // Disable start button during race
+            const startRaceBtn = document.getElementById('start-race-btn');
+            if (startRaceBtn) startRaceBtn.disabled = true;
+            
+            // Simulate race
+            const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
+            racingGameState.raceInterval = setInterval(() => {
+                try {
+                    // Random progress for each horse
+                    const activeSuit = suits[Math.floor(Math.random() * suits.length)];
+                    racingGameState.progress[activeSuit] += Math.floor(Math.random() * 10) + 5;
+                    
+                    // Update progress display
+                    this.updateProgress(racingGameState.progress);
+                    
+                    // Check for winner
+                    const winner = Object.entries(racingGameState.progress).find(([suit, progress]) => progress >= 100);
+                    
+                    if (winner) {
+                        clearInterval(racingGameState.raceInterval);
+                        this.endRace(winner[0]);
+                    }
+                } catch (err) {
+                    console.error('Error in race simulation interval:', err);
+                    clearInterval(racingGameState.raceInterval);
+                    if (window.gameManager && window.gameManager.showNotification) {
+                        window.gameManager.showNotification('Race error occurred. Please try again.', 'error');
+                    }
+                }
+            }, 250);
+        } catch (err) {
+            console.error('Error starting race:', err);
             if (window.gameManager && window.gameManager.showNotification) {
-                window.gameManager.showNotification('Not enough $CATTLE to place this bet!', 'error');
+                window.gameManager.showNotification('Failed to start race. Please try again.', 'error');
             }
-            return;
         }
-        
-        // Deduct bet from player's balance
-        window.gameState.player.cattleBalance -= totalBet;
-        
-        // Apply 10% burn
-        const burnAmount = totalBet * 0.1;
-        if (window.gameState.player.stats) {
-            window.gameState.player.stats.totalBurned = (window.gameState.player.stats.totalBurned || 0) + burnAmount;
-        }
-        
-        // Update UI
-        if (window.gameManager && window.gameManager.updateUI) {
-            window.gameManager.updateUI();
-        }
-        
-        // Start race
-        racingGameState.raceActive = true;
-        racingGameState.progress = { hearts: 0, diamonds: 0, clubs: 0, spades: 0 };
-        racingGameState.winner = null;
-        
-        // Notify player
-        if (window.gameManager && window.gameManager.showNotification) {
-            window.gameManager.showNotification('The race has begun!', 'info');
-        }
-        
-        // Disable start button during race
-        const startRaceBtn = document.getElementById('start-race-btn');
-        if (startRaceBtn) startRaceBtn.disabled = true;
-        
-        // Simulate race
-        const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
-        racingGameState.raceInterval = setInterval(() => {
-            // Random progress for each horse
-            const activeSuit = suits[Math.floor(Math.random() * suits.length)];
-            racingGameState.progress[activeSuit] += Math.floor(Math.random() * 10) + 5;
-            
-            // Update progress display
-            this.updateProgress(racingGameState.progress);
-            
-            // Check for winner
-            const winner = Object.entries(racingGameState.progress).find(([suit, progress]) => progress >= 100);
-            
-            if (winner) {
-                clearInterval(racingGameState.raceInterval);
-                this.endRace(winner[0]);
-            }
-        }, 250);
     },
     
     updateProgress: function(progress) {

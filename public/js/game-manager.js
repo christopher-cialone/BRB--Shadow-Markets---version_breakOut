@@ -59,7 +59,7 @@ function initializeGame() {
         },
         scene: [
             MainScene,
-            SaloonScene,
+            // SaloonScene is defined in its own file
             EtherScene
         ],
         scale: {
@@ -108,86 +108,117 @@ function initializeUIListeners() {
 
 // Switch between scenes and update UI visibility
 function switchScene(sceneName) {
-    console.log(`Switching to scene: ${sceneName}`);
-    
-    // Update current scene tracker
-    currentScene = sceneName;
-    
-    // Hide all UI elements
-    Object.values(uiElements).forEach(element => {
-        if (element) element.classList.add('hidden');
-    });
-    
-    // Show the relevant UI based on scene
-    const uiMap = {
-        'main-scene': uiElements.mainMenu,
-        'ranch-scene': uiElements.ranchUI,
-        'saloon-scene': uiElements.saloonUI,
-        'ether-scene': uiElements.nightUI,
-        'profile-scene': uiElements.profileUI
-    };
-    
-    const targetUI = uiMap[sceneName];
-    if (targetUI) {
-        targetUI.classList.remove('hidden');
-    }
-    
-    // Start the corresponding Phaser scene if the game exists
-    if (window.game && window.game.scene) {
-        // Stop all running scenes first
-        window.game.scene.getScenes(true).forEach(scene => {
-            window.game.scene.sleep(scene.scene.key);
+    try {
+        console.log(`Switching to scene: ${sceneName}`);
+        
+        // Update current scene tracker
+        currentScene = sceneName;
+        
+        // Hide all UI elements
+        Object.values(uiElements).forEach(element => {
+            if (element) element.classList.add('hidden');
         });
         
-        // Map sceneName to Phaser scene key
-        const sceneMap = {
-            'main-scene': 'MainScene',
-            'ranch-scene': 'RanchScene',
-            'saloon-scene': 'SaloonScene',
-            'ether-scene': 'EtherScene'
+        // Show the relevant UI based on scene
+        const uiMap = {
+            'main-scene': uiElements.mainMenu,
+            'ranch-scene': uiElements.ranchUI,
+            'saloon-scene': uiElements.saloonUI,
+            'ether-scene': uiElements.nightUI,
+            'profile-scene': uiElements.profileUI
         };
         
-        const phaserScene = sceneMap[sceneName];
-        if (phaserScene) {
-            // Check if scene exists and start it
-            if (window.game.scene.getScene(phaserScene)) {
-                window.game.scene.wake(phaserScene);
-            } else {
-                window.game.scene.start(phaserScene);
+        const targetUI = uiMap[sceneName];
+        if (targetUI) {
+            targetUI.classList.remove('hidden');
+        }
+        
+        // Start the corresponding Phaser scene if the game exists
+        if (window.game && window.game.scene) {
+            try {
+                // Stop all running scenes first
+                window.game.scene.getScenes(true).forEach(scene => {
+                    window.game.scene.sleep(scene.scene.key);
+                });
+                
+                // Map sceneName to Phaser scene key
+                const sceneMap = {
+                    'main-scene': 'MainScene',
+                    'ranch-scene': 'RanchScene',
+                    'saloon-scene': 'SaloonScene',
+                    'ether-scene': 'EtherScene'
+                };
+                
+                const phaserScene = sceneMap[sceneName];
+                if (phaserScene) {
+                    // Check if scene exists and start it
+                    if (window.game.scene.getScene(phaserScene)) {
+                        window.game.scene.wake(phaserScene);
+                    } else {
+                        window.game.scene.start(phaserScene);
+                    }
+                }
+            } catch (err) {
+                console.error('Error switching Phaser scene:', err);
+                showNotification('Error switching scenes. Please refresh the page.', 'error');
             }
         }
+        
+        // Initialize scene-specific logic based on your original switchScene implementation
+        try {
+            if (sceneName === 'ranch-scene' && window.initRanchGrid) {
+                window.initRanchGrid();
+            }
+            if (sceneName === 'ether-scene' && window.initShadowGrid) {
+                window.initShadowGrid();
+            }
+            if (sceneName === 'saloon-scene' && window.initSaloonScene) {
+                window.initSaloonScene();
+            }
+            if (sceneName === 'profile-scene' && window.updateProfileUI) {
+                window.updateProfileUI();
+            }
+        } catch (err) {
+            console.error('Error initializing scene-specific logic:', err);
+            showNotification('Error initializing scene. Please try again.', 'error');
+        }
+        
+        // Update UI with current state
+        updateUI();
+    } catch (err) {
+        console.error('Error in switchScene:', err);
+        showNotification('An error occurred while changing scenes.', 'error');
     }
-    
-    // Initialize scene-specific logic based on your original switchScene implementation
-    if (sceneName === 'ranch-scene' && window.initRanchGrid) {
-        window.initRanchGrid();
-    }
-    if (sceneName === 'ether-scene' && window.initShadowGrid) {
-        window.initShadowGrid();
-    }
-    if (sceneName === 'saloon-scene' && window.initSaloonScene) {
-        window.initSaloonScene();
-    }
-    if (sceneName === 'profile-scene' && window.updateProfileUI) {
-        window.updateProfileUI();
-    }
-    
-    // Update UI with current state
-    updateUI();
 }
 
 // Update UI elements with current game state
 function updateUI() {
-    if (!window.gameState || !window.gameState.player) return;
-    
-    const player = window.gameState.player;
-    
-    // Update resource displays across all UI sections
-    updateResourceDisplays(player);
-    
-    // Update betting sliders if in saloon
-    if (currentScene === 'saloon-scene') {
-        updateBettingControls(player);
+    try {
+        if (!window.gameState || !window.gameState.player) return;
+        
+        const player = window.gameState.player;
+        
+        // Update resource displays across all UI sections
+        updateResourceDisplays(player);
+        
+        // Update betting sliders if in saloon
+        if (currentScene === 'saloon-scene') {
+            updateBettingControls(player);
+        }
+        
+        // Update breeding UI if in ranch
+        if (currentScene === 'ranch-scene' && window.updateBreedingControls) {
+            window.updateBreedingControls(player);
+        }
+        
+        // Update ether UI if in night scene
+        if (currentScene === 'ether-scene' && window.updateEtherControls) {
+            window.updateEtherControls(player);
+        }
+        
+        console.log('UI updated with current game state');
+    } catch (err) {
+        console.error('Error in updateUI:', err);
     }
 }
 
