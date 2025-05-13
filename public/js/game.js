@@ -3148,6 +3148,8 @@ socket.on('error-message', data => {
 
 // Helper Functions
 function switchScene(scene) {
+    console.log(`Switching to scene: ${scene}`);
+    
     // Map HTML UI elements
     const mainMenu = document.getElementById('main-menu');
     const ranchUI = document.getElementById('ranch-ui');
@@ -3229,16 +3231,33 @@ function switchScene(scene) {
     
     // Start the corresponding Phaser scene if available
     if (phaser_scenes[scene] && game && game.scene) {
-        // Stop all running scenes
-        if (scene !== 'main-menu') game.scene.stop('MainMenuScene');
-        if (scene !== 'ranch') game.scene.stop('RanchScene');
-        if (scene !== 'saloon') game.scene.stop('SaloonScene');
-        if (scene !== 'night') game.scene.stop('NightScene');
-        
-        // Start the new scene
-        if (!game.scene.isActive(phaser_scenes[scene])) {
-            game.scene.start(phaser_scenes[scene]);
+        try {
+            console.log(`Stopping all scenes except ${scene}`);
+            
+            // Stop all running scenes
+            if (scene !== 'main-menu') game.scene.stop('MainMenuScene');
+            if (scene !== 'ranch') game.scene.stop('RanchScene');
+            if (scene !== 'saloon') game.scene.stop('SaloonScene');
+            if (scene !== 'night') game.scene.stop('NightScene');
+            
+            // Start the new scene
+            const targetScene = phaser_scenes[scene];
+            if (!game.scene.isActive(targetScene)) {
+                console.log(`Starting Phaser scene: ${targetScene}`);
+                game.scene.start(targetScene);
+            } else {
+                console.log(`Scene ${targetScene} is already active`);
+                // Resume if it was paused
+                if (game.scene.isPaused(targetScene)) {
+                    console.log(`Resuming paused scene: ${targetScene}`);
+                    game.scene.resume(targetScene);
+                }
+            }
+        } catch (error) {
+            console.error(`Error switching to Phaser scene ${phaser_scenes[scene]}:`, error);
         }
+    } else {
+        console.log(`No Phaser scene to start for ${scene} or game instance not available`);
     }
     
     // Initialize scene-specific logic
