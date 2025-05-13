@@ -1,3 +1,7 @@
+// Begin main IIFE to encapsulate all code
+(function() {
+    'use strict';
+    
 // Connect to server
 const socket = io();
 
@@ -2256,7 +2260,12 @@ const config = {
     width: window.innerWidth,
     height: window.innerHeight,
     parent: 'game-container',
-    scene: [MainMenuScene, RanchScene, SaloonScene],
+    scene: [
+        window.MainMenuScene, 
+        window.RanchScene, 
+        window.SaloonScene,
+        window.NightScene
+    ],
     scale: {
         mode: Phaser.Scale.RESIZE,
         autoCenter: Phaser.Scale.CENTER_BOTH
@@ -5343,3 +5352,6 @@ function setupBettingSliders() {
         });
     }
 }
+
+// End of the file wrapper
+});})();
