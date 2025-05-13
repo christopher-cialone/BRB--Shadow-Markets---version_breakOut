@@ -133,6 +133,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
+    z-index: 10; /* Ensure screens appear above the Phaser canvas */
     padding: 20px;
     display: flex;
     flex-direction: column;
@@ -155,11 +156,22 @@ body {
 #ranch-ui {
     background: linear-gradient(135deg, rgba(139, 69, 19, 0.3) 0%, rgba(26, 12, 22, 0.85) 100%);
     border-color: var(--desert-orange);
+    position: relative;
+    z-index: 5; /* Place above canvas but below overlays */
 }
 
 #saloon-ui {
     background: linear-gradient(135deg, rgba(106, 44, 160, 0.3) 0%, rgba(26, 12, 22, 0.85) 100%);
     border-color: var(--secondary-color);
+    position: relative;
+    z-index: 5; /* Place above canvas but below overlays */
+}
+
+#night-ui {
+    background: linear-gradient(135deg, rgba(58, 22, 120, 0.4) 0%, rgba(16, 6, 22, 0.9) 100%);
+    border-color: var(--glow-purple);
+    position: relative;
+    z-index: 5; /* Place above canvas but below overlays */
 }
 
 #ether-ui {
