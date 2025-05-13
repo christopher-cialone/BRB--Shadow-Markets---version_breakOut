@@ -734,10 +734,21 @@ if (typeof window.RanchScene === 'undefined') {
     
     // Create individual grid cells
     createGridCells() {
+        console.log('Creating ranch grid cells');
         const { size, cellSize, padding, startX, startY } = this.gridConfig;
         
+        // Ensure ranchGrid is defined
+        if (typeof ranchGrid === 'undefined') {
+            console.error('ranchGrid is undefined, initializing it');
+            window.ranchGrid = {
+                cells: []
+            };
+        }
+        
         // Initialize the cells array if it's empty
-        if (ranchGrid.cells.length === 0) {
+        if (!ranchGrid.cells || ranchGrid.cells.length === 0) {
+            console.log('Initializing ranch grid with empty cells');
+            ranchGrid.cells = [];
             for (let i = 0; i < size * size; i++) {
                 ranchGrid.cells.push({
                     id: i,
@@ -748,12 +759,19 @@ if (typeof window.RanchScene === 'undefined') {
             }
         }
         
+        console.log(`Creating ${ranchGrid.cells.length} grid cells for ranch`);
+        
         // Clear existing cells if any
-        this.gridCells.forEach(cell => {
-            if (cell.sprite) cell.sprite.destroy();
-            if (cell.text) cell.text.destroy();
-        });
-        this.gridCells = [];
+        if (this.gridCells && this.gridCells.length > 0) {
+            this.gridCells.forEach(cell => {
+                if (cell && cell.sprite) cell.sprite.destroy();
+                if (cell && cell.text) cell.text.destroy();
+            });
+            // Reset array
+            this.gridCells = [];
+        } else {
+            this.gridCells = [];
+        }
         
         // Create the grid cells
         for (let row = 0; row < size; row++) {
