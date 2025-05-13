@@ -412,6 +412,17 @@
                 </div>
                 
                 <div class="stats-panel">
+                    <!-- Player Level and XP -->
+                    <div class="level-container">
+                        <h3>Level <span id="level-value">1</span></h3>
+                        <div class="xp-bar-container">
+                            <div class="xp-bar">
+                                <div class="xp-progress-bar" id="xp-progress-bar"></div>
+                            </div>
+                            <div class="xp-text">XP: <span id="xp-value">0 / 100</span></div>
+                        </div>
+                    </div>
+                    
                     <h3>Player Statistics</h3>
                     <div class="stats-grid">
                         <div class="stat-item">
@@ -437,6 +448,14 @@
                         <div class="stat-item">
                             <div class="stat-label">Total $CATTLE Burned</div>
                             <div class="stat-value" id="total-burned">0</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Achievements Section -->
+                    <div class="achievements-section">
+                        <h3>Achievements</h3>
+                        <div id="achievements-container" class="achievements-grid">
+                            <!-- Achievements will be populated dynamically -->
                         </div>
                     </div>
                 </div>
