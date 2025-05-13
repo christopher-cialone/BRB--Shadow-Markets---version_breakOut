@@ -687,7 +687,7 @@ if (typeof window.RanchScene === 'undefined') {
         this.createGridCells();
         
         // Add harvest all button
-        const harvestAllBtn = this.add.text(gridX, gridY + totalHeight/2 + 40, '🌾 Harvest All', {
+        const harvestAllBtn = this.add.text(gridX - 100, gridY + totalHeight/2 + 40, '🌾 Harvest All', {
             fontFamily: 'Anta',
             fontSize: '20px',
             color: '#ffffff',
@@ -699,7 +699,26 @@ if (typeof window.RanchScene === 'undefined') {
         harvestAllBtn.setInteractive({ useHandCursor: true })
             .on('pointerdown', () => harvestAllRanchCells());
             
+        // Add sell cattle button
+        const sellCattleBtn = this.add.text(gridX + 100, gridY + totalHeight/2 + 40, '💰 Sell Cattle', {
+            fontFamily: 'Anta',
+            fontSize: '20px',
+            color: '#ffffff',
+            backgroundColor: '#6a2ca0', // Purple color for selling
+            padding: { x: 10, y: 5 },
+            shadow: { color: '#000000', fill: true, offsetX: 1, offsetY: 1, blur: 2 }
+        }).setOrigin(0.5);
+        
+        // Add glow effect to button
+        if (typeof window.addTextGlow === 'function') {
+            window.addTextGlow(sellCattleBtn, '#ff44cc', 5);
+        }
+        
+        sellCattleBtn.setInteractive({ useHandCursor: true })
+            .on('pointerdown', () => this.sellAllCattle());
+            
         this.ranchContainer.add(harvestAllBtn);
+        this.ranchContainer.add(sellCattleBtn);
     }
     
     // Create individual grid cells
@@ -1141,6 +1160,104 @@ if (typeof window.RanchScene === 'undefined') {
                 child.setPosition(gridX, gridY + totalHeight/2 + 40);
             }
         });
+    }
+    
+    // Method to sell all cattle
+    sellAllCattle() {
+        if (!playerData.cattle || playerData.cattle.length === 0) {
+            showNotification('No cattle to sell!', 'error');
+            return;
+        }
+        
+        // Calculate total sale price based on market conditions and cattle stats
+        const marketPrice = playerData.resources && playerData.resources.cattlePrice 
+            ? playerData.resources.cattlePrice 
+            : 50; // Default price if not set
+            
+        let totalSaleAmount = 0;
+        let cattleCount = playerData.cattle.length;
+        
+        // Calculate total value of all cattle
+        playerData.cattle.forEach(cattle => {
+            // Base value determined by cattle stats (speed is the primary value driver)
+            const baseValue = cattle.speed * 10;
+            totalSaleAmount += baseValue;
+        });
+        
+        // Apply market conditions (could be adjusted by game events/economy)
+        const finalAmount = Math.floor(totalSaleAmount * (marketPrice / 50));
+        
+        // Add to player's balance
+        playerData.cattleBalance += finalAmount;
+        
+        // Clear cattle array
+        playerData.cattle = [];
+        
+        // Remove all cattle sprites from the scene
+        if (this.cattle && this.cattle.length > 0) {
+            // Create a copy of the array to avoid modification during iteration
+            const cattleToRemove = [...this.cattle];
+            
+            cattleToRemove.forEach(cattleSprite => {
+                // Add selling animation with staggered timing for visual appeal
+                this.tweens.add({
+                    targets: cattleSprite,
+                    alpha: 0,
+                    y: '-=50',
+                    duration: 500,
+                    ease: 'Power2',
+                    delay: Math.random() * 300, // Stagger effect
+                    onComplete: () => {
+                        // Destroy the sprite
+                        cattleSprite.destroy();
+                    }
+                });
+            });
+            
+            // Clear the cattle arrays
+            this.cattle = [];
+            this.cattleMilkTimers = [];
+        }
+        
+        // Show celebration notification
+        showNotification(`Sold ${cattleCount} cattle for ${finalAmount} $CATTLE!`, 'success');
+        
+        // Create money animation in the center of the screen
+        const x = this.scale.width / 2;
+        const y = this.scale.height / 2;
+        
+        const moneyText = this.add.text(x, y, `+${finalAmount}`, {
+            fontFamily: 'Anta',
+            fontSize: '36px',
+            color: '#00ff00',
+            stroke: '#000000',
+            strokeThickness: 4
+        }).setOrigin(0.5);
+        
+        // Add glow effect to money text
+        if (typeof window.addTextGlow === 'function') {
+            window.addTextGlow(moneyText, '#00ffff', 8);
+        }
+        
+        // Create particle effect for selling if available
+        if (typeof window.createRaceWinParticleEffect === 'function') {
+            window.createRaceWinParticleEffect(this, x, y);
+        }
+        
+        this.tweens.add({
+            targets: moneyText,
+            y: '-=100',
+            alpha: { from: 1, to: 0 },
+            duration: 2000,
+            ease: 'Power2',
+            onComplete: () => {
+                moneyText.destroy();
+            }
+        });
+        
+        // Update UI
+        updateCattleInventory();
+        updateUI();
     }
 } // End of RanchScene class
 
