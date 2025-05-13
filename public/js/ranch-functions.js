@@ -13,6 +13,70 @@ let ranchGrid = {
     initialized: false
 };
 
+// Crop types with different properties
+const cropTypes = {
+    wheat: {
+        name: "Wheat",
+        growthTime: 120000, // 2 minutes
+        waterBoost: 1.5,    // Growth boost from watering
+        harvestReward: { hay: 15, cattle: 1 },
+        weatherEffects: {
+            sunny: 1.2,     // 20% boost in sunny weather
+            rainy: 1.3,     // 30% boost in rainy weather
+            stormy: 0.8     // 20% penalty in stormy weather
+        },
+        icon: '🌾'
+    },
+    corn: {
+        name: "Corn",
+        growthTime: 180000, // 3 minutes
+        waterBoost: 1.4,    // Growth boost from watering
+        harvestReward: { hay: 25, cattle: 2 },
+        weatherEffects: {
+            sunny: 1.4,     // 40% boost in sunny weather
+            rainy: 1.1,     // 10% boost in rainy weather
+            stormy: 0.6     // 40% penalty in stormy weather
+        },
+        icon: '🌽'
+    },
+    cactus: {
+        name: "Cactus",
+        growthTime: 300000, // 5 minutes
+        waterBoost: 1.2,    // Less boost from watering (desert plant)
+        harvestReward: { hay: 30, cattle: 3, water: 5 },
+        weatherEffects: {
+            sunny: 1.5,     // 50% boost in sunny weather
+            rainy: 0.9,     // 10% penalty in rainy weather
+            stormy: 0.7     // 30% penalty in stormy weather
+        },
+        icon: '🌵'
+    }
+};
+
+// Weather system
+let weatherSystem = {
+    currentWeather: 'sunny', // Default weather
+    weatherStartTime: Date.now(),
+    weatherDuration: 300000, // 5 minutes per weather cycle
+    effects: {
+        sunny: {
+            name: "Sunny",
+            description: "Perfect for sunlight-loving crops",
+            icon: '☀️'
+        },
+        rainy: {
+            name: "Rainy",
+            description: "Great for water-needing crops",
+            icon: '🌧️'
+        },
+        stormy: {
+            name: "Stormy",
+            description: "Crops grow slower, be careful!",
+            icon: '⛈️'
+        }
+    }
+};
+
 // Initialize the ranch grid
 function initRanchGrid() {
     try {
@@ -194,9 +258,15 @@ function interactWithRanchCell(cellIndex) {
 }
 
 // Plant crops in a specific cell
-function plantRanchCell(cellIndex) {
+function plantRanchCell(cellIndex, cropType = 'wheat') {
     try {
         if (!ranchGrid.initialized) return;
+        
+        // Validate crop type
+        if (!cropTypes[cropType]) {
+            console.error('Invalid crop type:', cropType);
+            cropType = 'wheat'; // Fallback to wheat
+        }
         
         const cell = ranchGrid.cells[cellIndex];
         if (cell.state !== 'empty') return;
@@ -206,22 +276,43 @@ function plantRanchCell(cellIndex) {
         
         const player = window.gameState.player;
         
-        // Planting costs 5 hay
-        if (player.hay < 5) {
+        // Different crops have different planting costs
+        const plantingCosts = {
+            wheat: { hay: 5 },
+            corn: { hay: 10 },
+            cactus: { hay: 15, water: 5 }
+        };
+        
+        const cost = plantingCosts[cropType];
+        
+        // Check if player has enough resources
+        let missingResource = null;
+        if (player.hay < (cost.hay || 0)) missingResource = 'hay';
+        if (cost.water && player.water < cost.water) missingResource = 'water';
+        
+        if (missingResource) {
             if (window.gameManager && window.gameManager.showNotification) {
-                window.gameManager.showNotification('Not enough hay to plant!', 'error');
+                window.gameManager.showNotification(`Not enough ${missingResource} to plant ${cropTypes[cropType].name}!`, 'error');
             }
             return;
         }
         
         // Deduct resources
-        player.hay -= 5;
+        player.hay -= (cost.hay || 0);
+        if (cost.water) player.water -= cost.water;
         
         // Update cell state
         cell.state = 'planted';
-        cell.crop = 'wheat';
+        cell.crop = cropType;
         cell.planted = Date.now();
         cell.growthStage = 0;
+        cell.lastWeather = weatherSystem.currentWeather; // Track weather at planting time
+        
+        // Track crop planting statistics
+        if (!player.stats) player.stats = {};
+        if (!player.stats.cropsPlanted) player.stats = {...player.stats, cropsPlanted: {}};
+        if (!player.stats.cropsPlanted[cropType]) player.stats.cropsPlanted[cropType] = 0;
+        player.stats.cropsPlanted[cropType]++;
         
         // Start growth process
         startGrowthProcess(cellIndex);
@@ -231,10 +322,15 @@ function plantRanchCell(cellIndex) {
         
         // Notify player
         if (window.gameManager && window.gameManager.showNotification) {
-            window.gameManager.showNotification('Crops planted!', 'success');
+            window.gameManager.showNotification(`${cropTypes[cropType].name} planted! ${weatherSystem.effects[weatherSystem.currentWeather].icon}`, 'success');
         }
         
-        console.log('Planted cell', cellIndex);
+        console.log(`Planted ${cropType} in cell ${cellIndex} during ${weatherSystem.currentWeather} weather`);
+        
+        // Save game after planting
+        if (window.saveGame) {
+            window.saveGame();
+        }
     } catch (err) {
         console.error('Error in plantRanchCell:', err);
         if (window.gameManager && window.gameManager.showNotification) {

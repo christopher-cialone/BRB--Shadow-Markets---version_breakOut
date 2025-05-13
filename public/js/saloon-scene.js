@@ -263,15 +263,41 @@ class SaloonScene extends Phaser.Scene {
         
         returnButton.on('pointerdown', () => {
             // Switch back to town scene
-            if (window.gameManager && window.gameManager.switchScene) {
-                window.gameManager.switchScene('main-scene');
-            } else if (window.switchScene) {
-                // Direct call to global switchScene function
-                window.switchScene('main-scene');
-            } else {
-                console.error('Cannot find switchScene function');
-                // Fallback to direct scene transition
+            try {
+                console.log("Return to town button clicked");
+                
+                // Try to use the original game.js switchScene function first
+                if (typeof window.switchScene === 'function') {
+                    window.switchScene('ranch');
+                    return;
+                }
+                
+                // Fall back to gameManager if available
+                if (window.gameManager && typeof window.gameManager.switchScene === 'function') {
+                    window.gameManager.switchScene('main-scene');
+                    return;
+                }
+                
+                // Last resort - direct Phaser scene transition
+                console.log("Using direct scene transition");
                 this.scene.start('MainScene');
+                
+                // Also try to update the UI (in case we're in the refactored version)
+                const mainMenu = document.getElementById('main-menu');
+                const saloonUI = document.getElementById('saloon-ui');
+                if (mainMenu && saloonUI) {
+                    saloonUI.classList.add('hidden');
+                    mainMenu.classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error("Error in Return to Town button:", err);
+                
+                // Emergency fallback - just try to reset to the main scene
+                try {
+                    this.scene.start('MainScene');
+                } catch (e) {
+                    console.error("Critical navigation failure:", e);
+                }
             }
         });
     }
