@@ -38,9 +38,14 @@
     
     /* UI component colors */
     --ui-bg: rgba(18, 12, 22, 0.85);   /* UI background with transparency */
-    --ui-border: rgba(200, 100, 100, 0.3); /* Subtle border with desert tint */
-    --ui-element-bg: rgba(30, 20, 30, 0.7); /* Element background */
-    --ui-element-active: rgba(50, 30, 45, 0.8); /* Active element state */
+    --ui-border: rgba(255, 68, 204, 0.5); /* Neon pink border */
+    --ui-element-bg: rgba(30, 20, 30, 0.8); /* Element background */
+    --ui-element-active: rgba(106, 44, 160, 0.9); /* Active element state */
+    
+    /* Neon glow effects */
+    --pink-glow: 0 0 10px #ff44cc, 0 0 20px rgba(255, 68, 204, 0.5);
+    --cyan-glow: 0 0 10px #00ffff, 0 0 20px rgba(0, 255, 255, 0.5);
+    --purple-glow: 0 0 10px #6a2ca0, 0 0 20px rgba(106, 44, 160, 0.5);
     
     /* Functional colors */
     --ui-success: #00cc99;             /* Success green */
@@ -311,15 +316,18 @@ body {
 .primary-button {
     background-color: var(--primary-color);
     color: white;
-    border: 1px solid var(--primary-light);
+    border: 2px solid var(--accent-color);
     background-image: linear-gradient(45deg, var(--primary-color), var(--primary-light));
+    box-shadow: var(--purple-glow);
+    text-shadow: 0 0 5px var(--accent-color);
 }
 
 .primary-button:hover {
     background-image: linear-gradient(45deg, var(--primary-light), var(--primary-color));
     transform: translateY(-2px);
-    box-shadow: var(--shadow-neon-pink);
-    text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+    box-shadow: var(--pink-glow);
+    text-shadow: 0 0 8px var(--accent-color);
+    border-color: var(--accent-light);
 }
 
 .primary-button:active {
@@ -329,15 +337,18 @@ body {
 .secondary-button {
     background-color: var(--secondary-dark);
     color: white;
-    border: 1px solid var(--secondary-color);
+    border: 2px solid var(--secondary-color);
     background-image: linear-gradient(45deg, var(--secondary-dark), var(--secondary-color));
+    box-shadow: var(--cyan-glow);
+    text-shadow: 0 0 5px var(--secondary-color);
 }
 
 .secondary-button:hover {
     background-image: linear-gradient(45deg, var(--secondary-color), var(--secondary-dark));
     transform: translateY(-2px);
-    box-shadow: var(--shadow-neon-cyan);
-    text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+    box-shadow: var(--cyan-glow), 0 0 25px rgba(0, 255, 255, 0.4);
+    text-shadow: 0 0 8px var(--secondary-light);
+    border-color: var(--secondary-light);
 }
 
 .secondary-button:active {
