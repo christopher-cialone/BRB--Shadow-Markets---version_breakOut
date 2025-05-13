@@ -13,6 +13,10 @@ let playerData = {
     barnCapacity: 100,
     cattle: [],
     potionCollection: [],
+    // Added progression system - Level and XP
+    level: 1,
+    xp: 0,
+    xpToNextLevel: 100,
     stats: {
         racesWon: 0,
         racesLost: 0,
@@ -22,12 +26,234 @@ let playerData = {
         totalBurned: 0,
         plantsHarvested: 0,
         potionsDistilled: 0
+    },
+    // Added achievements system
+    achievements: {
+        farmer: { 
+            name: "Farmer", 
+            description: "Harvest 10 crops", 
+            requirement: 10, 
+            current: 0, 
+            reward: 100, 
+            unlocked: false 
+        },
+        alchemist: { 
+            name: "Alchemist", 
+            description: "Distill 5 potions", 
+            requirement: 5, 
+            current: 0, 
+            reward: 100, 
+            unlocked: false 
+        },
+        gambler: { 
+            name: "Gambler", 
+            description: "Win 3 races", 
+            requirement: 3, 
+            current: 0, 
+            reward: 100, 
+            unlocked: false 
+        }
     }
 };
 
 let marketPrice = 1.0;
 let currentScene = 'main-menu';
 let wagerAmount = 10;
+
+// Function to add XP and handle level-ups
+function addPlayerXP(amount) {
+    if (!amount || amount <= 0) return;
+    
+    // Add XP
+    playerData.xp += amount;
+    console.log(`Added ${amount} XP! Total: ${playerData.xp}`);
+    
+    // Check for level up
+    if (playerData.xp >= playerData.xpToNextLevel) {
+        levelUpPlayer();
+    }
+    
+    // Update UI if available
+    updateXPDisplay();
+}
+
+// Function to handle player level up
+function levelUpPlayer() {
+    // Level up!
+    playerData.level += 1;
+    
+    // Calculate excess XP for next level
+    const excessXP = playerData.xp - playerData.xpToNextLevel;
+    playerData.xp = excessXP;
+    
+    // Increase XP required for next level
+    playerData.xpToNextLevel = playerData.level * 100;
+    
+    // Reward for leveling up
+    playerData.cattleBalance += 50;
+    
+    // Increase multipliers
+    if (window.ranchGrid && typeof ranchGrid.multiplier !== 'undefined') {
+        ranchGrid.multiplier += 0.1;
+    }
+    
+    if (window.shadowGrid && typeof shadowGrid.multiplier !== 'undefined') {
+        shadowGrid.multiplier += 0.1;
+    }
+    
+    // Show notification
+    showNotification(`Level Up! You reached level ${playerData.level}! +50 $CATTLE`, 'success');
+    
+    // Play level up sound if available
+    playSoundEffect('levelup');
+    
+    // Update UI
+    updateAllDisplays();
+}
+
+// Function to update XP display
+function updateXPDisplay() {
+    const xpValue = document.getElementById('xp-value');
+    const xpProgress = document.getElementById('xp-progress-bar');
+    const levelValue = document.getElementById('level-value');
+    
+    if (xpValue) {
+        xpValue.textContent = `${playerData.xp} / ${playerData.xpToNextLevel}`;
+    }
+    
+    if (xpProgress) {
+        const progressPercent = (playerData.xp / playerData.xpToNextLevel) * 100;
+        xpProgress.style.width = `${progressPercent}%`;
+    }
+    
+    if (levelValue) {
+        levelValue.textContent = playerData.level;
+    }
+}
+
+// Function to check and update achievements
+function checkAchievements() {
+    // Check Farmer Achievement
+    if (!playerData.achievements.farmer.unlocked && 
+        playerData.stats.plantsHarvested >= playerData.achievements.farmer.requirement) {
+        unlockAchievement('farmer');
+    }
+    
+    // Check Alchemist Achievement
+    if (!playerData.achievements.alchemist.unlocked && 
+        playerData.stats.potionsDistilled >= playerData.achievements.alchemist.requirement) {
+        unlockAchievement('alchemist');
+    }
+    
+    // Check Gambler Achievement
+    if (!playerData.achievements.gambler.unlocked && 
+        playerData.stats.racesWon >= playerData.achievements.gambler.requirement) {
+        unlockAchievement('gambler');
+    }
+}
+
+// Function to unlock achievement and give rewards
+function unlockAchievement(achievementId) {
+    if (!playerData.achievements[achievementId]) {
+        console.error(`Achievement ${achievementId} does not exist`);
+        return;
+    }
+    
+    const achievement = playerData.achievements[achievementId];
+    
+    // Already unlocked
+    if (achievement.unlocked) return;
+    
+    // Unlock the achievement
+    achievement.unlocked = true;
+    
+    // Give reward
+    playerData.cattleBalance += achievement.reward;
+    
+    // Show notification
+    showNotification(`Achievement Unlocked: ${achievement.name}! +${achievement.reward} $CATTLE`, 'achievement');
+    
+    // Play achievement sound
+    playSoundEffect('achievement');
+    
+    // Update UI
+    updateAchievementsDisplay();
+    updateAllDisplays();
+}
+
+// Function to update achievements display
+function updateAchievementsDisplay() {
+    const achievementsContainer = document.getElementById('achievements-container');
+    
+    if (!achievementsContainer) return;
+    
+    // Clear existing achievements
+    achievementsContainer.innerHTML = '';
+    
+    // Add each achievement
+    for (const id in playerData.achievements) {
+        const achievement = playerData.achievements[id];
+        
+        // Create achievement element
+        const element = document.createElement('div');
+        element.className = `achievement ${achievement.unlocked ? 'unlocked' : 'locked'}`;
+        
+        // Create title
+        const title = document.createElement('div');
+        title.className = 'achievement-title';
+        title.textContent = achievement.name;
+        
+        // Create description
+        const description = document.createElement('div');
+        description.className = 'achievement-description';
+        description.textContent = achievement.description;
+        
+        // Create progress
+        const progress = document.createElement('div');
+        progress.className = 'achievement-progress';
+        progress.textContent = `${achievement.current}/${achievement.requirement}`;
+        
+        // Create reward
+        const reward = document.createElement('div');
+        reward.className = 'achievement-reward';
+        reward.textContent = `Reward: ${achievement.reward} $CATTLE`;
+        
+        // Append children
+        element.appendChild(title);
+        element.appendChild(description);
+        element.appendChild(progress);
+        element.appendChild(reward);
+        
+        // Add to container
+        achievementsContainer.appendChild(element);
+    }
+}
+
+// Function to play sound effects
+function playSoundEffect(soundName) {
+    // Check if we're in a Phaser scene
+    const currentPhaserScene = window.phaserGame && window.phaserGame.scene.getScenes(true)[0];
+    
+    if (currentPhaserScene && currentPhaserScene.sound && currentPhaserScene.sound.play) {
+        // Use Phaser's sound system
+        try {
+            currentPhaserScene.sound.play(soundName);
+            console.log(`Playing sound: ${soundName} via Phaser`);
+        } catch (err) {
+            console.error(`Error playing sound ${soundName} via Phaser:`, err);
+        }
+    } else {
+        // Use HTML5 Audio as fallback
+        try {
+            const audio = new Audio(`img/${soundName}.mp3`);
+            audio.volume = 0.5; // 50% volume
+            audio.play().catch(err => console.error('Audio play error:', err));
+            console.log(`Playing sound: ${soundName} via HTML Audio`);
+        } catch (err) {
+            console.error(`Error playing sound ${soundName} via HTML Audio:`, err);
+        }
+    }
+}
 
 // Grid state for ranch and shadow market
 const ranchGrid = {
@@ -2753,12 +2979,40 @@ socket.on('card-drawn', data => {
     }
 });
 
+// Process race win, handle XP and achievements
+function processRaceWin(winnings) {
+    // Only process if player actually won
+    if (winnings <= 0) return;
+    
+    // Award XP for winning races (30 XP per race won)
+    addPlayerXP(30);
+    
+    // Update player stats
+    playerData.stats.racesWon = (playerData.stats.racesWon || 0) + 1;
+    
+    // Update achievement progress
+    if (playerData.achievements.gambler) {
+        playerData.achievements.gambler.current = playerData.stats.racesWon;
+    }
+    
+    // Check achievements
+    checkAchievements();
+    
+    // Play win sound
+    playSoundEffect('win');
+}
+
 socket.on('race-finished', data => {
     console.log('Race finished event received:', data);
     
     // Update player data if present
     if (data.player) {
         playerData = data.player;
+    }
+    
+    // Process race win if player won
+    if (data.winnings > 0) {
+        processRaceWin(data.winnings);
     }
     
     // Disable draw card button
@@ -3803,6 +4057,20 @@ function harvestRanchCell(cellIndex) {
     playerData.water += waterReward;
     playerData.stats.plantsHarvested = (playerData.stats.plantsHarvested || 0) + 1;
     
+    // Play harvest sound effect
+    playSoundEffect('harvest');
+    
+    // Add XP for harvesting (10 XP per crop harvested)
+    addPlayerXP(10);
+    
+    // Update achievement progress
+    if (playerData.achievements.farmer) {
+        playerData.achievements.farmer.current = playerData.stats.plantsHarvested;
+    }
+    
+    // Check if any achievements were unlocked
+    checkAchievements();
+    
     // Reset cell
     cell.state = 'empty';
     cell.growthStage = 0;
@@ -3908,6 +4176,20 @@ function distillShadowCell(cellIndex) {
     playerData.ether = (playerData.ether || 0) + etherReward;
     playerData.cattleBalance += cattleReward;
     playerData.stats.potionsDistilled = (playerData.stats.potionsDistilled || 0) + 1;
+    
+    // Play distill sound effect
+    playSoundEffect('distill');
+    
+    // Add XP for distilling (20 XP per potion distilled)
+    addPlayerXP(20);
+    
+    // Update achievement progress
+    if (playerData.achievements.alchemist) {
+        playerData.achievements.alchemist.current = playerData.stats.potionsDistilled;
+    }
+    
+    // Check if any achievements were unlocked
+    checkAchievements();
     
     // Create a distilled potion in the inventory with potency
     if (!playerData.potionCollection) {
