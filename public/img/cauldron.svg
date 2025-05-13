@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="60" height="60" xmlns="http://www.w3.org/2000/svg">
+  <!-- Digital Cauldron for potion crafting -->
+  
+  <!-- Cauldron base -->
+  <ellipse cx="30" cy="45" rx="20" ry="7" fill="#333333" />
+  
+  <!-- Cauldron body -->
+  <path d="M15 45 C15 25 45 25 45 45" fill="#666666" />
+  <ellipse cx="30" cy="25" rx="15" ry="5" fill="#666666" />
+  
+  <!-- Cauldron rim -->
+  <ellipse cx="30" cy="25" rx="15" ry="5" fill="none" stroke="#999999" stroke-width="1" />
+  
+  <!-- Cauldron legs -->
+  <rect x="13" y="45" width="3" height="10" fill="#333333" />
+  <rect x="44" y="45" width="3" height="10" fill="#333333" />
+  
+  <!-- Potion liquid -->
+  <ellipse cx="30" cy="25" rx="12" ry="3" fill="#8a2be2">
+    <animate attributeName="fill" values="#8a2be2;#9400d3;#8a2be2" dur="4s" repeatCount="indefinite" />
+  </ellipse>
+  
+  <!-- Bubbles -->
+  <circle cx="25" cy="22" r="1" fill="#ff00ff">
+    <animate attributeName="cy" values="22;15;22" dur="3s" repeatCount="indefinite" />
+    <animate attributeName="opacity" values="1;0;1" dur="3s" repeatCount="indefinite" />
+  </circle>
+  <circle cx="30" cy="23" r="1.5" fill="#ff00ff">
+    <animate attributeName="cy" values="23;13;23" dur="4s" repeatCount="indefinite" />
+    <animate attributeName="opacity" values="1;0;1" dur="4s" repeatCount="indefinite" />
+  </circle>
+  <circle cx="35" cy="21" r="1" fill="#ff00ff">
+    <animate attributeName="cy" values="21;16;21" dur="3.5s" repeatCount="indefinite" />
+    <animate attributeName="opacity" values="1;0;1" dur="3.5s" repeatCount="indefinite" />
+  </circle>
+  
+  <!-- Digital circuits on cauldron -->
+  <path d="M17 30 L23 30 L23 35 L28 35 L28 40 L17 40 Z" fill="none" stroke="#00ffff" stroke-width="0.5" />
+  <path d="M43 30 L37 30 L37 35 L32 35 L32 40 L43 40 Z" fill="none" stroke="#00ffff" stroke-width="0.5" />
+  
+  <!-- Glowing runes -->
+  <text x="22" y="33" font-family="monospace" font-size="4" fill="#00ffff">01</text>
+  <text x="35" y="33" font-family="monospace" font-size="4" fill="#00ffff">10</text>
+  <text x="28" y="38" font-family="monospace" font-size="4" fill="#ff00ff">FF</text>
+  
+  <!-- Energy field -->
+  <ellipse cx="30" cy="18" rx="8" ry="2" fill="#ffffff" opacity="0.3">
+    <animate attributeName="opacity" values="0.1;0.4;0.1" dur="2s" repeatCount="indefinite" />
+  </ellipse>
+</svg>

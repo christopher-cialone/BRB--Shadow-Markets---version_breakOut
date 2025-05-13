@@ -10,9 +10,40 @@
   <line x1="10" y1="45" x2="70" y2="45" stroke="#5e2605" stroke-width="2" />
   <line x1="10" y1="60" x2="70" y2="60" stroke="#5e2605" stroke-width="2" />
   
-  <!-- Small growing wheat stalks -->
-  <path d="M20 15 L20 10 M25 15 L27 10 M30 15 L30 8" stroke="#9acd32" stroke-width="2" />
-  <path d="M40 30 L40 25 M45 30 L47 25 M50 30 L50 23" stroke="#9acd32" stroke-width="2" />
-  <path d="M20 45 L20 40 M25 45 L27 40 M30 45 L30 38" stroke="#9acd32" stroke-width="2" />
-  <path d="M40 60 L40 55 M45 60 L47 55 M50 60 L50 53" stroke="#9acd32" stroke-width="2" />
+  <!-- Small plants growing -->
+  <line x1="20" y1="15" x2="20" y2="10" stroke="#9acd32" stroke-width="1" />
+  <path d="M19 10 L20 8 L21 10" fill="#9acd32" />
+  
+  <line x1="40" y1="15" x2="40" y2="9" stroke="#9acd32" stroke-width="1" />
+  <path d="M39 9 L40 6 L41 9" fill="#9acd32" />
+  
+  <line x1="60" y1="15" x2="60" y2="10" stroke="#9acd32" stroke-width="1" />
+  <path d="M59 10 L60 7 L61 10" fill="#9acd32" />
+  
+  <line x1="20" y1="30" x2="20" y2="25" stroke="#9acd32" stroke-width="1" />
+  <path d="M19 25 L20 22 L21 25" fill="#9acd32" />
+  
+  <line x1="40" y1="30" x2="40" y2="24" stroke="#9acd32" stroke-width="1" />
+  <path d="M39 24 L40 21 L41 24" fill="#9acd32" />
+  
+  <line x1="60" y1="30" x2="60" y2="26" stroke="#9acd32" stroke-width="1" />
+  <path d="M59 26 L60 22 L61 26" fill="#9acd32" />
+  
+  <line x1="20" y1="45" x2="20" y2="40" stroke="#9acd32" stroke-width="1" />
+  <path d="M19 40 L20 37 L21 40" fill="#9acd32" />
+  
+  <line x1="40" y1="45" x2="40" y2="39" stroke="#9acd32" stroke-width="1" />
+  <path d="M39 39 L40 36 L41 39" fill="#9acd32" />
+  
+  <line x1="60" y1="45" x2="60" y2="40" stroke="#9acd32" stroke-width="1" />
+  <path d="M59 40 L60 37 L61 40" fill="#9acd32" />
+  
+  <line x1="20" y1="60" x2="20" y2="55" stroke="#9acd32" stroke-width="1" />
+  <path d="M19 55 L20 52 L21 55" fill="#9acd32" />
+  
+  <line x1="40" y1="60" x2="40" y2="54" stroke="#9acd32" stroke-width="1" />
+  <path d="M39 54 L40 51 L41 54" fill="#9acd32" />
+  
+  <line x1="60" y1="60" x2="60" y2="56" stroke="#9acd32" stroke-width="1" />
+  <path d="M59 56 L60 52 L61 56" fill="#9acd32" />
 </svg>

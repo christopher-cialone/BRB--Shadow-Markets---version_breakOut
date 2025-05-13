@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="60" height="60" xmlns="http://www.w3.org/2000/svg">
+  <!-- Crystal node for the Ether Range -->
+  
+  <!-- Crystal base -->
+  <polygon points="30,5 45,20 40,50 20,50 15,20" fill="#9400d3" opacity="0.8" />
+  
+  <!-- Crystal inner glow -->
+  <polygon points="30,10 40,22 36,45 24,45 20,22" fill="#ff00ff" opacity="0.6">
+    <animate attributeName="opacity" values="0.4;0.8;0.4" dur="3s" repeatCount="indefinite" />
+  </polygon>
+  
+  <!-- Crystal core -->
+  <polygon points="30,15 35,25 32,40 28,40 25,25" fill="#ffffff" opacity="0.7">
+    <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite" />
+  </polygon>
+  
+  <!-- Energy pulses -->
+  <circle cx="30" cy="30" r="20" stroke="#00ffff" stroke-width="1" fill="none" opacity="0.3">
+    <animate attributeName="r" values="15;25;15" dur="4s" repeatCount="indefinite" />
+    <animate attributeName="opacity" values="0.1;0.5;0.1" dur="4s" repeatCount="indefinite" />
+  </circle>
+  
+  <circle cx="30" cy="30" r="10" stroke="#ff00ff" stroke-width="1" fill="none" opacity="0.3">
+    <animate attributeName="r" values="5;15;5" dur="3s" repeatCount="indefinite" />
+    <animate attributeName="opacity" values="0.1;0.5;0.1" dur="3s" repeatCount="indefinite" />
+  </circle>
+  
+  <!-- Digital bits -->
+  <rect x="28" y="12" width="1" height="1" fill="#00ffff">
+    <animate attributeName="opacity" values="0;1;0" dur="1s" repeatCount="indefinite" />
+  </rect>
+  <rect x="32" y="18" width="1" height="1" fill="#00ffff">
+    <animate attributeName="opacity" values="0;1;0" dur="1.3s" repeatCount="indefinite" />
+  </rect>
+  <rect x="26" y="25" width="1" height="1" fill="#00ffff">
+    <animate attributeName="opacity" values="0;1;0" dur="0.7s" repeatCount="indefinite" />
+  </rect>
+  <rect x="33" y="30" width="1" height="1" fill="#00ffff">
+    <animate attributeName="opacity" values="0;1;0" dur="0.9s" repeatCount="indefinite" />
+  </rect>
+  <rect x="28" y="35" width="1" height="1" fill="#00ffff">
+    <animate attributeName="opacity" values="0;1;0" dur="1.2s" repeatCount="indefinite" />
+  </rect>
+</svg>
