@@ -42,32 +42,79 @@ document.addEventListener('DOMContentLoaded', function() {
             screen.classList.add('hidden');
         });
         
-        // Show the requested screen
-        let screenElement;
-        switch(sceneName) {
-            case 'main-menu':
-                screenElement = document.getElementById('main-menu');
-                break;
-            case 'ranch':
-                screenElement = document.getElementById('ranch-ui');
-                break;
-            case 'saloon':
-                screenElement = document.getElementById('saloon-ui');
-                break;
-            case 'night':
-                screenElement = document.getElementById('night-ui');
-                break;
-            case 'profile':
-                screenElement = document.getElementById('profile-ui');
-                break;
-            default:
-                console.error(`Unknown scene: ${sceneName}`);
-                return;
+        // Hide Phaser game container initially
+        const phaserContainer = document.getElementById('phaser-game-container');
+        if (phaserContainer) {
+            phaserContainer.style.display = 'none';
         }
         
-        if (screenElement) {
-            screenElement.classList.remove('hidden');
-            console.log(`UI updated for scene: ${sceneName}`);
+        // For ranch and night scenes, use the Phaser implementation if available
+        if ((sceneName === 'ranch' || sceneName === 'night') && 
+            typeof window.startPhaserScene === 'function') {
+            
+            // Map scene name to Phaser scene name
+            const phaserSceneName = sceneName === 'ranch' ? 'RanchScene' : 'NightScene';
+            
+            // Start the Phaser scene
+            window.startPhaserScene(phaserSceneName);
+            
+            // Show the Phaser container
+            if (phaserContainer) {
+                phaserContainer.style.display = 'block';
+            }
+            
+            console.log(`Started Phaser ${phaserSceneName}`);
+            
+            // Also show the HTML UI for data display purposes
+            // This will be positioned around the Phaser canvas
+            let htmlUI;
+            if (sceneName === 'ranch') {
+                htmlUI = document.getElementById('ranch-ui');
+            } else {
+                htmlUI = document.getElementById('night-ui');
+            }
+            
+            if (htmlUI) {
+                htmlUI.classList.remove('hidden');
+                // Make sure the UI doesn't block the Phaser canvas interaction
+                htmlUI.style.pointerEvents = 'none';
+                
+                // Allow interaction only with specific UI elements (stats, buttons, etc.)
+                const interactiveElements = htmlUI.querySelectorAll('.stats-panel, .resource-display');
+                interactiveElements.forEach(el => {
+                    el.style.pointerEvents = 'auto';
+                });
+            }
+        } else {
+            // For other scenes, use the traditional HTML UI
+            let screenElement;
+            switch(sceneName) {
+                case 'main-menu':
+                    screenElement = document.getElementById('main-menu');
+                    break;
+                case 'ranch':
+                    screenElement = document.getElementById('ranch-ui');
+                    break;
+                case 'saloon':
+                    screenElement = document.getElementById('saloon-ui');
+                    break;
+                case 'night':
+                    screenElement = document.getElementById('night-ui');
+                    break;
+                case 'profile':
+                    screenElement = document.getElementById('profile-ui');
+                    break;
+                default:
+                    console.error(`Unknown scene: ${sceneName}`);
+                    return;
+            }
+            
+            if (screenElement) {
+                screenElement.classList.remove('hidden');
+                // Restore full interaction with the UI
+                screenElement.style.pointerEvents = 'auto';
+                console.log(`UI updated for scene: ${sceneName}`);
+            }
         }
     }
     
