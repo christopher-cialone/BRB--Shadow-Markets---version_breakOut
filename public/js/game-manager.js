@@ -46,48 +46,63 @@ const uiElements = {
 function initializeGame() {
     if (gameInitialized) return;
     
-    // Create Phaser game configuration
-    const config = {
-        type: Phaser.AUTO,
-        width: 800,
-        height: 600,
-        parent: 'game-container',
-        pixelArt: true,
-        physics: {
-            default: 'arcade',
-            arcade: {
-                gravity: { y: 0 },
-                debug: false
-            }
-        },
-        scene: [
-            MainScene,
-            // SaloonScene is defined in its own file
-            EtherScene
-        ],
-        scale: {
-            mode: Phaser.Scale.FIT,
-            autoCenter: Phaser.Scale.CENTER_BOTH
+    try {
+        // Load saved game data if available
+        if (window.loadGameState) {
+            window.loadGameState();
         }
-    };
-    
-    // Initialize Phaser game
-    window.game = new Phaser.Game(config);
-    
-    // Store references to UI elements
-    uiElements.mainMenu = document.getElementById('main-menu');
-    uiElements.ranchUI = document.getElementById('ranch-ui');
-    uiElements.saloonUI = document.getElementById('saloon-ui');
-    uiElements.nightUI = document.getElementById('ether-ui');
-    uiElements.profileUI = document.getElementById('profile-ui');
-    
-    // Initialize UI event listeners
-    initializeUIListeners();
-    
-    // Mark as initialized
-    gameInitialized = true;
-    
-    console.log('Game Manager initialized');
+        
+        // Create Phaser game configuration
+        const config = {
+            type: Phaser.AUTO,
+            width: 800,
+            height: 600,
+            parent: 'game-container',
+            pixelArt: true,
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 0 },
+                    debug: false
+                }
+            },
+            scene: [
+                MainScene,
+                // SaloonScene is defined in its own file
+                EtherScene
+            ],
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH
+            }
+        };
+        
+        // Initialize Phaser game
+        window.game = new Phaser.Game(config);
+        
+        // Store references to UI elements
+        uiElements.mainMenu = document.getElementById('main-menu');
+        uiElements.ranchUI = document.getElementById('ranch-ui');
+        uiElements.saloonUI = document.getElementById('saloon-ui');
+        uiElements.nightUI = document.getElementById('ether-ui');
+        uiElements.profileUI = document.getElementById('profile-ui');
+        
+        // Initialize UI event listeners
+        initializeUIListeners();
+        
+        // Setup auto-save functionality
+        if (window.setupAutoSave) {
+            window.setupAutoSave(2); // Auto-save every 2 minutes
+        }
+        
+        // Mark as initialized
+        gameInitialized = true;
+        
+        console.log('Game Manager initialized');
+    } catch (err) {
+        console.error('Error initializing game:', err);
+        alert('There was a problem initializing the game. Please try refreshing the page.');
+    }
 }
 
 // Initialize UI event listeners

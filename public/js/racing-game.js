@@ -302,6 +302,11 @@ window.racingGame = {
             }));
         }
         
+        // Save game state after winning/losing
+        if (window.saveGameState) {
+            window.saveGameState();
+        }
+        
         // Auto reset after a delay
         setTimeout(() => this.resetRace(), 3000);
     },

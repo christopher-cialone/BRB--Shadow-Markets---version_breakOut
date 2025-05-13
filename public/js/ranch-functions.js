@@ -336,6 +336,11 @@ function harvestRanchCell(cellIndex) {
             window.gameManager.updateUI();
         }
         
+        // Save game progress
+        if (window.saveGameState) {
+            window.saveGameState();
+        }
+        
         console.log('Harvested cell', cellIndex);
     } catch (err) {
         console.error('Error in harvestRanchCell:', err);
