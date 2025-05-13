@@ -150,48 +150,61 @@ function handleWebSocketMessage(data) {
 
 // Initialize Socket.IO connection separate from WebSockets
 function connectToSocketIO() {
-    const socketIO = io();
-    
-    socketIO.on('connect', () => {
-        console.log('Connected to Socket.IO server');
+    try {
+        const socketIO = io();
         
-        // Initialize player with server
-        socketIO.emit('new-player', {
-            name: gameState.player.name,
-            characterType: gameState.player.characterType
+        socketIO.on('connect', () => {
+            console.log('Connected to Socket.IO server');
+            
+            // Initialize player with server
+            socketIO.emit('new-player', {
+                name: gameState.player.name,
+                characterType: gameState.player.characterType
+            });
         });
-    });
-    
-    socketIO.on('game-state', (data) => {
-        // Update player data from server
-        if (data.player) {
-            gameState.player = data.player;
+        
+        socketIO.on('game-state', (data) => {
+            // Update player data from server
+            if (data.player) {
+                gameState.player = data.player;
+            }
+            
+            // Update market price
+            if (data.marketPrice) {
+                gameState.marketPrice = data.marketPrice;
+            }
+            
+            // Notify current scene
+            const currentScene = game.scene.getScenes(true)[0];
+            if (currentScene && currentScene.handleGameStateUpdate) {
+                currentScene.handleGameStateUpdate(gameState);
+            }
+        });
+        
+        socketIO.on('error-message', (data) => {
+            console.error('Server error:', data.message);
+            
+            // Display error to user in current scene
+            const currentScene = game.scene.getScenes(true)[0];
+            if (currentScene && currentScene.showNotification) {
+                currentScene.showNotification(data.message, 'error');
+            }
+        });
+        
+        // Save Socket.IO instance for use in scenes
+        gameState.socketIO = socketIO;
+        
+        // Make socket available globally to fix compatibility with old code
+        if (typeof window !== 'undefined') {
+            window.socket = socketIO;
+            console.log("Socket.IO instance set as global window.socket");
         }
         
-        // Update market price
-        if (data.marketPrice) {
-            gameState.marketPrice = data.marketPrice;
-        }
-        
-        // Notify current scene
-        const currentScene = game.scene.getScenes(true)[0];
-        if (currentScene && currentScene.handleGameStateUpdate) {
-            currentScene.handleGameStateUpdate(gameState);
-        }
-    });
-    
-    socketIO.on('error-message', (data) => {
-        console.error('Server error:', data.message);
-        
-        // Display error to user in current scene
-        const currentScene = game.scene.getScenes(true)[0];
-        if (currentScene && currentScene.showNotification) {
-            currentScene.showNotification(data.message, 'error');
-        }
-    });
-    
-    // Save Socket.IO instance for use in scenes
-    gameState.socketIO = socketIO;
+        return socketIO;
+    } catch (err) {
+        console.error("Error initializing Socket.IO:", err);
+        return null;
+    }
 }
 
 // Initialize connections when the page loads

@@ -2085,17 +2085,51 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Start Game button
     addClickListener('start-game', () => {
+        console.log("Start Game button clicked");
+        
         // Get player name
         const playerNameInput = document.getElementById('player-name');
         playerData.name = playerNameInput ? (playerNameInput.value || 'Cowboy') : 'Cowboy';
         
-        // Connect to server
-        socket.emit('new-player', {
-            name: playerData.name,
-            archetype: playerData.archetype
-        });
+        // Connect to server using the available socket connection
+        try {
+            // Try the Socket.IO connection from this file first
+            if (typeof socket !== 'undefined' && socket) {
+                socket.emit('new-player', {
+                    name: playerData.name,
+                    archetype: playerData.archetype
+                });
+                console.log("Using direct socket variable");
+            } 
+            // Try window.io as fallback
+            else if (window.io && typeof io !== 'undefined') {
+                // Use existing socketIO connection from game-init.js if available
+                if (window.gameState && window.gameState.socketIO) {
+                    window.gameState.socketIO.emit('new-player', {
+                        name: playerData.name,
+                        archetype: playerData.archetype
+                    });
+                    console.log("Using existing Socket.IO connection");
+                } else {
+                    // Create a new Socket.IO connection if needed
+                    const socketIO = io();
+                    socketIO.emit('new-player', {
+                        name: playerData.name,
+                        archetype: playerData.archetype
+                    });
+                    console.log("Created new Socket.IO connection");
+                    
+                    // Store for future use
+                    if (window.gameState) {
+                        window.gameState.socketIO = socketIO;
+                    }
+                }
+            }
+        } catch (err) {
+            console.error("Error with socket connection:", err);
+        }
         
-        // Switch to ranch scene
+        // Switch to ranch scene regardless of socket status
         switchScene('ranch');
     });
     

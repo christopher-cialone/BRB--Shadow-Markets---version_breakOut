@@ -223,13 +223,35 @@ document.addEventListener('DOMContentLoaded', function() {
             playerData.name = playerNameInput.value || 'Cowboy';
         }
         
-        // Connect to server (if needed)
-        if (typeof socket !== 'undefined' && socket) {
-            socket.emit('new-player', {
-                name: playerData.name,
-                archetype: playerData.archetype
-            });
-        }
+        // Connect to server using the available socket connection
+        // Try the Socket.IO connection first
+        if (window.io && typeof io !== 'undefined') {
+            try {
+                // Use existing socketIO connection from game-init.js if available
+                if (window.gameState && window.gameState.socketIO) {
+                    window.gameState.socketIO.emit('new-player', {
+                        name: playerData.name,
+                        archetype: playerData.archetype
+                    });
+                    console.log("Using existing Socket.IO connection");
+                } else {
+                    // Create a new Socket.IO connection if needed
+                    const socketIO = io();
+                    socketIO.emit('new-player', {
+                        name: playerData.name,
+                        archetype: playerData.archetype
+                    });
+                    console.log("Created new Socket.IO connection");
+                    
+                    // Store for future use
+                    if (window.gameState) {
+                        window.gameState.socketIO = socketIO;
+                    }
+                }
+            } catch (err) {
+                console.error("Error with Socket.IO connection:", err);
+            }
+        } 
         
         // Switch to ranch scene
         switchScene('ranch');
