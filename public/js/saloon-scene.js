@@ -256,7 +256,7 @@ class SaloonScene extends Phaser.Scene {
                 scaleX: 1,
                 scaleY: 1,
                 alpha: 0.7,
-                duration: a few hundred,
+                duration: 300,
                 yoyo: false
             });
         });

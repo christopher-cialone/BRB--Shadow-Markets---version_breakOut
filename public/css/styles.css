@@ -403,6 +403,271 @@ body {
     border: 1px solid rgba(106, 44, 160, 0.3);
 }
 
+/* Racing game styles with cyberpunk/western theme */
+.race-tracks {
+    background: linear-gradient(135deg, rgba(58, 31, 46, 0.8) 0%, rgba(59, 46, 31, 0.8) 100%);
+    border: 2px solid var(--desert-brown);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    margin: 15px 0;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+.race-tracks::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--secondary-color), transparent);
+    animation: neonFlicker 4s infinite;
+}
+
+.race-lane {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.race-label {
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    margin-right: 15px;
+    text-shadow: 0 0 8px currentColor;
+}
+
+.race-label[data-suit="hearts"] {
+    color: var(--hearts-color);
+}
+
+.race-label[data-suit="diamonds"] {
+    color: var(--diamonds-color);
+}
+
+.race-label[data-suit="clubs"] {
+    color: var(--clubs-color);
+}
+
+.race-label[data-suit="spades"] {
+    color: var(--spades-color);
+}
+
+.race-track-bg {
+    flex: 1;
+    height: 20px;
+    background-color: rgba(20, 10, 20, 0.7);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--desert-brown);
+}
+
+.race-progress {
+    height: 100%;
+    width: 0;
+    border-radius: 10px;
+    transition: width 0.3s ease-out;
+    position: relative;
+    box-shadow: 0 0 10px currentColor;
+}
+
+.race-progress[data-suit="hearts"] {
+    background: linear-gradient(90deg, var(--hearts-color), #ff5f7f);
+}
+
+.race-progress[data-suit="diamonds"] {
+    background: linear-gradient(90deg, var(--diamonds-color), #ffcf5f);
+}
+
+.race-progress[data-suit="clubs"] {
+    background: linear-gradient(90deg, var(--clubs-color), #5fffaf);
+}
+
+.race-progress[data-suit="spades"] {
+    background: linear-gradient(90deg, var(--spades-color), #5fcfff);
+}
+
+.betting-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 20px;
+    padding: 15px;
+    background: rgba(30, 20, 30, 0.7);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--desert-brown);
+}
+
+.bet-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: rgba(20, 10, 20, 0.7);
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(139, 69, 19, 0.5);
+    transition: all var(--transition-medium);
+}
+
+.bet-option:hover {
+    border-color: var(--secondary-color);
+    box-shadow: var(--shadow-neon-cyan);
+}
+
+.bet-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-medium);
+    background: linear-gradient(135deg, #2a1a2e 0%, #3a1f2e 100%);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.bet-btn[data-suit="hearts"] {
+    color: var(--hearts-color);
+    text-shadow: 0 0 5px var(--hearts-color);
+}
+
+.bet-btn[data-suit="diamonds"] {
+    color: var(--diamonds-color);
+    text-shadow: 0 0 5px var(--diamonds-color);
+}
+
+.bet-btn[data-suit="clubs"] {
+    color: var(--clubs-color);
+    text-shadow: 0 0 5px var(--clubs-color);
+}
+
+.bet-btn[data-suit="spades"] {
+    color: var(--spades-color);
+    text-shadow: 0 0 5px var(--spades-color);
+}
+
+.bet-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 15px currentColor;
+}
+
+.bet-slider {
+    -webkit-appearance: none;
+    width: 120px;
+    height: 8px;
+    background: rgba(50, 30, 45, 0.8);
+    border-radius: 4px;
+    outline: none;
+    opacity: 0.7;
+    transition: opacity var(--transition-quick);
+}
+
+.bet-slider:hover {
+    opacity: 1;
+}
+
+.bet-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    background: var(--secondary-color);
+    box-shadow: 0 0 8px var(--secondary-color);
+}
+
+.bet-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    background: var(--secondary-color);
+    box-shadow: 0 0 8px var(--secondary-color);
+}
+
+.bet-amount {
+    color: var(--light-text);
+    font-family: var(--font-mono);
+    background: rgba(20, 10, 20, 0.7);
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    min-width: 30px;
+    text-align: center;
+}
+
+#start-race-btn, #reset-race-btn {
+    padding: 10px 20px;
+    margin-top: 15px;
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+    color: white;
+    border: 1px solid var(--primary-light);
+    border-radius: var(--radius-md);
+    font-family: var(--font-mono);
+    font-size: 16px;
+    cursor: pointer;
+    transition: all var(--transition-medium);
+}
+
+#start-race-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+    box-shadow: var(--shadow-neon-pink);
+    transform: translateY(-2px);
+}
+
+#reset-race-btn {
+    background: linear-gradient(135deg, var(--secondary-dark) 0%, var(--secondary-color) 100%);
+    border-color: var(--secondary-light);
+}
+
+#reset-race-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--secondary-light) 100%);
+    box-shadow: var(--shadow-neon-cyan);
+    transform: translateY(-2px);
+}
+
+#current-card {
+    padding: 15px;
+    margin: 15px auto;
+    background: rgba(26, 18, 26, 0.8);
+    border: 2px solid var(--desert-brown);
+    border-radius: var(--radius-md);
+    color: var(--light-text);
+    text-align: center;
+    font-family: var(--font-mono);
+    transition: all var(--transition-medium);
+    max-width: 300px;
+}
+
+#current-card.hearts {
+    border-color: var(--hearts-color);
+}
+
+#current-card.diamonds {
+    border-color: var(--diamonds-color);
+}
+
+#current-card.clubs {
+    border-color: var(--clubs-color);
+}
+
+#current-card.spades {
+    border-color: var(--spades-color);
+}
+
 .time-indicator .icon {
     font-size: 1.5em;
     transition: transform var(--transition-quick);

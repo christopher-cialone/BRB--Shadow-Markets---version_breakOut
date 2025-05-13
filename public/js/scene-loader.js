@@ -36,8 +36,77 @@ class MainScene extends Phaser.Scene {
     }
 
     create() {
-        // Add town background
-        this.add.image(400, 300, 'town-bg');
+        // Add town background with cyberpunk/western effect
+        const townBg = this.add.image(400, 300, 'town-bg');
+        
+        // Add cyberpunk neon title with flickering effect
+        const titleText = this.add.text(400, 80, 'BULL RUN BOOST', {
+            fontFamily: 'Share Tech Mono, monospace',
+            fontSize: '42px',
+            color: '#FF44CC',
+            align: 'center',
+            stroke: '#000',
+            strokeThickness: 4,
+            shadow: {
+                offsetX: 2,
+                offsetY: 2,
+                color: '#000',
+                blur: 5,
+                stroke: true,
+                fill: true
+            }
+        }).setOrigin(0.5);
+        
+        // Add glow effect to title
+        titleText.setShadow(0, 0, '#FF44CC', 12, true, true);
+        
+        // Add flickering animation to title
+        this.tweens.add({
+            targets: titleText,
+            alpha: { from: 1, to: 0.8 },
+            duration: 1500 + Math.random() * 500,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+        
+        // Add subtitle with different color
+        const subtitleText = this.add.text(400, 130, 'SHADOW MARKETS', {
+            fontFamily: 'Share Tech Mono, monospace',
+            fontSize: '24px',
+            color: '#00FFFF',
+            align: 'center',
+            stroke: '#000',
+            strokeThickness: 2
+        }).setOrigin(0.5);
+        
+        // Add glow effect to subtitle with different timing
+        subtitleText.setShadow(0, 0, '#00FFFF', 8, true, true);
+        
+        this.tweens.add({
+            targets: subtitleText,
+            alpha: { from: 1, to: 0.7 },
+            duration: 2000 + Math.random() * 800,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+        
+        // Add dust particle effect for western desert atmosphere
+        const particles = this.add.particles('bubble');
+        const emitter = particles.createEmitter({
+            x: { min: 0, max: 800 },
+            y: { min: 0, max: 600 },
+            scale: { start: 0.05, end: 0 },
+            speed: { min: 10, max: 30 },
+            angle: { min: 0, max: 360 },
+            rotate: { min: 0, max: 360 },
+            alpha: { start: 0.2, end: 0 },
+            lifespan: 3000,
+            quantity: 1,
+            frequency: 300,
+            tint: [0xFFDAB9, 0x8B4513]
+        });
         
         // Setup grid system - 10x10 grid with 80x80px cells
         this.grid = {
@@ -110,14 +179,96 @@ class MainScene extends Phaser.Scene {
         return gridY * this.grid.height + this.grid.height / 2;
     }
     
-    // Create a building at a grid position
+    // Create a building at a grid position with cyberpunk/western effects
     createBuilding(key, gridX, gridY, name) {
+        // Create neon glow effect around building
+        const glowColor = {
+            'field': 0xFFD700,       // Gold for field
+            'pasture': 0x00FF00,     // Green for pasture
+            'saloon': 0xFF44CC,      // Pink for saloon
+            'portal': 0x00FFFF       // Cyan for portal
+        }[name] || 0xFFFFFF;
+        
+        // Create glow rectangle behind building
+        const glow = this.add.rectangle(
+            this.gridToX(gridX),
+            this.gridToY(gridY),
+            this.grid.width * 1.1,
+            this.grid.height * 1.1,
+            glowColor,
+            0.2
+        );
+        glow.setStrokeStyle(2, glowColor, 0.7);
+        glow.setData('buildingName', name); // Store reference for tweens
+        
+        // Different animation for each building type
+        if (name === 'saloon') {
+            // Saloon gets a nice flickering pink neon effect
+            this.tweens.add({
+                targets: glow,
+                alpha: { from: 0.3, to: 0.6 },
+                duration: 900 + Math.random() * 500,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+        } else if (name === 'portal') {
+            // Portal gets a pulsing cyan effect
+            this.tweens.add({
+                targets: glow,
+                scaleX: { from: 1, to: 1.1 },
+                scaleY: { from: 1, to: 1.1 },
+                alpha: { from: 0.2, to: 0.5 },
+                duration: 1500,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+        } else {
+            // Other buildings get subtle glow
+            this.tweens.add({
+                targets: glow,
+                alpha: { from: 0.2, to: 0.4 },
+                duration: 2000 + Math.random() * 1000,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+        }
+        
+        // Create actual building sprite
         const building = this.buildings.create(
             this.gridToX(gridX),
             this.gridToY(gridY),
             key
         );
         building.name = name;
+        building.setData('glow', glow); // Store reference to glow effect
+        
+        // Add hover effect
+        building.setInteractive();
+        building.on('pointerover', () => {
+            this.tweens.add({
+                targets: glow,
+                alpha: 0.7,
+                scaleX: 1.15,
+                scaleY: 1.15,
+                duration: 300,
+                ease: 'Power2'
+            });
+        });
+        
+        building.on('pointerout', () => {
+            this.tweens.add({
+                targets: glow,
+                alpha: 0.3,
+                scaleX: 1,
+                scaleY: 1,
+                duration: 300,
+                ease: 'Power2'
+            });
+        });
+        
         return building;
     }
     
