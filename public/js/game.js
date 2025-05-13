@@ -457,6 +457,8 @@ if (typeof window.MainMenuScene === 'undefined') {
     }
     
     startGame() {
+        console.log("Start Game button clicked");
+        
         // Get player name from HTML input
         const nameInput = document.getElementById('player-name');
         if (nameInput) {
@@ -475,11 +477,20 @@ if (typeof window.MainMenuScene === 'undefined') {
             mainMenuElement.classList.add('hidden');
         }
         
-        // Switch to ranch scene
-        switchScene('ranch');
+        // Ensure game object exists
+        if (window.game && window.game.scene) {
+            // First stop this scene
+            this.scene.stop('MainMenuScene');
+            
+            // Start RanchScene in Phaser
+            console.log("Starting RanchScene from MainMenuScene");
+            this.scene.start('RanchScene');
+        } else {
+            console.error("Phaser game instance not available in startGame()");
+        }
         
-        // Start RanchScene in Phaser too
-        this.scene.start('RanchScene');
+        // Switch UI to ranch scene
+        switchScene('ranch');
     }
     
     resize(gameSize) {
@@ -3407,6 +3418,11 @@ function handleMissingTexture(scene, key, width = 64, height = 64, color = 0x3a7
 function switchScene(scene) {
     console.log(`Switching to scene: ${scene}`);
     
+    // Track current scene for reference
+    if (window.currentScene === undefined) {
+        window.currentScene = 'main-menu'; // Default initial scene
+    }
+    
     // Map HTML UI elements
     const mainMenu = document.getElementById('main-menu');
     const ranchUI = document.getElementById('ranch-ui');
@@ -3423,21 +3439,45 @@ function switchScene(scene) {
         'profile': profileUI
     };
     
-    // Hide all HTML UI screens
-    Object.values(screens).forEach(screen => {
-        if (screen) screen.classList.add('hidden');
-    });
-    
-    // Map scene types to Phaser scene keys
-    const phaser_scenes = {
+    // Map scene string to Phaser scene key
+    const sceneMap = {
         'main-menu': 'MainMenuScene',
         'ranch': 'RanchScene',
         'saloon': 'SaloonScene',
         'night': 'NightScene'
     };
     
+    // Hide all HTML UI screens
+    Object.values(screens).forEach(screen => {
+        if (screen) screen.classList.add('hidden');
+    });
+    
+    // Switch the Phaser scene if game is available
+    if (window.game && window.game.scene && sceneMap[scene]) {
+        // Get the previous scene and new scene keys
+        const prevSceneKey = sceneMap[window.currentScene];
+        const newSceneKey = sceneMap[scene];
+        
+        console.log(`Switching Phaser scene from ${prevSceneKey} to ${newSceneKey}`);
+        
+        // Stop all currently running scenes first
+        const activeScenes = window.game.scene.getScenes(true);
+        activeScenes.forEach(activeScene => {
+            if (activeScene.scene.key !== newSceneKey) {
+                window.game.scene.stop(activeScene.scene.key);
+            }
+        });
+        
+        // Start the new scene if it's not already running
+        if (!window.game.scene.isActive(newSceneKey)) {
+            window.game.scene.start(newSceneKey);
+        }
+    } else if (sceneMap[scene]) {
+        console.warn("Phaser game instance not available for scene switching");
+    }
+    
     // Store current scene
-    currentScene = scene;
+    window.currentScene = scene;
     
     // Handle Phaser canvas visibility and positioning
     if (scene === 'profile') {
