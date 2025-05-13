@@ -110,8 +110,15 @@ class SaloonScene extends Phaser.Scene {
         
         returnButton.on('pointerdown', () => {
             // Switch back to town scene
-            if (window.gameManager) {
+            if (window.gameManager && window.gameManager.switchScene) {
                 window.gameManager.switchScene('main-scene');
+            } else if (window.switchScene) {
+                // Direct call to global switchScene function
+                window.switchScene('main-scene');
+            } else {
+                console.error('Cannot find switchScene function');
+                // Fallback to direct scene transition
+                this.scene.start('MainScene');
             }
         });
     }

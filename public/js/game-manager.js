@@ -351,3 +351,6 @@ window.gameManager = {
     updateUI,
     showNotification
 };
+
+// Also expose switchScene directly as a global function
+window.switchScene = switchScene;

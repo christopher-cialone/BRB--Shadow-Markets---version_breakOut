@@ -6,35 +6,41 @@
 }
 
 :root {
-    /* Main color palette inspired by character artwork - modern Web3/Solana style */
+    /* Main color palette - cyberpunk western fusion */
     --primary-color: #6a2ca0;          /* Deep purple */
     --primary-light: #8a4cbf;          /* Light purple */
     --primary-dark: #4a1a80;           /* Dark purple */
     
-    --secondary-color: #00ccff;        /* Cyan blue */
+    --secondary-color: #00FFFF;        /* Cyan neon */
     --secondary-light: #33daff;        /* Light cyan */
     --secondary-dark: #0099cc;         /* Dark cyan */
     
-    --accent-color: #ff5acd;           /* Hot pink accent */
+    --accent-color: #FF44CC;           /* Hot pink neon accent */
     --accent-light: #ff85dd;           /* Light pink */
     --accent-dark: #d24aad;            /* Dark pink */
     
-    /* Background colors */
+    /* Western desert tones */
+    --desert-sand: #FFDAB9;            /* Light sand */
+    --desert-brown: #8B4513;           /* Dark brown */
+    --desert-orange: #FF8C00;          /* Desert sunset orange */
+    --desert-red: #FF4500;             /* Red rock */
+    
+    /* Background colors with desert/cyber fusion */
     --dark-bg: #0c0c16;                /* Deep space blue-black */
-    --dark-bg-gradient: linear-gradient(135deg, #0c0c16 0%, #1a1a2e 100%);
-    --card-bg: rgba(26, 26, 46, 0.8);  /* Card background with transparency */
-    --card-bg-hover: rgba(30, 30, 60, 0.9); /* Card hover state */
+    --dark-bg-gradient: linear-gradient(135deg, #1a0c16 0%, #2a1a2e 100%);
+    --card-bg: rgba(26, 18, 26, 0.8);  /* Card background with transparency */
+    --card-bg-hover: rgba(38, 24, 40, 0.9); /* Card hover state */
     
     /* Text colors */
-    --light-text: #e8e8f8;             /* Light blue-white text */
-    --muted-text: #9090b0;             /* Muted text for less important items */
-    --highlight: #ff7aed;              /* Bright pink highlight */
+    --light-text: #f8e8e8;             /* Light text with warm tint */
+    --muted-text: #b09090;             /* Muted text with western brown tint */
+    --highlight: #FFD700;              /* Gold highlight */
     
     /* UI component colors */
-    --ui-bg: rgba(12, 12, 22, 0.85);   /* UI background with transparency */
-    --ui-border: rgba(100, 100, 200, 0.3); /* Subtle blue borders */
-    --ui-element-bg: rgba(20, 20, 40, 0.7); /* Element background */
-    --ui-element-active: rgba(30, 30, 60, 0.8); /* Active element state */
+    --ui-bg: rgba(18, 12, 22, 0.85);   /* UI background with transparency */
+    --ui-border: rgba(200, 100, 100, 0.3); /* Subtle border with desert tint */
+    --ui-element-bg: rgba(30, 20, 30, 0.7); /* Element background */
+    --ui-element-active: rgba(50, 30, 45, 0.8); /* Active element state */
     
     /* Functional colors */
     --ui-success: #00cc99;             /* Success green */
@@ -42,28 +48,37 @@
     --ui-warning: #ffbb33;             /* Warning orange */
     --ui-info: #00aaff;                /* Info blue */
     
-    /* Card suits colors */
-    --hearts-color: #ff5f5f;           /* Hearts red */
-    --diamonds-color: #ff9f5f;         /* Diamonds orange */
-    --clubs-color: #5fff7f;            /* Clubs green */
-    --spades-color: #5f9fff;           /* Spades blue */
+    /* Card suits colors - more vibrant neon */
+    --hearts-color: #ff2f5f;           /* Hearts red - more neon */
+    --diamonds-color: #ffaf2f;         /* Diamonds orange - more neon */
+    --clubs-color: #2fff7f;            /* Clubs green - more neon */
+    --spades-color: #2f9fff;           /* Spades blue - more neon */
     
     /* Animation timing */
     --transition-quick: 0.2s;
     --transition-medium: 0.3s;
     --transition-slow: 0.5s;
     
-    /* Box shadows */
+    /* Box shadows with neon glow effects */
     --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
     --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.2);
     --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.25);
-    --shadow-neon: 0 0 10px rgba(255, 90, 205, 0.5);
+    --shadow-neon-cyan: 0 0 10px rgba(0, 255, 255, 0.7), 0 0 20px rgba(0, 255, 255, 0.4);
+    --shadow-neon-pink: 0 0 10px rgba(255, 68, 204, 0.7), 0 0 20px rgba(255, 68, 204, 0.4);
+    --shadow-neon-gold: 0 0 10px rgba(255, 215, 0, 0.7), 0 0 20px rgba(255, 215, 0, 0.4);
     
     /* Border radius */
     --radius-sm: 4px;
     --radius-md: 8px;
     --radius-lg: 12px;
     --radius-xl: 24px;
+    
+    /* Font families */
+    --font-body: 'Roboto', sans-serif;
+    --font-mono: 'Share Tech Mono', monospace;
+    --font-heading: 'Montserrat', sans-serif;
+    --font-title: 'Share Tech Mono', monospace;
+    --font-game-title: 'Share Tech Mono', monospace;
 }
 
 body {
@@ -275,7 +290,8 @@ body {
 .primary-button:hover {
     background-image: linear-gradient(45deg, var(--primary-light), var(--primary-color));
     transform: translateY(-2px);
-    box-shadow: 0 0 15px rgba(106, 44, 160, 0.5);
+    box-shadow: var(--shadow-neon-pink);
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
 }
 
 .primary-button:active {
@@ -292,7 +308,8 @@ body {
 .secondary-button:hover {
     background-image: linear-gradient(45deg, var(--secondary-color), var(--secondary-dark));
     transform: translateY(-2px);
-    box-shadow: 0 0 15px rgba(0, 204, 255, 0.5);
+    box-shadow: var(--shadow-neon-cyan);
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
 }
 
 .secondary-button:active {
