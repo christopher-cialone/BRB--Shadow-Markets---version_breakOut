@@ -53,15 +53,15 @@
                     title: 'Cattle Breeding',
                     text: 'Select two compatible cattle to breed them and create new cattle with combined traits. Better traits mean more milk production!',
                     position: 'right',
-                    highlight: '#breed-cattle-btn',
+                    highlight: '#breed-cattle',
                     next: 'milk-collection'
                 },
                 {
                     id: 'milk-collection',
                     title: 'Milk Collection',
-                    text: 'Click on a cow to milk it, or use the "Milk All" button to collect from all your cattle at once. Milk is converted to $CATTLE tokens.',
+                    text: 'Click on a cow to milk it and collect from your cattle. Milk is automatically converted to $CATTLE tokens.',
                     position: 'bottom',
-                    highlight: '#milk-all-btn',
+                    highlight: '#ranch-grid',
                     next: null
                 }
             ],
