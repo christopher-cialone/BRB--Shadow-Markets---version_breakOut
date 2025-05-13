@@ -386,11 +386,26 @@ if (typeof window.MainMenuScene === 'undefined') {
                 });
             });
         
-        // Adventurer card background - disabled
+        /*
+         * Adventurer Archetype: Future Implementation Plan
+         * 
+         * Planned features for the Adventurer archetype:
+         * 1. Heist missions with risk/reward mechanics
+         * 2. Raid special locations for rare resources
+         * 3. Unlock unique items and power-ups
+         * 4. Special abilities like lockpicking and stealth
+         * 5. Chance-based outcomes with skill modifiers
+         * 
+         * The Adventurer will be implemented in a future update
+         * after the core Entrepreneur gameplay loop is refined.
+         */
+        
+        // Adventurer card - TEMPORARILY HIDDEN
+        // Will be re-enabled when the heist mechanics are implemented
+        /*
         this.adventurerCardBg = this.add.rectangle(width * 0.65, height * 0.65, 250, 200, 0x222222, 0.7);
         this.adventurerCardBg.setStrokeStyle(3, 0x555555);
         
-        // Adventurer card title
         this.adventurerTitle = this.add.text(width * 0.65, height * 0.65 - 70, 'Adventurer', {
             fontFamily: 'Roboto',
             fontSize: '24px',
@@ -398,7 +413,6 @@ if (typeof window.MainMenuScene === 'undefined') {
             fontStyle: 'bold'
         }).setOrigin(0.5);
         
-        // Adventurer card description
         this.adventurerDesc = this.add.text(width * 0.65, height * 0.65 + 20, '+10% heist\nsuccess rate', {
             fontFamily: 'Roboto',
             fontSize: '18px',
@@ -414,6 +428,7 @@ if (typeof window.MainMenuScene === 'undefined') {
             backgroundColor: '#000000',
             padding: { x: 10, y: 5 }
         }).setOrigin(0.5).setAngle(-15);
+        */
         
         // Start button
         this.startBtnBg = this.add.rectangle(width / 2, height * 0.85, 200, 60, 0x6a2ca0);
