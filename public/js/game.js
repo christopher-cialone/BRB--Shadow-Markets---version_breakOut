@@ -1492,7 +1492,17 @@ class NightScene extends Phaser.Scene {
             // Find index of clicked cell
             const index = this.cellSprites.indexOf(gameObject);
             if (index !== -1) {
-                handleShadowCellClick(index);
+                if (typeof window.interactWithShadowCell === 'function') {
+                    // Use the modern potion crafting system
+                    window.interactWithShadowCell(index);
+                } else {
+                    // Fallback to legacy handler
+                    if (typeof handleShadowCellClick === 'function') {
+                        handleShadowCellClick(index);
+                    } else {
+                        console.log(`Cell ${index} clicked, but no handler available`);
+                    }
+                }
             }
         });
         
