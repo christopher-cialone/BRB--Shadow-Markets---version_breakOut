@@ -14,7 +14,8 @@ let gameInitialized = false;
 window.gameState = {
     player: {
         cattleBalance: 100,
-        hay: 10,
+        hay: 50,
+        water: 50,
         wheat: 5,
         crystals: 0,
         potions: 0,
@@ -22,7 +23,9 @@ window.gameState = {
             racesWon: 0,
             racesLost: 0,
             totalEarned: 0,
-            totalBurned: 0
+            totalBurned: 0,
+            fieldsHarvested: 0,
+            cattleBred: 0
         }
     },
     cattle: [],
@@ -224,62 +227,102 @@ function updateUI() {
 
 // Update resource displays across all UI sections
 function updateResourceDisplays(player) {
-    // Update cattle balance displays
-    ['cattle-balance', 'ranch-cattle-balance', 'saloon-cattle-balance', 'ether-cattle-balance'].forEach(id => {
-        const element = document.getElementById(id);
-        if (element) element.textContent = player.cattleBalance || 0;
-    });
-    
-    // Update hay amount displays
-    ['hay-amount', 'ranch-hay-amount'].forEach(id => {
-        const element = document.getElementById(id);
-        if (element) element.textContent = player.hay || 0;
-    });
-    
-    // Update wheat amount displays
-    ['wheat-amount', 'ranch-wheat-amount'].forEach(id => {
-        const element = document.getElementById(id);
-        if (element) element.textContent = player.wheat || 0;
-    });
-    
-    // Update crystal and potion displays
-    const crystalElement = document.getElementById('crystal-amount');
-    const potionElement = document.getElementById('potion-amount');
-    
-    if (crystalElement) crystalElement.textContent = player.crystals || 0;
-    if (potionElement) potionElement.textContent = player.potions || 0;
+    try {
+        // Update cattle balance displays
+        ['cattle-balance', 'ranch-cattle-balance', 'saloon-cattle-balance', 'ether-cattle-balance'].forEach(id => {
+            const element = document.getElementById(id);
+            if (element) element.textContent = player.cattleBalance || 0;
+        });
+        
+        // Update hay amount displays
+        ['hay-amount', 'ranch-hay-amount'].forEach(id => {
+            const element = document.getElementById(id);
+            if (element) element.textContent = player.hay || 0;
+        });
+        
+        // Update water amount displays
+        ['water-amount', 'ranch-water-amount'].forEach(id => {
+            const element = document.getElementById(id);
+            if (element) element.textContent = player.water || 0;
+        });
+        
+        // Update wheat amount displays
+        ['wheat-amount', 'ranch-wheat-amount'].forEach(id => {
+            const element = document.getElementById(id);
+            if (element) element.textContent = player.wheat || 0;
+        });
+        
+        // Update crystal and potion displays
+        const crystalElement = document.getElementById('crystal-amount');
+        const potionElement = document.getElementById('potion-amount');
+        
+        if (crystalElement) crystalElement.textContent = player.crystals || 0;
+        if (potionElement) potionElement.textContent = player.potions || 0;
+    } catch (err) {
+        console.error('Error in updateResourceDisplays:', err);
+    }
 }
 
 // Update betting controls in the saloon
 function updateBettingControls(player) {
-    // Enable/disable bet buttons based on player's balance
-    const betButtons = document.querySelectorAll('.bet-btn');
-    const startRaceBtn = document.getElementById('start-race-btn');
-    
-    betButtons.forEach(btn => {
-        btn.disabled = player.cattleBalance <= 0;
-    });
-    
-    if (startRaceBtn) {
-        startRaceBtn.disabled = player.cattleBalance <= 0;
+    try {
+        // Enable/disable bet buttons based on player's balance
+        const betButtons = document.querySelectorAll('.bet-btn');
+        const startRaceBtn = document.getElementById('start-race-btn');
+        
+        betButtons.forEach(btn => {
+            try {
+                btn.disabled = player.cattleBalance <= 0;
+            } catch (err) {
+                console.error('Error updating bet button:', err);
+            }
+        });
+        
+        if (startRaceBtn) {
+            startRaceBtn.disabled = player.cattleBalance <= 0;
+        }
+    } catch (err) {
+        console.error('Error in updateBettingControls:', err);
     }
 }
 
 // Show notification message
 function showNotification(message, type = 'info') {
-    const notifications = document.querySelectorAll('.notification');
-    notifications.forEach(notification => {
-        notification.textContent = message;
-        notification.className = 'notification active ' + type;
+    try {
+        const notifications = document.querySelectorAll('.notification');
         
-        // Auto-hide after delay
-        setTimeout(() => {
-            notification.className = 'notification';
-        }, 5000);
-    });
-    
-    // Also log to console
-    console.log(`Notification: ${message} (${type})`);
+        if (notifications.length === 0) {
+            // Create a notification element if none exists
+            const notificationDiv = document.createElement('div');
+            notificationDiv.className = 'notification';
+            document.body.appendChild(notificationDiv);
+            
+            // Call function again now that we have a notification element
+            setTimeout(() => showNotification(message, type), 100);
+            return;
+        }
+        
+        notifications.forEach(notification => {
+            notification.textContent = message;
+            notification.className = 'notification active ' + type;
+            
+            // Auto-hide after delay
+            setTimeout(() => {
+                try {
+                    notification.className = 'notification';
+                } catch (err) {
+                    console.error('Error hiding notification:', err);
+                }
+            }, 5000);
+        });
+        
+        // Also log to console
+        console.log(`Notification: ${message} (${type})`);
+    } catch (err) {
+        // Fallback to console only if display fails
+        console.error('Error showing notification:', err);
+        console.log(`Notification: ${message} (${type})`);
+    }
 }
 
 // Initialize when page loads
