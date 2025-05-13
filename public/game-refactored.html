@@ -349,6 +349,42 @@
     <!-- Phaser -->
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
     
+    <!-- Socket.io and WebSocket setup -->
+    <script>
+        // WebSocket initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize WebSocket connection
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws`;
+            
+            // Create global WebSocket
+            window.socket = new WebSocket(wsUrl);
+            
+            window.socket.onopen = function() {
+                console.log('Connected to server');
+            };
+            
+            window.socket.onmessage = function(event) {
+                try {
+                    const message = JSON.parse(event.data);
+                    console.log('Message from server:', message);
+                    
+                    // Handle server messages if needed
+                } catch (error) {
+                    console.error('Error parsing server message:', error);
+                }
+            };
+            
+            window.socket.onclose = function() {
+                console.log('Disconnected from server');
+            };
+            
+            window.socket.onerror = function(error) {
+                console.error('WebSocket error:', error);
+            };
+        });
+    </script>
+    
     <!-- Game scripts -->
     <script src="js/asset-handler.js"></script>
     <script src="js/racing-game.js"></script>

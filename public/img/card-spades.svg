@@ -1,28 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg width="100" height="140" xmlns="http://www.w3.org/2000/svg">
-  <!-- Card background -->
-  <rect width="100" height="140" rx="10" ry="10" fill="white" stroke="black" stroke-width="1" />
-  
-  <!-- Cyberpunk spade suit -->
-  <g transform="translate(50, 70) scale(2.5)">
-    <path d="M0,0 L0,-10 M0,0 L10,0 M0,0 L0,10 M0,0 L-10,0" stroke="#333333" stroke-width="0.5" fill="none" />
-    <path d="M0,-10 C-8,0 -10,6 0,10 C10,6 8,0 0,-10 Z" fill="#333333" />
-    <rect x="-1.5" y="7" width="3" height="7" fill="#333333" transform="rotate(-10)" />
-    
-    <!-- Cyberpunk details -->
-    <path d="M0,-10 C-8,0 -10,6 0,10" fill="none" stroke="#666666" stroke-width="0.3" />
-    <path d="M0,-10 C8,0 10,6 0,10" fill="none" stroke="#666666" stroke-width="0.3" />
-    <path d="M-2,-2 L2,2 M-2,2 L2,-2" stroke="white" stroke-width="0.3" />
-    <path d="M0,-7 A 3,3 0 0,0 -3,-4 A 3,3 0 0,0 0,-1 A 3,3 0 0,0 3,-4 A 3,3 0 0,0 0,-7" fill="none" stroke="#666666" stroke-width="0.2" />
-  </g>
-  
-  <!-- Card label (top left) -->
-  <text x="10" y="25" font-family="Arial" font-size="20" fill="#333333" font-weight="bold">A♠</text>
-  
-  <!-- Card label (bottom right) -->
-  <text x="90" y="125" font-family="Arial" font-size="20" fill="#333333" font-weight="bold" text-anchor="end">A♠</text>
-  
-  <!-- Cyberpunk circuit border -->
-  <path d="M5,5 L20,5 L20,15 L30,15 L30,5 L50,5 L50,15 L70,15 L70,5 L95,5" stroke="#333333" stroke-width="0.5" fill="none" />
-  <path d="M5,135 L20,135 L20,125 L30,125 L30,135 L50,135 L50,125 L70,125 L70,135 L95,135" stroke="#333333" stroke-width="0.5" fill="none" />
+<svg width="50" height="50" xmlns="http://www.w3.org/2000/svg">
+  <rect width="50" height="50" rx="5" fill="#222" />
+  <path d="M25 15 L 35 25 C 35 35, 25 40, 20 35 C 15 40, 5 35, 5 25 L 15 15 Z" fill="#333333" />
+  <rect x="24" y="30" width="2" height="10" fill="#333333" />
 </svg>
