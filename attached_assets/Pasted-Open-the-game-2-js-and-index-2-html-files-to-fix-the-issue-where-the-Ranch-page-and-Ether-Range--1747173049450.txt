@@ -1,0 +1,21 @@
+Open the game (2).js and index (2).html files to fix the issue where the Ranch page and Ether Range page do not display their grids, and the CTA buttons ('Harvest All', 'Distill All', 'Sell Cattle', 'Craft Potion') are not working properly. Follow these steps:
+
+Verify Phaser Game Initialization:
+In game (2).js, check if the Phaser game instance (game) is defined globally. If not, add a Phaser game configuration at the top of the IIFE (e.g., window.game = new Phaser.Game({ width: 800, height: 600, scene: [MainMenuScene, RanchScene, SaloonScene, NightScene], parent: 'game-container' });) using the existing scene classes. Ensure the game-container div exists in index (2).html (add <div id="game-container"></div> inside the body if missing).
+Fix Scene Activation:
+Locate the switchScene function (assumed to be defined elsewhere in the truncated code). Ensure it stops the current scene and starts the new one (e.g., game.scene.stop(currentScene); game.scene.start(newScene); currentScene = newScene;). Add a console log (e.g., console.log('Switching to', newScene);) to verify execution.
+In the MainMenuScene.startGame method, confirm that this.scene.start('RanchScene'); is called after hiding the main menu, and add a check to ensure game.scene is available.
+Initialize and Render Grids:
+In RanchScene.create, ensure initPhaserGrid is called and createGridCells populates the grid with valid sprites. Add a console log in createGridCells (e.g., console.log('Creating', ranchGrid.cells.length, 'grid cells');) to confirm execution.
+In NightScene.create (complete the truncated code), add similar logic to initialize a 4x4 grid using createGridCells or equivalent, ensuring shadowGrid.cells is populated. Add a console log (e.g., console.log('Night grid initialized with', shadowGrid.cells.length, 'cells');).
+Fix CTA Button Functionality:
+In RanchScene.initPhaserGrid, verify that the "Harvest All" and "Sell Cattle" buttons' event listeners (harvestAllRanchCells, sellAllCattle) are correctly bound. Add a console log in each function (e.g., console.log('Harvest All triggered');) to debug.
+In the initializeNightScene function, ensure the "Distill All" and "Craft Potion" buttons' event listeners (distillAllShadowCells, the craft potion logic) are properly set. Add a console log in each (e.g., console.log('Distill All triggered');).
+Check that playerData and grid data are accessible when buttons are clicked, adding a fallback (e.g., if (!ranchGrid.cells) ranchGrid.cells = [];) if undefined.
+Debug Asset Loading:
+In RanchScene.preload and NightScene.preload, ensure all required assets (cell-empty, cell-planted, etc.) are loaded or fallbacks are created. Add a console log after the load.on('complete', ...) callback (e.g., console.log('Assets loaded for', this.scene.key);) to confirm.
+Sync UI with Phaser:
+In index (2).html, ensure the <div id="ranch-ui"> and <div id="night-ui"> are styled to overlay or complement the Phaser canvas (e.g., add position: relative; z-index: 1; to their CSS). Add a hidden class toggle in switchScene to show/hide these divs based on currentScene.
+Test and Log:
+After changes, run the game, switch to the Ranch and Ether Range pages, and check the console for logs. If grids or CTAs still fail, add more specific logs (e.g., console.log('Cell state:', ranchGrid.cells[0].state);) to identify the issue.
+Save the files and test the game to ensure grids appear and CTAs (Harvest All, Distill All, Sell Cattle, Craft Potion) work as expected. Do not modify existing gameplay logic unless necessary to fix these issues.
