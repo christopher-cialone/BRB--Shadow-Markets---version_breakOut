@@ -17,16 +17,22 @@ class MainScene extends Phaser.Scene {
     }
 
     preload() {
-        // Load town assets (SVG versions)
-        this.load.svg('town-bg', 'img/town-bg.svg');
-        this.load.svg('character', 'img/character.svg');
-        this.load.svg('field-empty', 'img/field-empty.svg');
-        this.load.svg('field-growing', 'img/field-growing.svg');
-        this.load.svg('field-ready', 'img/field-ready.svg');
-        this.load.svg('pasture', 'img/pasture.svg');
-        this.load.svg('saloon', 'img/saloon.svg');
-        this.load.svg('portal', 'img/portal.svg');
-        this.load.svg('cattle', 'img/cattle.svg');
+        // Use asset handler to preload common assets
+        if (window.assetHandler && window.assetHandler.preloadCommonAssets) {
+            window.assetHandler.preloadCommonAssets(this);
+        } else {
+            console.warn('Asset handler not found, falling back to direct loading');
+            // Direct loading fallback
+            this.load.svg('town-bg', 'img/town-bg.svg');
+            this.load.svg('character', 'img/character.svg');
+            this.load.svg('field-empty', 'img/field-empty.svg');
+            this.load.svg('field-growing', 'img/field-growing.svg');
+            this.load.svg('field-ready', 'img/field-ready.svg');
+            this.load.svg('pasture', 'img/pasture.svg');
+            this.load.svg('saloon', 'img/saloon.svg');
+            this.load.svg('portal', 'img/portal.svg');
+            this.load.svg('cattle', 'img/cattle.svg');
+        }
     }
 
     create() {
