@@ -285,7 +285,10 @@ const notification = document.getElementById('notification');
 const resultModal = document.getElementById('result-modal');
 
 // Define the MainMenuScene class - simplified for stability
-class MainMenuScene extends Phaser.Scene {
+// Check if MainMenuScene already exists to prevent duplicate declaration errors
+if (typeof MainMenuScene === 'undefined') {
+    console.log('Registering MainMenuScene class globally');
+    class MainMenuScene extends Phaser.Scene {
     constructor() {
         super('MainMenuScene');
     }
@@ -3263,18 +3266,49 @@ function switchScene(scene) {
     // Initialize scene-specific logic
     switch (scene) {
         case 'ranch':
+            console.log('Initializing Ranch scene UI');
             initRanchGrid(); // Initialize or update ranch grid
+            
+            // Add timer tracking for ranch grid
+            if (window.ranchGridTimerTracker) {
+                clearInterval(window.ranchGridTimerTracker);
+            }
+            
+            window.ranchGridTimerTracker = setInterval(() => {
+                if (ranchGrid && ranchGrid.growthTimer) {
+                    console.log(`Ranch Growth Timer: ${ranchGrid.growthTimer}`);
+                }
+            }, 5000); // Log every 5 seconds to avoid console spam
             break;
+            
         case 'saloon':
+            console.log('Initializing Saloon scene UI');
             initSaloonScene(); // Initialize saloon-specific elements
             break;
+            
         case 'profile':
+            console.log('Initializing Profile scene UI');
             updateProfileUI();
             break;
+            
         case 'night':
+            console.log('Initializing Night scene UI');
             initShadowGrid(); // Initialize or update shadow market grid
+            
+            // Add timer tracking for shadow grid
+            if (window.shadowGridTimerTracker) {
+                clearInterval(window.shadowGridTimerTracker);
+            }
+            
+            window.shadowGridTimerTracker = setInterval(() => {
+                if (shadowGrid && shadowGrid.cycleTimer) {
+                    console.log(`Shadow Market Cycle Timer: ${shadowGrid.cycleTimer}`);
+                }
+            }, 5000); // Log every 5 seconds to avoid console spam
             break;
     }
+    
+    console.log(`UI updated for scene: ${scene}`);
     
     // Update UI with current player data
     updateUI();
