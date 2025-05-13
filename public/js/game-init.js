@@ -44,6 +44,19 @@ const gameState = {
         barnCapacity: 100,
         cattleCollection: [],
         potionCollection: [],
+        // Player progression data
+        level: 1,
+        xp: 0,
+        xpToNextLevel: 100,
+        achievements: {}, // Will be populated by player-progression.js
+        stats: {
+            cropHarvested: 0,
+            potionsDistilled: 0,
+            racesWon: 0,
+            racesLost: 0,
+            totalEarned: 0,
+            totalBurned: 0
+        },
         field: {
             planted: false,
             growthStage: 0,
@@ -214,4 +227,19 @@ window.addEventListener('load', () => {
     
     // Connect to Socket.IO
     connectToSocketIO();
+    
+    // Initialize player data and progression system
+    window.playerData = gameState.player;
+    
+    // Initialize player progression
+    if (typeof initializePlayerProgression === 'function') {
+        initializePlayerProgression();
+        console.log("Player progression system initialized");
+    }
+    
+    // Initialize sound effects
+    if (typeof SoundEffects !== 'undefined' && SoundEffects.init) {
+        SoundEffects.init();
+        console.log("Sound effects system initialized");
+    }
 });
