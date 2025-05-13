@@ -2,10 +2,14 @@ const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
+const { WebSocketServer, WebSocket } = require('ws');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
+
+// Create WebSocket server on a distinct path to avoid conflicts with Vite's HMR socket
+const wss = new WebSocketServer({ server: server, path: '/ws' });
 
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
@@ -13,6 +17,54 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Routes
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Handle WebSocket connections
+wss.on('connection', (ws) => {
+  console.log('WebSocket client connected');
+  
+  // Send welcome message
+  ws.send(JSON.stringify({
+    type: 'connection',
+    message: 'Connected to Bull Run Boost WebSocket server'
+  }));
+  
+  // Handle incoming messages
+  ws.on('message', (data) => {
+    try {
+      const message = JSON.parse(data);
+      console.log('Received message:', message);
+      
+      // Handle different message types
+      switch (message.type) {
+        case 'ping':
+          ws.send(JSON.stringify({ type: 'pong', timestamp: Date.now() }));
+          break;
+          
+        case 'game_update':
+          // Broadcast game update to all connected clients
+          wss.clients.forEach((client) => {
+            if (client.readyState === WebSocket.OPEN) {
+              client.send(JSON.stringify({
+                type: 'game_update',
+                data: message.data
+              }));
+            }
+          });
+          break;
+          
+        default:
+          console.log('Unknown message type:', message.type);
+      }
+    } catch (err) {
+      console.error('Error handling WebSocket message:', err);
+    }
+  });
+  
+  // Handle disconnection
+  ws.on('close', () => {
+    console.log('WebSocket client disconnected');
+  });
 });
 
 // Game state
