@@ -834,6 +834,7 @@ if (typeof window !== 'undefined') {
     window.initShadowGrid = initShadowGrid;
     window.interactWithShadowCell = interactWithShadowCell;
     window.cleanupPotionProcesses = cleanupPotionProcesses;
+    window.collectPotion = collectPotion;
     window.shadowGrid = shadowGrid;
     window.potionTypes = potionTypes;
 }

@@ -1667,7 +1667,43 @@ class NightScene extends Phaser.Scene {
         ).setOrigin(0.5);
         
         distillAllBtn.setInteractive({ useHandCursor: true })
-            .on('pointerdown', () => distillAllShadowCells());
+            .on('pointerdown', () => {
+                // Use new potion crafting system if available
+                if (window.shadowGrid && window.shadowGrid.cells) {
+                    let collectedCount = 0;
+                    
+                    // Collect all ready potions
+                    window.shadowGrid.cells.forEach((cell, index) => {
+                        if (cell.state === 'ready') {
+                            if (typeof window.collectPotion === 'function') {
+                                window.collectPotion(index);
+                                collectedCount++;
+                            }
+                        }
+                    });
+                    
+                    // Show notification based on results
+                    if (collectedCount > 0) {
+                        if (window.gameManager && window.gameManager.showNotification) {
+                            window.gameManager.showNotification(`Collected ${collectedCount} potions!`, 'success');
+                        }
+                        
+                        // Update the grid visuals
+                        this.updatePotionGrid();
+                    } else {
+                        if (window.gameManager && window.gameManager.showNotification) {
+                            window.gameManager.showNotification('No potions ready to collect', 'info');
+                        }
+                    }
+                } else {
+                    // Fallback to legacy function if available
+                    if (typeof distillAllShadowCells === 'function') {
+                        distillAllShadowCells();
+                    } else {
+                        console.log('No potion system available');
+                    }
+                }
+            });
             
         this.gridContainer.add(distillAllBtn);
         
