@@ -4202,19 +4202,33 @@ function distillShadowCell(cellIndex) {
     playerData.cattleBalance += cattleReward;
     playerData.stats.potionsDistilled = (playerData.stats.potionsDistilled || 0) + 1;
     
-    // Play distill sound effect
-    playSoundEffect('distill');
-    
-    // Add XP for distilling (20 XP per potion distilled)
-    addPlayerXP(20);
-    
-    // Update achievement progress
-    if (playerData.achievements.alchemist) {
-        playerData.achievements.alchemist.current = playerData.stats.potionsDistilled;
+    // Track potion distilling for progression using new system if available
+    if (typeof trackPotionDistill === 'function') {
+        trackPotionDistill();
+    } else {
+        // Fallback to original implementation
+        if (typeof addPlayerXP === 'function') {
+            // Add XP for distilling (20 XP per potion distilled)
+            addPlayerXP(20);
+        }
+        
+        // Update achievement progress
+        if (playerData.achievements && playerData.achievements.alchemist) {
+            playerData.achievements.alchemist.current = playerData.stats.potionsDistilled;
+        }
+        
+        // Check if any achievements were unlocked
+        if (typeof checkAchievements === 'function') {
+            checkAchievements();
+        }
     }
     
-    // Check if any achievements were unlocked
-    checkAchievements();
+    // Play distill sound effect
+    if (window.SoundEffects && SoundEffects.play) {
+        SoundEffects.play('distill');
+    } else if (typeof playSoundEffect === 'function') {
+        playSoundEffect('distill');
+    }
     
     // Create a distilled potion in the inventory with potency
     if (!playerData.potionCollection) {
@@ -4865,6 +4879,70 @@ function updateProfileUI() {
         characterImageEl.src = `img/characters/${playerData.characterType}.jpeg`;
         if (playerData.characterType === 'the-scientist') {
             characterImageEl.src = 'img/characters/the-scientist.jpg';
+        }
+    }
+    
+    // Update level and XP display
+    if (typeof updateXPDisplay === 'function') {
+        updateXPDisplay();
+    } else {
+        // Fallback implementation
+        const levelValueElement = document.getElementById('level-value');
+        if (levelValueElement && playerData.level) {
+            levelValueElement.textContent = playerData.level;
+        }
+        
+        const xpValueElement = document.getElementById('xp-value');
+        if (xpValueElement && playerData.xp !== undefined && playerData.xpToNextLevel) {
+            xpValueElement.textContent = `${playerData.xp} / ${playerData.xpToNextLevel}`;
+        }
+        
+        const xpProgressBar = document.getElementById('xp-progress-bar');
+        if (xpProgressBar && playerData.xp !== undefined && playerData.xpToNextLevel) {
+            const progressPercentage = (playerData.xp / playerData.xpToNextLevel) * 100;
+            xpProgressBar.style.width = `${progressPercentage}%`;
+        }
+    }
+    
+    // Update achievements display
+    if (typeof updateAchievementsDisplay === 'function') {
+        updateAchievementsDisplay();
+    }
+    
+    // Update player statistics
+    if (playerData.stats) {
+        // Update races won/lost
+        const racesWonEl = document.getElementById('races-won');
+        if (racesWonEl) {
+            racesWonEl.textContent = playerData.stats.racesWon || 0;
+        }
+        
+        const racesLostEl = document.getElementById('races-lost');
+        if (racesLostEl) {
+            racesLostEl.textContent = playerData.stats.racesLost || 0;
+        }
+        
+        // Update cattle bred
+        const cattleBredEl = document.getElementById('cattle-bred');
+        if (cattleBredEl) {
+            cattleBredEl.textContent = playerData.cattleCollection ? playerData.cattleCollection.length : 0;
+        }
+        
+        // Update potions crafted
+        const potionsCraftedEl = document.getElementById('potions-crafted');
+        if (potionsCraftedEl) {
+            potionsCraftedEl.textContent = playerData.stats.potionsDistilled || 0;
+        }
+        
+        // Update total earned/burned
+        const totalEarnedEl = document.getElementById('total-earned');
+        if (totalEarnedEl) {
+            totalEarnedEl.textContent = playerData.stats.totalEarned || 0;
+        }
+        
+        const totalBurnedEl = document.getElementById('total-burned');
+        if (totalBurnedEl) {
+            totalBurnedEl.textContent = playerData.stats.totalBurned || 0;
         }
     }
     
