@@ -285,10 +285,11 @@ const notification = document.getElementById('notification');
 const resultModal = document.getElementById('result-modal');
 
 // Define the MainMenuScene class - simplified for stability
-// Check if MainMenuScene already exists to prevent duplicate declaration errors
-if (typeof MainMenuScene === 'undefined') {
+// Define the MainMenuScene class - only if not already defined
+// This prevents duplicate declaration errors
+if (typeof window.MainMenuScene === 'undefined') {
     console.log('Registering MainMenuScene class globally');
-    class MainMenuScene extends Phaser.Scene {
+    window.MainMenuScene = class MainMenuScene extends Phaser.Scene {
     constructor() {
         super('MainMenuScene');
     }
@@ -499,10 +500,14 @@ if (typeof MainMenuScene === 'undefined') {
         if (this.startBtnBg) this.startBtnBg.setPosition(width / 2, height * 0.85);
         if (this.startBtnText) this.startBtnText.setPosition(width / 2, height * 0.85);
     }
-}
+} // End of MainMenuScene class
 
-// Define the RanchScene class - simplified for stability
-class RanchScene extends Phaser.Scene {
+} // End of MainMenuScene if block
+
+// Define the RanchScene class - only if not already defined
+if (typeof window.RanchScene === 'undefined') {
+    console.log('RanchScene class initialized');
+    window.RanchScene = class RanchScene extends Phaser.Scene {
     constructor() {
         super('RanchScene');
         
@@ -1118,10 +1123,14 @@ class RanchScene extends Phaser.Scene {
             }
         });
     }
-}
+} // End of RanchScene class
 
-// Define the SaloonScene class - simplified for stability
-class SaloonScene extends Phaser.Scene {
+} // End of RanchScene if block
+
+// Define the SaloonScene class - only if not already defined
+if (typeof window.SaloonScene === 'undefined') {
+    console.log('SaloonScene class initialized');
+    window.SaloonScene = class SaloonScene extends Phaser.Scene {
     constructor() {
         super('SaloonScene');
         this.raceCardImages = {};
@@ -1338,10 +1347,14 @@ class SaloonScene extends Phaser.Scene {
             this.currentCardSprite.setPosition(width/2, height/2 - 40);
         }
     }
-}
+} // End of SaloonScene class
 
-// Define the NightScene class - simplified to just provide the background
-class NightScene extends Phaser.Scene {
+} // End of SaloonScene if block
+
+// Define the NightScene class - only if not already defined
+if (typeof window.NightScene === 'undefined') {
+    console.log('NightScene class initialized');
+    window.NightScene = class NightScene extends Phaser.Scene {
     constructor() {
         super('NightScene');
         
