@@ -6,7 +6,6 @@
     <title>BRB Bull Run Boost Shadow Markets</title>
     <link rel="stylesheet" href="css/fonts.css">
     <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/phaser-integration.css">
 </head>
 <body>
     <div id="game-container">
@@ -601,75 +600,6 @@
         <div class="win-amount" id="win-amount">+0 $CATTLE</div>
     </div>
     
-    <!-- Phaser Interaction UIs -->
-    <div id="crop-management-ui" class="interaction-ui hidden">
-        <button class="close-ui-button" id="close-crop-ui">&times;</button>
-        <h2>Crop Management</h2>
-        <div class="grid-container" id="crop-grid"></div>
-        <div class="action-buttons">
-            <button id="plant-wheat" class="action-button">Plant Wheat</button>
-            <button id="plant-corn" class="action-button">Plant Corn</button>
-            <button id="plant-cactus" class="action-button">Plant Cactus</button>
-            <button id="harvest-all" class="action-button">Harvest All</button>
-        </div>
-        <div class="crop-info">
-            <p>Current weather: <span id="weather-status">Sunny</span></p>
-            <p>Wheat: 3 days, low water, medium yield</p>
-            <p>Corn: 5 days, medium water, high yield</p>
-            <p>Cactus: 7 days, low water, very high yield</p>
-        </div>
-    </div>
-    
-    <div id="cattle-management-ui" class="interaction-ui hidden">
-        <button class="close-ui-button" id="close-cattle-ui">&times;</button>
-        <h2>Cattle Management</h2>
-        <div class="grid-container" id="cattle-grid"></div>
-        <div class="action-buttons">
-            <button id="breed-cattle-btn" class="action-button">Breed Cattle</button>
-            <button id="milk-all-btn" class="action-button">Milk All</button>
-            <button id="feed-all-btn" class="action-button">Feed All</button>
-        </div>
-        <div class="cattle-info">
-            <p>Breeding requires: 10 Hay, 10 Water</p>
-            <p>Cattle produce milk every 30 seconds</p>
-            <p>Well-fed cattle produce more milk</p>
-        </div>
-    </div>
-    
-    <div id="potion-brewing-ui" class="interaction-ui hidden">
-        <button class="close-ui-button" id="close-potion-ui">&times;</button>
-        <h2>Potion Brewing</h2>
-        <div class="grid-container" id="potion-grid"></div>
-        <div class="action-buttons">
-            <button id="brew-speed-potion" class="action-button">Brew Speed Potion</button>
-            <button id="brew-power-potion" class="action-button">Brew Power Potion</button>
-            <button id="brew-mystic-potion" class="action-button">Brew Mystic Potion</button>
-            <button id="collect-all-potions" class="action-button">Collect All</button>
-        </div>
-        <div class="potion-info">
-            <p>Speed Potion: 5 Crystals, low brewing time</p>
-            <p>Power Potion: 10 Crystals, medium brewing time</p>
-            <p>Mystic Potion: 15 Crystals, long brewing time</p>
-            <p>Warning: Overbrewing may result in explosion!</p>
-        </div>
-    </div>
-    
-    <div id="shadow-market-ui" class="interaction-ui hidden">
-        <button class="close-ui-button" id="close-shadow-market-ui">&times;</button>
-        <h2>Shadow Market</h2>
-        <div class="grid-container" id="shadow-market-grid"></div>
-        <div class="action-buttons">
-            <button id="buy-resource" class="action-button">Buy Resources</button>
-            <button id="sell-resource" class="action-button">Sell Resources</button>
-            <button id="trade-resource" class="action-button">Trade Resources</button>
-        </div>
-        <div class="market-info">
-            <p>Market prices fluctuate based on supply and demand</p>
-            <p>Premium trades available at night</p>
-            <p>Shadow deals may have hidden benefits or risks</p>
-        </div>
-    </div>
-    
     <!-- Scripts -->
     <!-- Third-party libraries -->
     <script src="/socket.io/socket.io.js"></script>
@@ -726,12 +656,6 @@
     
     <!-- UI navigation and fallbacks -->
     <script src="js/game-fixed.js"></script>
-    
-    <!-- Phaser scenes and character movement -->
-    <script src="js/ranch-scene.js"></script>
-    <script src="js/night-scene.js"></script>
-    <script src="js/phaser-game-config.js"></script>
-    <script src="js/phaser-ui-bridge.js"></script>
     
     <!-- Game initialization (must be last) -->
     <script src="js/game-init.js"></script>
