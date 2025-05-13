@@ -2619,9 +2619,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log("Finished setting up all event listeners");
 });
 
-} // End of NightScene class
-
-} // End of NightScene if block
+// Note: Class declarations are now properly defined and don't need extra closing braces here
 
 // Socket event handlers
 if (typeof socket !== 'undefined') {
