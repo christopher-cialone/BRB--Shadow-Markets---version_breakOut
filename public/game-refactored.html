@@ -201,6 +201,136 @@
         .profile-stats div {
             padding: 5px 0;
         }
+        
+        /* Racing Game Styles */
+        #saloon-ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        .race-tracks {
+            width: 90%;
+            margin: 10px auto;
+        }
+        
+        .race-track {
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+        }
+        
+        .race-lane {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .race-label {
+            font-size: 24px;
+            width: 30px;
+            text-align: center;
+        }
+        
+        .race-track-bg {
+            flex: 1;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .race-progress {
+            height: 100%;
+            width: 0%;
+            transition: width 0.2s ease;
+        }
+        
+        .betting-controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            width: 90%;
+            margin: 20px auto;
+        }
+        
+        .bet-option {
+            width: 48%;
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 8px;
+            border-radius: 4px;
+        }
+        
+        .bet-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #555;
+            margin-right: 10px;
+        }
+        
+        .bet-slider {
+            flex: 1;
+            margin: 0 10px;
+        }
+        
+        .bet-amount {
+            min-width: 30px;
+            text-align: right;
+        }
+        
+        /* Suit colors */
+        .race-lane[data-suit="hearts"] .race-label,
+        .bet-btn[data-suit="hearts"] {
+            color: #ff3399;
+        }
+        
+        .race-lane[data-suit="diamonds"] .race-label,
+        .bet-btn[data-suit="diamonds"] {
+            color: #ff3333;
+        }
+        
+        .race-lane[data-suit="clubs"] .race-label,
+        .bet-btn[data-suit="clubs"] {
+            color: #333333;
+        }
+        
+        .race-lane[data-suit="spades"] .race-label,
+        .bet-btn[data-suit="spades"] {
+            color: #333333;
+        }
+        
+        .race-progress[data-suit="hearts"] {
+            background: linear-gradient(90deg, #ff3399, #ff66cc);
+        }
+        
+        .race-progress[data-suit="diamonds"] {
+            background: linear-gradient(90deg, #ff3333, #ff6666);
+        }
+        
+        .race-progress[data-suit="clubs"] {
+            background: linear-gradient(90deg, #333333, #666666);
+        }
+        
+        .race-progress[data-suit="spades"] {
+            background: linear-gradient(90deg, #333333, #666666);
+        }
     </style>
 </head>
 <body>
@@ -222,6 +352,7 @@
     <!-- Game scripts -->
     <script src="js/asset-handler.js"></script>
     <script src="js/racing-game.js"></script>
+    <script src="js/saloon-scene.js"></script>
     <script src="js/scene-loader.js"></script>
     <script src="js/game-manager.js"></script>
 </body>
