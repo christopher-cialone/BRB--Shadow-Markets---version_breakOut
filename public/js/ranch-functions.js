@@ -77,6 +77,104 @@ let weatherSystem = {
     }
 };
 
+// Initialize weather system
+function initWeatherSystem() {
+    try {
+        console.log('Initializing weather system...');
+        
+        // Start with random weather
+        const weatherTypes = Object.keys(weatherSystem.effects);
+        weatherSystem.currentWeather = weatherTypes[Math.floor(Math.random() * weatherTypes.length)];
+        weatherSystem.weatherStartTime = Date.now();
+        
+        console.log(`Starting weather: ${weatherSystem.currentWeather} (${weatherSystem.effects[weatherSystem.currentWeather].icon})`);
+        
+        // Set up periodic weather changes
+        if (!window.weatherInterval) {
+            window.weatherInterval = setInterval(changeWeather, weatherSystem.weatherDuration);
+        }
+        
+        // Add weather display to UI
+        updateWeatherUI();
+    } catch (err) {
+        console.error('Error in initWeatherSystem:', err);
+    }
+}
+
+// Change weather randomly
+function changeWeather() {
+    try {
+        const weatherTypes = Object.keys(weatherSystem.effects);
+        const oldWeather = weatherSystem.currentWeather;
+        
+        // Don't repeat the same weather twice in a row
+        let newWeather;
+        do {
+            newWeather = weatherTypes[Math.floor(Math.random() * weatherTypes.length)];
+        } while (newWeather === oldWeather && weatherTypes.length > 1);
+        
+        weatherSystem.currentWeather = newWeather;
+        weatherSystem.weatherStartTime = Date.now();
+        
+        console.log(`Weather changed from ${oldWeather} to ${newWeather} (${weatherSystem.effects[newWeather].icon})`);
+        
+        // Update weather UI
+        updateWeatherUI();
+        
+        // Notify player
+        if (window.gameManager && window.gameManager.showNotification) {
+            window.gameManager.showNotification(
+                `Weather changed to ${weatherSystem.effects[newWeather].name}! ${weatherSystem.effects[newWeather].icon}`, 
+                'info'
+            );
+        }
+    } catch (err) {
+        console.error('Error in changeWeather:', err);
+    }
+}
+
+// Update weather UI display
+function updateWeatherUI() {
+    try {
+        const weatherDisplay = document.getElementById('weather-display');
+        if (!weatherDisplay) {
+            // Create weather display if it doesn't exist
+            const ranchUI = document.getElementById('ranch-ui');
+            if (!ranchUI) return;
+            
+            const weatherDiv = document.createElement('div');
+            weatherDiv.id = 'weather-display';
+            weatherDiv.className = 'weather-display';
+            
+            // Style the weather display
+            weatherDiv.style.position = 'absolute';
+            weatherDiv.style.top = '10px';
+            weatherDiv.style.right = '10px';
+            weatherDiv.style.padding = '10px';
+            weatherDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+            weatherDiv.style.color = '#fff';
+            weatherDiv.style.borderRadius = '5px';
+            weatherDiv.style.fontSize = '18px';
+            weatherDiv.style.zIndex = '100';
+            weatherDiv.style.textShadow = '0 0 5px rgba(0, 255, 255, 0.7)';
+            weatherDiv.style.boxShadow = '0 0 10px rgba(0, 255, 255, 0.5)';
+            weatherDiv.style.fontFamily = "'Share Tech Mono', monospace";
+            
+            ranchUI.appendChild(weatherDiv);
+        }
+        
+        // Update the content
+        const weatherInfo = weatherSystem.effects[weatherSystem.currentWeather];
+        document.getElementById('weather-display').innerHTML = `
+            <div style="font-size: 24px; text-align: center;">${weatherInfo.icon}</div>
+            <div>${weatherInfo.name}</div>
+            <div style="font-size: 12px;">${weatherInfo.description}</div>
+        `;
+    } catch (err) {
+        console.error('Error in updateWeatherUI:', err);
+    }
+}
+
 // Initialize the ranch grid
 function initRanchGrid() {
     try {
@@ -102,6 +200,9 @@ function initRanchGrid() {
         
         // Setup UI elements
         setupRanchUI();
+        
+        // Initialize weather system
+        initWeatherSystem();
         
         console.log('Ranch grid initialized with', ranchGrid.cells.length, 'cells');
     } catch (err) {
@@ -232,6 +333,139 @@ function updateRanchUI() {
 }
 
 // Interact with a specific ranch cell
+// Show crop selection menu
+function showCropSelectionMenu(cellIndex, x, y) {
+    try {
+        // Remove any existing crop selection menu
+        const existingMenu = document.getElementById('crop-selection-menu');
+        if (existingMenu) {
+            existingMenu.remove();
+        }
+        
+        // Create menu container
+        const menu = document.createElement('div');
+        menu.id = 'crop-selection-menu';
+        menu.className = 'crop-selection-menu';
+        
+        // Style the menu
+        Object.assign(menu.style, {
+            position: 'fixed',
+            left: (x - 100) + 'px',
+            top: (y - 50) + 'px',
+            width: '200px',
+            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+            border: '2px solid rgba(0, 255, 255, 0.7)',
+            borderRadius: '10px',
+            padding: '10px',
+            boxShadow: '0 0 20px rgba(0, 255, 255, 0.5)',
+            zIndex: '1000',
+            color: 'white',
+            fontFamily: "'Share Tech Mono', monospace"
+        });
+        
+        // Add title
+        const title = document.createElement('div');
+        title.textContent = 'Select Crop Type';
+        title.style.textAlign = 'center';
+        title.style.marginBottom = '10px';
+        title.style.fontSize = '16px';
+        title.style.borderBottom = '1px solid rgba(0, 255, 255, 0.5)';
+        title.style.paddingBottom = '5px';
+        title.style.textShadow = '0 0 5px rgba(0, 255, 255, 0.7)';
+        menu.appendChild(title);
+        
+        // Create crop options
+        Object.keys(cropTypes).forEach(cropType => {
+            const option = document.createElement('div');
+            option.className = 'crop-option';
+            
+            // Style the option
+            Object.assign(option.style, {
+                padding: '8px',
+                margin: '5px 0',
+                cursor: 'pointer',
+                borderRadius: '5px',
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                transition: 'all 0.3s ease'
+            });
+            
+            const crop = cropTypes[cropType];
+            
+            // Add hover effect
+            option.addEventListener('mouseover', () => {
+                option.style.backgroundColor = 'rgba(0, 255, 255, 0.3)';
+                option.style.transform = 'translateX(5px)';
+            });
+            
+            option.addEventListener('mouseout', () => {
+                option.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                option.style.transform = 'translateX(0)';
+            });
+            
+            // Set content
+            option.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 20px; margin-right: 10px;">${crop.icon}</span>
+                    <span>${crop.name}</span>
+                </div>
+                <div style="font-size: 11px; color: #aaa; margin-top: 3px;">
+                    Growth: ${(crop.growthTime/60000).toFixed(1)}m
+                </div>
+            `;
+            
+            // Add click handler
+            option.addEventListener('click', () => {
+                plantRanchCell(cellIndex, cropType);
+                menu.remove(); // Close menu after selection
+            });
+            
+            menu.appendChild(option);
+        });
+        
+        // Add close button
+        const closeButton = document.createElement('div');
+        closeButton.textContent = '✖ Cancel';
+        closeButton.style.textAlign = 'center';
+        closeButton.style.marginTop = '10px';
+        closeButton.style.cursor = 'pointer';
+        closeButton.style.fontSize = '14px';
+        closeButton.style.opacity = '0.7';
+        
+        closeButton.addEventListener('mouseover', () => {
+            closeButton.style.opacity = '1';
+        });
+        
+        closeButton.addEventListener('mouseout', () => {
+            closeButton.style.opacity = '0.7';
+        });
+        
+        closeButton.addEventListener('click', () => {
+            menu.remove();
+        });
+        
+        menu.appendChild(closeButton);
+        
+        // Add menu to body
+        document.body.appendChild(menu);
+        
+        // Close menu when clicking outside
+        const closeMenuOnOutsideClick = (event) => {
+            if (!menu.contains(event.target)) {
+                menu.remove();
+                document.removeEventListener('click', closeMenuOnOutsideClick);
+            }
+        };
+        
+        // Delay adding the event listener to prevent immediate closure
+        setTimeout(() => {
+            document.addEventListener('click', closeMenuOnOutsideClick);
+        }, 100);
+        
+    } catch (err) {
+        console.error('Error in showCropSelectionMenu:', err);
+    }
+}
+
 function interactWithRanchCell(cellIndex) {
     try {
         if (!ranchGrid.initialized) return;
@@ -240,15 +474,25 @@ function interactWithRanchCell(cellIndex) {
         
         // Different interaction based on cell state
         if (cell.state === 'empty') {
-            plantRanchCell(cellIndex);
+            // Show crop selection menu instead of directly planting
+            const cellElement = document.querySelector(`.ranch-cell[data-index="${cellIndex}"]`);
+            if (cellElement) {
+                const rect = cellElement.getBoundingClientRect();
+                showCropSelectionMenu(cellIndex, rect.left + rect.width/2, rect.top + rect.height/2);
+            } else {
+                // Fallback if we can't get the element position
+                showCropSelectionMenu(cellIndex, window.innerWidth/2, window.innerHeight/2);
+            }
         } else if (cell.state === 'planted') {
             waterRanchCell(cellIndex);
         } else if (cell.state === 'harvestable') {
             harvestRanchCell(cellIndex);
         }
         
-        // Update UI after interaction
-        updateRanchUI();
+        // Update UI after interaction (except for empty cells which show the menu)
+        if (cell.state !== 'empty') {
+            updateRanchUI();
+        }
     } catch (err) {
         console.error('Error in interactWithRanchCell:', err);
         if (window.gameManager && window.gameManager.showNotification) {
@@ -394,28 +638,80 @@ function harvestRanchCell(cellIndex) {
         if (!ranchGrid.initialized) return;
         
         const cell = ranchGrid.cells[cellIndex];
-        if (cell.state !== 'harvestable') return;
+        if (cell.state !== 'harvestable' || !cell.crop) return;
         
         // Check player state
         if (!window.gameState || !window.gameState.player) return;
         
         const player = window.gameState.player;
         
-        // Harvesting gives 10 hay
-        player.hay += 10;
+        // Get crop data
+        const cropData = cropTypes[cell.crop];
+        if (!cropData) {
+            console.error('Unknown crop type when harvesting:', cell.crop);
+            return;
+        }
         
-        // If it's wheat, also add some cattle tokens
-        if (cell.crop === 'wheat') {
-            const cattleReward = 5;
-            player.cattleBalance += cattleReward;
-            
-            if (window.gameManager && window.gameManager.showNotification) {
-                window.gameManager.showNotification(`Harvested! +10 Hay, +${cattleReward} CATTLE`, 'success');
+        // Get the base reward for this crop type
+        const rewards = {...cropData.harvestReward};
+        
+        // Apply modifiers based on growing conditions
+        let bonusMultiplier = 1.0;
+        let bonusText = '';
+        
+        // Apply weather bonuses
+        if (cell.weatherInfluence) {
+            // Weather when it was growing affects reward
+            const weatherBonus = cropData.weatherEffects[cell.weatherInfluence] || 1.0;
+            if (weatherBonus > 1.0) {
+                bonusMultiplier *= weatherBonus;
+                bonusText += ` ${weatherSystem.effects[cell.weatherInfluence].icon}`;
             }
-        } else {
-            if (window.gameManager && window.gameManager.showNotification) {
-                window.gameManager.showNotification('Harvested! +10 Hay', 'success');
-            }
+        }
+        
+        // Apply watering bonus
+        if (cell.watered) {
+            bonusMultiplier *= 1.2; // 20% bonus for watered crops
+            bonusText += ' 💧';
+        }
+        
+        // Apply damage penalty
+        if (cell.damaged) {
+            bonusMultiplier *= 0.7; // 30% penalty for damaged crops
+            bonusText += ' ⚡';
+        }
+        
+        // Apply rain boost for wheat
+        if (cell.rainBoosted && cell.crop === 'wheat') {
+            bonusMultiplier *= 1.3; // 30% bonus for rain-boosted wheat
+            bonusText += ' 🌧️';
+        }
+        
+        // Calculate final rewards with applied modifiers
+        Object.keys(rewards).forEach(resource => {
+            rewards[resource] = Math.floor(rewards[resource] * bonusMultiplier);
+        });
+        
+        // Award the resources to the player
+        if (rewards.hay) player.hay = (player.hay || 0) + rewards.hay;
+        if (rewards.cattle) player.cattleBalance = (player.cattleBalance || 0) + rewards.cattle;
+        if (rewards.water) player.water = (player.water || 0) + rewards.water;
+        
+        // Track harvesting statistics
+        if (!player.stats) player.stats = {};
+        if (!player.stats.cropsHarvested) player.stats = {...player.stats, cropsHarvested: {}};
+        if (!player.stats.cropsHarvested[cell.crop]) player.stats.cropsHarvested[cell.crop] = 0;
+        player.stats.cropsHarvested[cell.crop]++;
+        
+        // Build notification message
+        let rewardText = '';
+        if (rewards.hay) rewardText += `+${rewards.hay} Hay `;
+        if (rewards.cattle) rewardText += `+${rewards.cattle} CATTLE `;
+        if (rewards.water) rewardText += `+${rewards.water} Water `;
+        
+        // Notify player
+        if (window.gameManager && window.gameManager.showNotification) {
+            window.gameManager.showNotification(`Harvested ${cropData.name}! ${rewardText}${bonusText}`, 'success');
         }
         
         // Reset cell to empty
@@ -423,6 +719,10 @@ function harvestRanchCell(cellIndex) {
         cell.crop = null;
         cell.planted = null;
         cell.growthStage = 0;
+        cell.watered = false;
+        cell.weatherInfluence = null;
+        cell.damaged = false;
+        cell.rainBoosted = false;
         
         // Update UI
         updateRanchUI();
@@ -435,9 +735,12 @@ function harvestRanchCell(cellIndex) {
         // Save game progress
         if (window.saveGameState) {
             window.saveGameState();
+        } else if (window.saveGame) {
+            window.saveGame();
         }
         
-        console.log('Harvested cell', cellIndex);
+        console.log(`Harvested ${cell.crop} from cell ${cellIndex} with bonus multiplier ${bonusMultiplier.toFixed(2)}`);
+    
     } catch (err) {
         console.error('Error in harvestRanchCell:', err);
         if (window.gameManager && window.gameManager.showNotification) {
