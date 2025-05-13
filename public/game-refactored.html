@@ -142,6 +142,65 @@
             gap: 10px;
             margin-bottom: 15px;
         }
+        
+        /* UI Section Visibility */
+        .ui-section {
+            display: block;
+            transition: opacity 0.3s ease;
+        }
+        
+        .ui-section.hidden {
+            display: none;
+        }
+        
+        /* Betting UI */
+        .bet-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            min-width: 80px;
+        }
+        
+        .bet-btn {
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 5px;
+        }
+        
+        .bet-slider {
+            width: 100%;
+            margin: 10px 0;
+        }
+        
+        .bet-amount {
+            font-weight: bold;
+        }
+        
+        /* Profile UI */
+        .profile-stats {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .profile-stats h3 {
+            margin-top: 0;
+            color: #e94560;
+            border-bottom: 1px solid #e94560;
+            padding-bottom: 5px;
+        }
+        
+        .profile-stats div {
+            padding: 5px 0;
+        }
     </style>
 </head>
 <body>
@@ -161,7 +220,7 @@
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
     
     <!-- Game scripts -->
-    <script src="js/game-refactored.js"></script>
+    <script src="js/ui-manager.js"></script>
     <script src="js/scene-loader.js"></script>
     <script src="js/game-init.js"></script>
 </body>

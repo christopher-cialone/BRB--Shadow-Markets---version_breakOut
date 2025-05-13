@@ -222,13 +222,25 @@ class MainScene extends Phaser.Scene {
     // Enter the saloon
     enterSaloon() {
         this.showNotification('Entering the Saloon...');
-        this.scene.start('SaloonScene');
+        
+        // Use UI manager if available
+        if (window.uiManager && window.uiManager.switchScene) {
+            window.uiManager.switchScene('saloon-scene');
+        } else {
+            this.scene.start('SaloonScene');
+        }
     }
     
     // Enter the ether range
     enterEtherRange() {
         this.showNotification('Entering the Ether Range...');
-        this.scene.start('EtherScene');
+        
+        // Use UI manager if available
+        if (window.uiManager && window.uiManager.switchScene) {
+            window.uiManager.switchScene('ether-scene');
+        } else {
+            this.scene.start('EtherScene');
+        }
     }
     
     // Interact with the field
