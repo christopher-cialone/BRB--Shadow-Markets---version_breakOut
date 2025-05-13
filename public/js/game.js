@@ -3513,6 +3513,10 @@ function switchScene(scene) {
         window.currentScene = 'main-menu'; // Default initial scene
     }
     
+    // Store previous scene for reference
+    const prevScene = window.currentScene;
+    console.log(`Previous scene was: ${prevScene}`);
+    
     // Map HTML UI elements
     const mainMenu = document.getElementById('main-menu');
     const ranchUI = document.getElementById('ranch-ui');
@@ -3537,33 +3541,62 @@ function switchScene(scene) {
         'night': 'NightScene'
     };
     
-    // Hide all HTML UI screens
+    // Hide all HTML UI screens first
     Object.values(screens).forEach(screen => {
-        if (screen) screen.classList.add('hidden');
+        if (screen) {
+            console.log(`Hiding UI screen: ${screen.id}`);
+            screen.classList.add('hidden');
+        }
     });
+    
+    // Show the appropriate UI screen
+    if (screens[scene]) {
+        console.log(`Showing UI screen: ${screens[scene].id}`);
+        screens[scene].classList.remove('hidden');
+    } else {
+        console.warn(`No UI screen found for scene: ${scene}`);
+    }
     
     // Switch the Phaser scene if game is available
     if (window.game && window.game.scene && sceneMap[scene]) {
         // Get the previous scene and new scene keys
-        const prevSceneKey = sceneMap[window.currentScene];
+        const prevSceneKey = sceneMap[prevScene];
         const newSceneKey = sceneMap[scene];
         
-        console.log(`Switching Phaser scene from ${prevSceneKey} to ${newSceneKey}`);
+        console.log(`Switching Phaser scene from ${prevSceneKey || 'none'} to ${newSceneKey}`);
         
-        // Stop all currently running scenes first
-        const activeScenes = window.game.scene.getScenes(true);
-        activeScenes.forEach(activeScene => {
-            if (activeScene.scene.key !== newSceneKey) {
-                window.game.scene.stop(activeScene.scene.key);
+        try {
+            // Stop all currently running scenes first
+            const activeScenes = window.game.scene.getScenes(true);
+            activeScenes.forEach(activeScene => {
+                if (activeScene.scene.key !== newSceneKey) {
+                    console.log(`Stopping scene: ${activeScene.scene.key}`);
+                    window.game.scene.stop(activeScene.scene.key);
+                }
+            });
+            
+            // Start the new scene if it's not already running
+            if (!window.game.scene.isActive(newSceneKey)) {
+                console.log(`Starting scene: ${newSceneKey}`);
+                window.game.scene.start(newSceneKey);
+                
+                // Check grid initialization after a short delay
+                if (scene === 'ranch' || scene === 'night') {
+                    setTimeout(checkGridStatus, 500, scene);
+                }
+            } else {
+                console.log(`Scene ${newSceneKey} is already active`);
             }
-        });
-        
-        // Start the new scene if it's not already running
-        if (!window.game.scene.isActive(newSceneKey)) {
-            window.game.scene.start(newSceneKey);
+        } catch (error) {
+            console.error(`Error switching to scene ${newSceneKey}:`, error);
         }
     } else if (sceneMap[scene]) {
         console.warn("Phaser game instance not available for scene switching");
+    }
+    
+    // Use WebSocket integration if available
+    if (window.websocketAPI && window.websocketAPI.notifySceneInit) {
+        window.websocketAPI.notifySceneInit(scene);
     }
     
     // Store current scene
@@ -3574,8 +3607,60 @@ function switchScene(scene) {
         // Hide Phaser canvas for profile scene (HTML only)
         if (phaserCanvas) phaserCanvas.style.display = 'none';
     } else {
-        // Show Phaser canvas for other scenes
+        // Show Phaser canvas for game scenes
         if (phaserCanvas) phaserCanvas.style.display = 'block';
+    }
+    
+    console.log(`Scene switch complete: ${scene}`);
+}
+
+/**
+ * Check grid status after scene initialization
+ * @param {string} sceneType - The type of scene ('ranch' or 'night')
+ */
+function checkGridStatus(sceneType) {
+    console.log(`Checking grid status for ${sceneType} scene`);
+    
+    if (sceneType === 'ranch') {
+        // Check ranch grid initialization
+        if (!window.ranchGrid) {
+            console.error('ranchGrid is undefined or null');
+            // Initialize if missing
+            window.ranchGrid = { cells: [] };
+            console.log('Created empty ranchGrid object');
+        } else {
+            console.log(`Ranch grid has ${window.ranchGrid.cells?.length || 0} cells`);
+            
+            // Log the state of the first few cells
+            if (window.ranchGrid.cells && window.ranchGrid.cells.length > 0) {
+                for (let i = 0; i < Math.min(3, window.ranchGrid.cells.length); i++) {
+                    console.log(`Ranch cell ${i} state: ${window.ranchGrid.cells[i].state || 'undefined'}`);
+                }
+            } else {
+                console.warn('Ranch grid has no cells');
+            }
+        }
+    } else if (sceneType === 'night') {
+        // Check shadow grid initialization
+        if (!window.shadowGrid) {
+            console.error('shadowGrid is undefined or null');
+            // Initialize if missing
+            window.shadowGrid = { cells: [] };
+            console.log('Created empty shadowGrid object');
+        } else {
+            console.log(`Shadow grid has ${window.shadowGrid.cells?.length || 0} cells`);
+            
+            // Log the state of the first few cells
+            if (window.shadowGrid.cells && window.shadowGrid.cells.length > 0) {
+                for (let i = 0; i < Math.min(3, window.shadowGrid.cells.length); i++) {
+                    console.log(`Shadow cell ${i} state: ${window.shadowGrid.cells[i].state || 'undefined'}`);
+                }
+            } else {
+                console.warn('Shadow grid has no cells');
+            }
+        }
+    }
+}
     }
     
     // Special handling for night scene
