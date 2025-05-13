@@ -54,11 +54,42 @@ class SaloonScene extends Phaser.Scene {
     }
 
     createSaloonElements() {
-        // Add card table and race track visuals
-        const cardTable = this.add.rectangle(400, 300, 500, 300, 0x3a2e1f);
-        cardTable.setStrokeStyle(4, 0x654321);
+        // Add cyberpunk/western styled card table and race track visuals
+        // Desert brown background with neon border
+        const cardTable = this.add.rectangle(400, 300, 500, 300, 0x3a1f2e);
+        cardTable.setStrokeStyle(4, 0x8B4513);
         
-        // Add card symbols for each suit
+        // Add neon border with pulsing animation
+        const neonBorder = this.add.rectangle(400, 300, 510, 310, 0x00FFFF, 0);
+        neonBorder.setStrokeStyle(2, 0x00FFFF, 0.7);
+        
+        // Create pulsing animation for the neon border
+        this.tweens.add({
+            targets: neonBorder,
+            alpha: { from: 0.7, to: 0.3 },
+            duration: 2000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+        
+        // Add dust particle effect for western atmosphere
+        const particles = this.add.particles('bubble');
+        const emitter = particles.createEmitter({
+            x: { min: 200, max: 600 },
+            y: { min: 150, max: 450 },
+            scale: { start: 0.05, end: 0 },
+            speed: { min: 5, max: 15 },
+            angle: { min: 0, max: 360 },
+            rotate: { min: 0, max: 360 },
+            alpha: { start: 0.3, end: 0 },
+            lifespan: 2000,
+            quantity: 1,
+            frequency: 500,
+            tint: [0xFFDAB9, 0x8B4513]
+        });
+        
+        // Add card symbols for each suit with cyberpunk effect
         const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
         const positions = [
             { x: 200, y: 200 },
@@ -67,18 +98,64 @@ class SaloonScene extends Phaser.Scene {
             { x: 400, y: 400 }
         ];
         
+        // Create neon glow effect
+        const suitColors = {
+            hearts: 0xff2f5f,     // Neon red
+            diamonds: 0xffaf2f,    // Neon orange
+            clubs: 0x2fff7f,       // Neon green
+            spades: 0x2f9fff       // Neon blue
+        };
+        
         suits.forEach((suit, index) => {
+            // Create border behind the card for glow effect
+            const glowBorder = this.add.rectangle(
+                positions[index].x, 
+                positions[index].y, 
+                100, 
+                100, 
+                suitColors[suit], 
+                0.3
+            );
+            glowBorder.setStrokeStyle(2, suitColors[suit], 0.8);
+            
+            // Create flickering animation for the border
+            this.tweens.add({
+                targets: glowBorder,
+                alpha: { from: 0.3, to: 0.7 },
+                duration: 1500 + Math.random() * 1000, // Random duration for more natural effect
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+            
+            // Add the main card image
             const cardImage = this.add.image(positions[index].x, positions[index].y, `card-${suit}`);
             cardImage.setScale(0.5);
             cardImage.setInteractive();
+            cardImage.setData('suit', suit); // Store suit for reference
             
-            // Add hover effect
+            // Add cyberpunk hover effect
             cardImage.on('pointerover', () => {
                 cardImage.setScale(0.6);
+                glowBorder.setAlpha(0.8);
+                glowBorder.setStrokeStyle(3, suitColors[suit], 1);
+                
+                // Create a pulsing effect
+                this.tweens.add({
+                    targets: glowBorder,
+                    scaleX: 1.1,
+                    scaleY: 1.1,
+                    duration: 300,
+                    yoyo: true,
+                    repeat: 0
+                });
             });
             
             cardImage.on('pointerout', () => {
                 cardImage.setScale(0.5);
+                glowBorder.setAlpha(0.3);
+                glowBorder.setStrokeStyle(2, suitColors[suit], 0.8);
+                glowBorder.setScale(1, 1);
             });
             
             // Click to place bet through racing game UI
@@ -87,25 +164,101 @@ class SaloonScene extends Phaser.Scene {
                     // Quick bet through card clicks (add 5 to selected suit)
                     const currentBet = window.racingGameState?.bets?.[suit] || 0;
                     window.racingGame.placeBet(suit, currentBet + 5);
+                    
+                    // Add visual feedback for clicking
+                    this.tweens.add({
+                        targets: cardImage,
+                        scaleX: 0.45,
+                        scaleY: 0.45,
+                        duration: 100,
+                        yoyo: true,
+                        ease: 'Bounce.easeOut'
+                    });
                 }
             });
         });
         
-        // Add return to town button
+        // Add cyberpunk-styled return to town button with neon effect
+        const returnBg = this.add.rectangle(120, 550, 150, 40, 0x3a1f2e);
+        returnBg.setStrokeStyle(2, 0x8B4513, 1);
+        
+        const returnGlow = this.add.rectangle(120, 550, 155, 45, 0x00FFFF, 0);
+        returnGlow.setStrokeStyle(1.5, 0x00FFFF, 0.7);
+        
+        // Create flickering animation for the button glow
+        this.tweens.add({
+            targets: returnGlow,
+            alpha: { from: 0.7, to: 0.3 },
+            duration: 1200 + Math.random() * 800,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+        
         const returnButton = this.add.text(50, 550, 'Return to Town', { 
+            fontFamily: 'Share Tech Mono, monospace',
             fontSize: '18px',
-            fill: '#fff',
-            backgroundColor: '#4a4a4a',
-            padding: { x: 10, y: 5 }
+            fill: '#00FFFF',
+            padding: { x: 10, y: 5 },
+            shadow: {
+                offsetX: 1,
+                offsetY: 1,
+                color: '#000',
+                blur: 2,
+                stroke: true,
+                fill: true
+            }
         });
         returnButton.setInteractive();
         
         returnButton.on('pointerover', () => {
-            returnButton.setStyle({ backgroundColor: '#5a5a5a' });
+            returnButton.setStyle({ 
+                fill: '#FFFFFF',
+                fontSize: '19px',
+                shadow: {
+                    offsetX: 2,
+                    offsetY: 2,
+                    color: '#00FFFF',
+                    blur: 5,
+                    stroke: true,
+                    fill: true
+                }
+            });
+            
+            // Pulse the glow on hover
+            this.tweens.add({
+                targets: returnGlow,
+                scaleX: 1.1,
+                scaleY: 1.1,
+                alpha: 0.9,
+                duration: 300,
+                yoyo: false
+            });
         });
         
         returnButton.on('pointerout', () => {
-            returnButton.setStyle({ backgroundColor: '#4a4a4a' });
+            returnButton.setStyle({ 
+                fill: '#00FFFF',
+                fontSize: '18px',
+                shadow: {
+                    offsetX: 1,
+                    offsetY: 1,
+                    color: '#000',
+                    blur: 2,
+                    stroke: true,
+                    fill: true
+                }
+            });
+            
+            // Reset the glow on pointer out
+            this.tweens.add({
+                targets: returnGlow,
+                scaleX: 1,
+                scaleY: 1,
+                alpha: 0.7,
+                duration: a few hundred,
+                yoyo: false
+            });
         });
         
         returnButton.on('pointerdown', () => {
