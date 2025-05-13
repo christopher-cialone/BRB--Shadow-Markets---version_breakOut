@@ -450,28 +450,120 @@ function harvestRanchCell(cellIndex) {
 function startGrowthProcess(cellIndex) {
     try {
         const cell = ranchGrid.cells[cellIndex];
+        if (!cell || cell.state !== 'planted' || !cell.crop) return;
         
-        // After 10 seconds, move to growing stage if it hasn't been watered
+        // Get crop type data
+        const cropData = cropTypes[cell.crop];
+        if (!cropData) {
+            console.error('Unknown crop type:', cell.crop);
+            return;
+        }
+        
+        // Calculate growth time based on weather conditions
+        let growthTime = cropData.growthTime;
+        const weatherEffect = cropData.weatherEffects[weatherSystem.currentWeather] || 1;
+        
+        // Apply weather effect
+        growthTime = growthTime / weatherEffect;
+        
+        // For demo purposes, speed up growth times by a factor of 4
+        const speedUpFactor = 4;
+        const actualGrowthTime = growthTime / speedUpFactor;
+        
+        // Stage 1: Need water warning (20% of growth time)
+        const waterWarningTime = actualGrowthTime * 0.2;
+        
+        // Stage 2: First visible growth (40% of growth time)
+        const firstGrowthTime = actualGrowthTime * 0.4;
+        
+        // Stage 3: Harvestable (100% of growth time)
+        const harvestTime = actualGrowthTime;
+        
+        // Stage 4: Withering if not harvested (150% of growth time)
+        const witherTime = actualGrowthTime * 1.5;
+        
+        console.log(`Growing ${cell.crop} with base time ${cropData.growthTime}ms, weather effect ${weatherEffect}, adjusted time ${actualGrowthTime}ms`);
+        console.log(`Weather is ${weatherSystem.currentWeather} (${weatherSystem.effects[weatherSystem.currentWeather].icon})`);
+        
+        // After waterWarningTime, warn player to water if not already watered
         setTimeout(() => {
-            if (cell.state === 'planted' && cell.growthStage === 0) {
-                cell.growthStage = 1;
-                updateRanchUI();
-                
-                // Notify player
+            if (cell.state === 'planted' && !cell.watered && cell.growthStage === 0) {
+                // Don't increase growth stage yet, just notify
                 if (window.gameManager && window.gameManager.showNotification) {
-                    window.gameManager.showNotification('Your crops need water!', 'info');
+                    window.gameManager.showNotification(`Your ${cropData.name} needs water! ${weatherSystem.effects[weatherSystem.currentWeather].icon}`, 'info');
                 }
             }
-        }, 10000); // 10 seconds
+        }, waterWarningTime);
         
-        // After 20 seconds, plants wither if not harvested
+        // After firstGrowthTime, move to first growth stage
         setTimeout(() => {
-            // Check if it's still in a growing state
-            if (cell.state === 'planted' && cell.growthStage < 2) {
+            if (cell.state === 'planted') {
+                // Apply watering boost if watered
+                if (cell.watered) {
+                    cell.growthStage = 1;
+                    cell.weatherInfluence = weatherSystem.currentWeather;
+                    updateRanchUI();
+                    
+                    console.log(`Cell ${cellIndex} (${cell.crop}) reached growth stage 1`);
+                    
+                    // Notify player of growth progress
+                    if (window.gameManager && window.gameManager.showNotification) {
+                        window.gameManager.showNotification(`${cropData.name} sprouting! ${cropData.icon}`, 'info');
+                    }
+                } else {
+                    // Not watered, less progress
+                    cell.growthStage = 1;
+                    updateRanchUI();
+                    
+                    if (window.gameManager && window.gameManager.showNotification) {
+                        window.gameManager.showNotification(`${cropData.name} growing slowly. Water it! ${cropData.icon}`, 'warning');
+                    }
+                }
+                
+                // Update weather effects
+                updateWeatherEffects(cellIndex);
+            }
+        }, firstGrowthTime);
+        
+        // After harvestTime, make crops harvestable
+        setTimeout(() => {
+            if (cell.state === 'planted') {
+                if (cell.watered || cell.growthStage >= 1) {
+                    // Successfully grown
+                    cell.state = 'harvestable';
+                    cell.harvestable = true;
+                    cell.growthStage = 2;
+                    updateRanchUI();
+                    
+                    console.log(`Cell ${cellIndex} (${cell.crop}) is now harvestable`);
+                    
+                    // Notify player based on crop type
+                    if (window.gameManager && window.gameManager.showNotification) {
+                        window.gameManager.showNotification(`${cropData.name} ready to harvest! ${cropData.icon}`, 'success');
+                    }
+                    
+                    // Save game when crops are ready
+                    if (window.saveGame) {
+                        window.saveGame();
+                    }
+                } else {
+                    // Not watered enough, will wither soon
+                    if (window.gameManager && window.gameManager.showNotification) {
+                        window.gameManager.showNotification(`${cropData.name} struggling without water! ${cropData.icon}`, 'warning');
+                    }
+                }
+            }
+        }, harvestTime);
+        
+        // After witherTime, crops wither if not harvested
+        setTimeout(() => {
+            // Check if it's still planted and not yet harvested
+            if (cell.state === 'planted' || (cell.state === 'harvestable' && !cell.harvested)) {
                 cell.state = 'empty';
                 cell.crop = null;
                 cell.planted = null;
                 cell.growthStage = 0;
+                cell.watered = false;
                 
                 updateRanchUI();
                 
@@ -480,9 +572,43 @@ function startGrowthProcess(cellIndex) {
                     window.gameManager.showNotification('Your crops withered!', 'error');
                 }
             }
-        }, 30000); // 30 seconds
+        }, witherTime);
     } catch (err) {
         console.error('Error in startGrowthProcess:', err);
+    }
+}
+
+// Update crop growth based on changing weather
+function updateWeatherEffects(cellIndex) {
+    const cell = ranchGrid.cells[cellIndex];
+    if (!cell || cell.state !== 'planted' || !cell.crop) return;
+    
+    // If weather has changed since planting, apply a one-time effect
+    const currentWeather = weatherSystem.currentWeather;
+    if (cell.lastWeather && cell.lastWeather !== currentWeather) {
+        console.log(`Weather changed from ${cell.lastWeather} to ${currentWeather} for ${cell.crop} in cell ${cellIndex}`);
+        
+        // Special weather change effects
+        if (currentWeather === 'stormy' && cell.crop !== 'cactus') {
+            // Non-cactus crops have a chance to be damaged in storms
+            if (Math.random() < 0.3) { // 30% chance
+                cell.damaged = true;
+                
+                if (window.gameManager && window.gameManager.showNotification) {
+                    window.gameManager.showNotification(`${cropTypes[cell.crop].name} damaged by storm! ${weatherSystem.effects.stormy.icon}`, 'warning');
+                }
+            }
+        } else if (currentWeather === 'rainy' && cell.crop === 'wheat') {
+            // Wheat gets an extra boost during rain
+            cell.rainBoosted = true;
+            
+            if (window.gameManager && window.gameManager.showNotification) {
+                window.gameManager.showNotification(`${cropTypes[cell.crop].name} thriving in the rain! ${weatherSystem.effects.rainy.icon}`, 'info');
+            }
+        }
+        
+        // Update the last weather
+        cell.lastWeather = currentWeather;
     }
 }
 
