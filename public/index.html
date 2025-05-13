@@ -6,6 +6,8 @@
     <title>BRB Bull Run Boost Shadow Markets</title>
     <link rel="stylesheet" href="css/fonts.css">
     <link rel="stylesheet" href="css/styles.css">
+    <!-- Share Tech Mono font for tutorials -->
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="game-container">
@@ -16,7 +18,7 @@
     <div id="ui-container">
         <!-- Main Menu -->
         <div id="main-menu" class="screen">
-            <h1>
+            <h1 id="game-title">
                 <img src="img/brb-logo.png" alt="Bull Run Boost Logo" class="game-logo" style="width: 36px; height: auto; vertical-align: middle; margin-right: 10px; display: inline-block;">
                 BRB Bull Run Boost
             </h1>
@@ -624,6 +626,9 @@
     
     <!-- Critical fixes for the game -->
     <script src="js/critical-fixes.js"></script>
+    
+    <!-- Tutorial system -->
+    <script src="js/tutorial-system.js"></script>
     
     <!-- Fixed components -->
     <script src="js/saloon-scene-fixed.js"></script>
