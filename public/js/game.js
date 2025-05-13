@@ -2408,8 +2408,11 @@ const config = {
     }
 };
 
-// Create game instance
-const game = new Phaser.Game(config);
+// Create game instance and store it globally
+window.game = new Phaser.Game(config);
+// Also keep a local reference
+const game = window.game;
+console.log("Phaser game instance created successfully");
 
 // Initialize UI event listeners
 document.addEventListener('DOMContentLoaded', () => {
