@@ -1197,15 +1197,20 @@ class NightScene extends Phaser.Scene {
         );
         this.bg.setTint(0x1a0f33); // Deep purple/blue tint for night scene
         
-        // Initialize shadow grid if needed
-        if (shadowGrid.cells.length === 0) {
-            console.log("Initializing Shadow Grid cells");
-            for (let i = 0; i < shadowGrid.size * shadowGrid.size; i++) {
-                shadowGrid.cells.push({
-                    state: 'empty-night',
-                    stage: 0,
-                    maxStage: 3
-                });
+        // Initialize shadow grid using our potion-crafting functions if available
+        if (typeof window.initShadowGrid === 'function') {
+            window.initShadowGrid();
+        } else {
+            // Fallback initialization for backward compatibility
+            if (!window.shadowGrid || shadowGrid.cells.length === 0) {
+                console.log("Initializing Shadow Grid cells (fallback method)");
+                for (let i = 0; i < shadowGrid.size * shadowGrid.size; i++) {
+                    shadowGrid.cells.push({
+                        state: 'empty-night',
+                        stage: 0,
+                        maxStage: 3
+                    });
+                }
             }
         }
         
@@ -1345,7 +1350,95 @@ class NightScene extends Phaser.Scene {
         // Add resize listener
         this.scale.on('resize', this.resize, this);
         
-        console.log("NightScene created with Phaser grid");
+        // Initialize the Phaser grid
+        this.initPhaserGrid();
+        
+        // Add method to update the potion grid visuals
+        this.updatePotionGrid = function() {
+            // Make sure we have cell sprites already created
+            if (!this.cellSprites || this.cellSprites.length === 0) return;
+            
+            // Update each cell based on its state in the shadowGrid
+            if (window.shadowGrid && window.shadowGrid.cells) {
+                window.shadowGrid.cells.forEach((cell, index) => {
+                    if (index < this.cellSprites.length) {
+                        const sprite = this.cellSprites[index];
+                        
+                        // Update cell texture based on state
+                        let textureKey = 'empty-night';
+                        
+                        if (cell.state === 'brewing') {
+                            textureKey = 'brewing';
+                            
+                            // Add brewing animation if not already present
+                            if (!this.bubblingTimers[index]) {
+                                this.addBrewingAnimation(index);
+                            }
+                        } else if (cell.state === 'ready') {
+                            textureKey = 'ready';
+                            
+                            // Add glow animation for ready potions
+                            if (!this.glowTimers[index]) {
+                                this.addGlowEffect(index);
+                            }
+                        } else {
+                            // For empty cells, clear any animations
+                            if (this.bubblingTimers[index]) {
+                                clearInterval(this.bubblingTimers[index]);
+                                this.bubblingTimers[index] = null;
+                            }
+                            if (this.glowTimers[index]) {
+                                clearInterval(this.glowTimers[index]);
+                                this.glowTimers[index] = null;
+                            }
+                        }
+                        
+                        // Update the cell's texture
+                        if (sprite.texture.key !== textureKey) {
+                            sprite.setTexture(textureKey);
+                        }
+                        
+                        // If brewing, update the cell indicator with potion color
+                        if (cell.state === 'brewing' || cell.state === 'ready') {
+                            const indicator = this.cellIndicators[index];
+                            if (indicator && cell.potion && window.potionTypes) {
+                                const potionColor = window.potionTypes[cell.potion]?.color || 0xffffff;
+                                indicator.setFillStyle(potionColor, 0.7);
+                                indicator.setVisible(true);
+                                
+                                // If overbrewed, add a pulsing effect
+                                if (cell.state === 'ready' && cell.overbrewed) {
+                                    if (!indicator.overbrewTween) {
+                                        indicator.overbrewTween = this.tweens.add({
+                                            targets: indicator,
+                                            alpha: { from: 0.7, to: 1 },
+                                            duration: 500,
+                                            yoyo: true,
+                                            repeat: -1
+                                        });
+                                    }
+                                }
+                            }
+                        } else {
+                            // Hide indicator for empty cells
+                            const indicator = this.cellIndicators[index];
+                            if (indicator) {
+                                indicator.setVisible(false);
+                                if (indicator.overbrewTween) {
+                                    indicator.overbrewTween.stop();
+                                    indicator.overbrewTween = null;
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        };
+        
+        // Initial update of the grid
+        this.updatePotionGrid();
+        
+        console.log("NightScene created with potion crafting functionality");
     }
     
     initPhaserGrid() {
