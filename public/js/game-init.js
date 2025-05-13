@@ -4,7 +4,7 @@
  * This file sets up the Phaser game instance and manages scene transitions.
  */
 
-// Game configuration
+// Game configuration - our scenes are loaded from scene-loader.js
 const config = {
     type: Phaser.AUTO,
     width: 800,
