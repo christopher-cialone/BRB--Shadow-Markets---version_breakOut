@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="80" height="80" xmlns="http://www.w3.org/2000/svg">
+  <!-- Ready to harvest field -->
+  <rect width="80" height="80" fill="#cd853f" />
+  <rect x="5" y="5" width="70" height="70" fill="#8b4513" />
+  
+  <!-- Tilled soil lines -->
+  <line x1="10" y1="15" x2="70" y2="15" stroke="#5e2605" stroke-width="2" />
+  <line x1="10" y1="30" x2="70" y2="30" stroke="#5e2605" stroke-width="2" />
+  <line x1="10" y1="45" x2="70" y2="45" stroke="#5e2605" stroke-width="2" />
+  <line x1="10" y1="60" x2="70" y2="60" stroke="#5e2605" stroke-width="2" />
+  
+  <!-- Full grown wheat stalks -->
+  <path d="M20 15 C18 5 22 5 20 15" stroke="#f5deb3" stroke-width="2" fill="#f5deb3" />
+  <path d="M30 15 C28 5 32 5 30 15" stroke="#f5deb3" stroke-width="2" fill="#f5deb3" />
+  <path d="M40 15 C38 5 42 5 40 15" stroke="#f5deb3" stroke-width="2" fill="#f5deb3" />
+  <path d="M50 15 C48 5 52 5 50 15" stroke="#f5deb3" stroke-width="2" fill="#f5deb3" />
+  <path d="M60 15 C58 5 62 5 60 15" stroke="#f5deb3" stroke-width="2" fill="#f5deb3" />
+  
+  <path d="M20 30 C18 20 22 20 20 30" stroke="#f5deb3" stroke-width="2" fill="#f5deb3" />
+  <path d="M30 30 C28 20 32 20 30 30" stroke="#f5deb3" stroke-width="2" fill="#f5deb3" />
+  <path d="M40 30 C38 20 42 20 40 30" stroke="#f5deb3" stroke-width="2" fill="#f5deb3" />
+  <path d="M50 30 C48 20 52 20 50 30" stroke="#f5deb3" stroke-width="2" fill="#f5deb3" />
+  <path d="M60 30 C58 20 62 20 60 30" stroke="#f5deb3" stroke-width="2" fill="#f5deb3" />
+  
+  <path d="M20 45 C18 35 22 35 20 45" stroke="#f5deb3" stroke-width="2" fill="#f5deb3" />
+  <path d="M30 45 C28 35 32 35 30 45" stroke="#f5deb3" stroke-width="2" fill="#f5deb3" />
+  <path d="M40 45 C38 35 42 35 40 45" stroke="#f5deb3" stroke-width="2" fill="#f5deb3" />
+  <path d="M50 45 C48 35 52 35 50 45" stroke="#f5deb3" stroke-width="2" fill="#f5deb3" />
+  <path d="M60 45 C58 35 62 35 60 45" stroke="#f5deb3" stroke-width="2" fill="#f5deb3" />
+  
+  <path d="M20 60 C18 50 22 50 20 60" stroke="#f5deb3" stroke-width="2" fill="#f5deb3" />
+  <path d="M30 60 C28 50 32 50 30 60" stroke="#f5deb3" stroke-width="2" fill="#f5deb3" />
+  <path d="M40 60 C38 50 42 50 40 60" stroke="#f5deb3" stroke-width="2" fill="#f5deb3" />
+  <path d="M50 60 C48 50 52 50 50 60" stroke="#f5deb3" stroke-width="2" fill="#f5deb3" />
+  <path d="M60 60 C58 50 62 50 60 60" stroke="#f5deb3" stroke-width="2" fill="#f5deb3" />
+  
+  <!-- Wheat stalks -->
+  <line x1="20" y1="15" x2="20" y2="5" stroke="#9acd32" stroke-width="1" />
+  <line x1="30" y1="15" x2="30" y2="5" stroke="#9acd32" stroke-width="1" />
+  <line x1="40" y1="15" x2="40" y2="5" stroke="#9acd32" stroke-width="1" />
+  <line x1="50" y1="15" x2="50" y2="5" stroke="#9acd32" stroke-width="1" />
+  <line x1="60" y1="15" x2="60" y2="5" stroke="#9acd32" stroke-width="1" />
+  
+  <line x1="20" y1="30" x2="20" y2="20" stroke="#9acd32" stroke-width="1" />
+  <line x1="30" y1="30" x2="30" y2="20" stroke="#9acd32" stroke-width="1" />
+  <line x1="40" y1="30" x2="40" y2="20" stroke="#9acd32" stroke-width="1" />
+  <line x1="50" y1="30" x2="50" y2="20" stroke="#9acd32" stroke-width="1" />
+  <line x1="60" y1="30" x2="60" y2="20" stroke="#9acd32" stroke-width="1" />
+  
+  <line x1="20" y1="45" x2="20" y2="35" stroke="#9acd32" stroke-width="1" />
+  <line x1="30" y1="45" x2="30" y2="35" stroke="#9acd32" stroke-width="1" />
+  <line x1="40" y1="45" x2="40" y2="35" stroke="#9acd32" stroke-width="1" />
+  <line x1="50" y1="45" x2="50" y2="35" stroke="#9acd32" stroke-width="1" />
+  <line x1="60" y1="45" x2="60" y2="35" stroke="#9acd32" stroke-width="1" />
+  
+  <line x1="20" y1="60" x2="20" y2="50" stroke="#9acd32" stroke-width="1" />
+  <line x1="30" y1="60" x2="30" y2="50" stroke="#9acd32" stroke-width="1" />
+  <line x1="40" y1="60" x2="40" y2="50" stroke="#9acd32" stroke-width="1" />
+  <line x1="50" y1="60" x2="50" y2="50" stroke="#9acd32" stroke-width="1" />
+  <line x1="60" y1="60" x2="60" y2="50" stroke="#9acd32" stroke-width="1" />
+</svg>

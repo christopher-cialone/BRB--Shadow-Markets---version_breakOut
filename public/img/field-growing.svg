@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="80" height="80" xmlns="http://www.w3.org/2000/svg">
+  <!-- Growing field -->
+  <rect width="80" height="80" fill="#cd853f" />
+  <rect x="5" y="5" width="70" height="70" fill="#8b4513" />
+  
+  <!-- Tilled soil lines -->
+  <line x1="10" y1="15" x2="70" y2="15" stroke="#5e2605" stroke-width="2" />
+  <line x1="10" y1="30" x2="70" y2="30" stroke="#5e2605" stroke-width="2" />
+  <line x1="10" y1="45" x2="70" y2="45" stroke="#5e2605" stroke-width="2" />
+  <line x1="10" y1="60" x2="70" y2="60" stroke="#5e2605" stroke-width="2" />
+  
+  <!-- Small growing wheat stalks -->
+  <path d="M20 15 L20 10 M25 15 L27 10 M30 15 L30 8" stroke="#9acd32" stroke-width="2" />
+  <path d="M40 30 L40 25 M45 30 L47 25 M50 30 L50 23" stroke="#9acd32" stroke-width="2" />
+  <path d="M20 45 L20 40 M25 45 L27 40 M30 45 L30 38" stroke="#9acd32" stroke-width="2" />
+  <path d="M40 60 L40 55 M45 60 L47 55 M50 60 L50 53" stroke="#9acd32" stroke-width="2" />
+</svg>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="80" height="80" xmlns="http://www.w3.org/2000/svg">
+  <!-- Stone circle base -->
+  <circle cx="40" cy="40" r="35" fill="#696969" />
+  <circle cx="40" cy="40" r="30" fill="#2f4f4f" />
+  
+  <!-- Portal energy -->
+  <circle cx="40" cy="40" r="25" fill="#4b0082">
+    <animate attributeName="r" values="25;23;25" dur="2s" repeatCount="indefinite" />
+    <animate attributeName="fill" values="#4b0082;#9400d3;#4b0082" dur="3s" repeatCount="indefinite" />
+  </circle>
+  
+  <!-- Energy swirl -->
+  <path d="M40,40 m-18,0 a18,18 0 1,0 36,0 a18,18 0 1,0 -36,0" stroke="#ba55d3" stroke-width="2" fill="none">
+    <animateTransform attributeName="transform" type="rotate" from="0 40 40" to="360 40 40" dur="8s" repeatCount="indefinite" />
+  </path>
+  
+  <!-- Energy beams -->
+  <line x1="40" y1="15" x2="40" y2="25" stroke="#9370db" stroke-width="2">
+    <animate attributeName="stroke-width" values="2;3;2" dur="1s" repeatCount="indefinite" />
+  </line>
+  <line x1="40" y1="55" x2="40" y2="65" stroke="#9370db" stroke-width="2">
+    <animate attributeName="stroke-width" values="2;3;2" dur="1s" repeatCount="indefinite" />
+  </line>
+  <line x1="15" y1="40" x2="25" y2="40" stroke="#9370db" stroke-width="2">
+    <animate attributeName="stroke-width" values="2;3;2" dur="1s" repeatCount="indefinite" />
+  </line>
+  <line x1="55" y1="40" x2="65" y2="40" stroke="#9370db" stroke-width="2">
+    <animate attributeName="stroke-width" values="2;3;2" dur="1s" repeatCount="indefinite" />
+  </line>
+  
+  <!-- Runes on stone circle -->
+  <path d="M25,15 L30,12 L25,9 Z" fill="#daa520" />
+  <path d="M55,15 L50,12 L55,9 Z" fill="#daa520" />
+  <path d="M15,25 L12,30 L9,25 Z" fill="#daa520" />
+  <path d="M15,55 L12,50 L9,55 Z" fill="#daa520" />
+  <path d="M25,65 L30,68 L25,71 Z" fill="#daa520" />
+  <path d="M55,65 L50,68 L55,71 Z" fill="#daa520" />
+  <path d="M65,25 L68,30 L71,25 Z" fill="#daa520" />
+  <path d="M65,55 L68,50 L71,55 Z" fill="#daa520" />
+</svg>
