@@ -4119,6 +4119,35 @@ function initShadowGrid() {
         newButton.addEventListener('click', distillAllShadowCells);
     }
     
+    // Set up sell potions button (new feature)
+    const sellPotionsButton = document.getElementById('sell-potions');
+    if (!sellPotionsButton) {
+        // Create the button if it doesn't exist
+        const buttonContainer = document.querySelector('.shadow-controls');
+        if (buttonContainer) {
+            const newSellButton = document.createElement('button');
+            newSellButton.id = 'sell-potions';
+            newSellButton.className = 'action-button sell-button';
+            newSellButton.innerHTML = '💰 Sell Potions';
+            
+            // Add neon glow style
+            newSellButton.style.backgroundColor = '#6a2ca0';
+            newSellButton.style.borderColor = '#ff44cc';
+            newSellButton.style.boxShadow = '0 0 10px #ff44cc, 0 0 20px rgba(255, 68, 204, 0.5)';
+            
+            // Add to container
+            buttonContainer.appendChild(newSellButton);
+            
+            // Add event listener
+            newSellButton.addEventListener('click', sellAllPotions);
+        }
+    } else {
+        // If button exists, just update the event listener
+        const newButton = sellPotionsButton.cloneNode(true);
+        sellPotionsButton.parentNode.replaceChild(newButton, sellPotionsButton);
+        newButton.addEventListener('click', sellAllPotions);
+    }
+    
     // Set up potion crafting button
     const craftPotionButton = document.getElementById('craft-potion');
     if (craftPotionButton) {
