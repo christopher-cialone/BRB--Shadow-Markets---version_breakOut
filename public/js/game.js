@@ -2984,22 +2984,33 @@ function processRaceWin(winnings) {
     // Only process if player actually won
     if (winnings <= 0) return;
     
-    // Award XP for winning races (30 XP per race won)
-    addPlayerXP(30);
-    
-    // Update player stats
-    playerData.stats.racesWon = (playerData.stats.racesWon || 0) + 1;
-    
-    // Update achievement progress
-    if (playerData.achievements.gambler) {
-        playerData.achievements.gambler.current = playerData.stats.racesWon;
+    // Use the new tracking function if available
+    if (typeof trackRaceWin === 'function') {
+        trackRaceWin();
+    } else {
+        // Fallback to direct XP addition and stat tracking
+        if (typeof addPlayerXP === 'function') {
+            addPlayerXP(30);
+        }
+        
+        // Update player stats
+        if (playerData.stats) {
+            playerData.stats.racesWon = (playerData.stats.racesWon || 0) + 1;
+        }
+        
+        // Check achievements if the function exists
+        if (typeof checkAchievements === 'function') {
+            checkAchievements();
+        }
     }
     
-    // Check achievements
-    checkAchievements();
-    
-    // Play win sound
-    playSoundEffect('win');
+    // Play win sound if available
+    if (window.SoundEffects && SoundEffects.play) {
+        SoundEffects.play('win');
+    } else if (typeof playSoundEffect === 'function') {
+        // Fallback to original sound function
+        playSoundEffect('win');
+    }
 }
 
 socket.on('race-finished', data => {
@@ -4057,19 +4068,33 @@ function harvestRanchCell(cellIndex) {
     playerData.water += waterReward;
     playerData.stats.plantsHarvested = (playerData.stats.plantsHarvested || 0) + 1;
     
-    // Play harvest sound effect
-    playSoundEffect('harvest');
-    
-    // Add XP for harvesting (10 XP per crop harvested)
-    addPlayerXP(10);
-    
-    // Update achievement progress
-    if (playerData.achievements.farmer) {
-        playerData.achievements.farmer.current = playerData.stats.plantsHarvested;
+    // Track harvest for progression using new system if available
+    if (typeof trackCropHarvest === 'function') {
+        trackCropHarvest();
+    } else {
+        // Fallback to original implementation
+        if (typeof addPlayerXP === 'function') {
+            // Add XP for harvesting (10 XP per crop harvested)
+            addPlayerXP(10);
+        }
+        
+        // Update achievement progress
+        if (playerData.achievements && playerData.achievements.farmer) {
+            playerData.achievements.farmer.current = playerData.stats.plantsHarvested;
+        }
+        
+        // Check if any achievements were unlocked
+        if (typeof checkAchievements === 'function') {
+            checkAchievements();
+        }
     }
     
-    // Check if any achievements were unlocked
-    checkAchievements();
+    // Play harvest sound effect
+    if (window.SoundEffects && SoundEffects.play) {
+        SoundEffects.play('harvest');
+    } else if (typeof playSoundEffect === 'function') {
+        playSoundEffect('harvest');
+    }
     
     // Reset cell
     cell.state = 'empty';
