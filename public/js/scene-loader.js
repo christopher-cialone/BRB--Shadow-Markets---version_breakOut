@@ -223,9 +223,9 @@ class MainScene extends Phaser.Scene {
     enterSaloon() {
         this.showNotification('Entering the Saloon...');
         
-        // Use UI manager if available
-        if (window.uiManager && window.uiManager.switchScene) {
-            window.uiManager.switchScene('saloon-scene');
+        // Use game manager for scene transitions
+        if (window.gameManager && window.gameManager.switchScene) {
+            window.gameManager.switchScene('saloon-scene');
         } else {
             this.scene.start('SaloonScene');
         }
@@ -235,9 +235,9 @@ class MainScene extends Phaser.Scene {
     enterEtherRange() {
         this.showNotification('Entering the Ether Range...');
         
-        // Use UI manager if available
-        if (window.uiManager && window.uiManager.switchScene) {
-            window.uiManager.switchScene('ether-scene');
+        // Use game manager for scene transitions
+        if (window.gameManager && window.gameManager.switchScene) {
+            window.gameManager.switchScene('ether-scene');
         } else {
             this.scene.start('EtherScene');
         }
@@ -564,6 +564,11 @@ class SaloonScene extends Phaser.Scene {
                 notification.destroy();
             }
         });
+        
+        // Also use game manager to show notification in UI
+        if (window.gameManager && window.gameManager.showNotification) {
+            window.gameManager.showNotification(message, type);
+        }
     }
     
     // Connect to WebSocket server
