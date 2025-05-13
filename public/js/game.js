@@ -558,34 +558,78 @@ if (typeof window.RanchScene === 'undefined') {
     }
     
     preload() {
+        console.log('RanchScene preload starting');
         try {
-            // Use the asset preloader to safely load assets if available
+            // Explicitly load essential textures for the ranch grid
+            const cellAssets = [
+                { key: 'cell-empty', url: 'img/cell-empty.png' },
+                { key: 'cell-planted', url: 'img/cell-planted.png' },
+                { key: 'cell-growing', url: 'img/cell-growing.png' },
+                { key: 'cell-harvestable', url: 'img/cell-harvestable.png' }
+            ];
+            
+            // Load each cell asset
+            cellAssets.forEach(asset => {
+                console.log(`Loading asset: ${asset.key}`);
+                if (typeof safePhaserImageLoad === 'function') {
+                    safePhaserImageLoad(this, asset.key, asset.url);
+                } else {
+                    this.load.image(asset.key, asset.url);
+                }
+            });
+            
+            // Load additional ranch assets
+            const ranchAssets = [
+                { key: 'cattle', url: 'img/cattle.png' },
+                { key: 'water-drop', url: 'img/water-drop.png' },
+                { key: 'hay-icon', url: 'img/hay-icon.png' },
+                { key: 'milk-bottle', url: 'img/milk-bottle.png' },
+                { key: 'barn', url: 'https://i.imgur.com/t32QEZB.png' }
+            ];
+            
+            // Load each ranch asset
+            ranchAssets.forEach(asset => {
+                console.log(`Loading asset: ${asset.key}`);
+                if (typeof safePhaserImageLoad === 'function') {
+                    safePhaserImageLoad(this, asset.key, asset.url);
+                } else {
+                    this.load.image(asset.key, asset.url);
+                }
+            });
+            
+            // Use common asset loader if available
             if (typeof preloadCommonAssets === 'function') {
                 preloadCommonAssets(this);
             }
             
-            // Always load the barn (special asset not in common set)
-            if (typeof safePhaserImageLoad === 'function') {
-                safePhaserImageLoad(this, 'barn', 'https://i.imgur.com/t32QEZB.png');
-            } else {
-                this.load.image('barn', 'https://i.imgur.com/t32QEZB.png');
-            }
+            // Track loading progress
+            this.load.on('progress', (value) => {
+                console.log(`RanchScene asset loading progress: ${Math.round(value * 100)}%`);
+            });
             
             // Create fallback graphics for any missing textures when load completes
             this.load.on('complete', () => {
-                console.log("RanchScene assets loaded");
+                console.log("RanchScene assets loading complete");
                 
-                // Ensure essential textures have fallbacks
+                // Check which textures were successfully loaded
                 const essentialTextures = [
                     'cell-empty', 'cell-planted', 'cell-growing', 'cell-harvestable', 
-                    'cattle', 'water-drop', 'hay-icon', 'milk-bottle'
+                    'cattle', 'water-drop', 'hay-icon', 'milk-bottle', 'barn'
                 ];
                 
+                // Log the status of each texture
                 essentialTextures.forEach(key => {
-                    if (!this.textures.exists(key) && typeof handleMissingTexture === 'function') {
+                    const exists = this.textures.exists(key);
+                    console.log(`Texture ${key} loaded: ${exists}`);
+                    
+                    // Create fallback if missing
+                    if (!exists && typeof handleMissingTexture === 'function') {
+                        console.log(`Creating fallback for missing texture: ${key}`);
                         handleMissingTexture(this, key);
                     }
                 });
+                
+                console.log('Assets loaded for', this.scene.key);
             });
         } catch (error) {
             console.error("Error in RanchScene preload:", error);
@@ -1540,50 +1584,78 @@ if (typeof window.NightScene === 'undefined') {
     }
     
     preload() {
+        console.log('NightScene preload starting');
         try {
-            // Use the asset preloader if available
+            // Explicitly load essential textures for the night scene grid
+            const nightCellAssets = [
+                { key: 'empty-night', url: 'img/empty-night.png', color: 0x212121 },
+                { key: 'brewing', url: 'img/brewing.png', color: 0x4a148c },
+                { key: 'distilling', url: 'img/distilling.png', color: 0x7c4dff },
+                { key: 'ready', url: 'img/ready.png', color: 0xe040fb }
+            ];
+            
+            // Load each cell asset
+            nightCellAssets.forEach(asset => {
+                console.log(`Loading night asset: ${asset.key}`);
+                if (typeof safePhaserImageLoad === 'function') {
+                    safePhaserImageLoad(this, asset.key, asset.url);
+                } else {
+                    this.load.image(asset.key, asset.url);
+                }
+            });
+            
+            // Load additional night scene assets
+            const nightEffectAssets = [
+                { key: 'shadow-bg', url: 'img/game-background.jpeg', color: 0x0a0a0a },
+                { key: 'bubble', url: 'img/bubble.png', color: 0x42a5f5 },
+                { key: 'glow', url: 'img/glow.png', color: 0xffeb3b },
+                { key: 'potion', url: 'img/potion.png', color: 0xe040fb }
+            ];
+            
+            // Load each effect asset
+            nightEffectAssets.forEach(asset => {
+                console.log(`Loading night effect: ${asset.key}`);
+                if (typeof safePhaserImageLoad === 'function') {
+                    safePhaserImageLoad(this, asset.key, asset.url);
+                } else {
+                    this.load.image(asset.key, asset.url);
+                }
+            });
+            
+            // Use common asset loader if available
             if (typeof preloadCommonAssets === 'function') {
                 preloadCommonAssets(this);
-            } else {
-                // Fallback loading
-                this.load.image('shadow-bg', 'img/game-background.jpeg');
-                this.load.image('bubble', 'img/bubble.png');
-                this.load.image('glow', 'img/glow.png');
-                
-                // PNG versions of the grid cell states
-                this.load.image('empty-night', 'img/empty-night.png');
-                this.load.image('brewing', 'img/brewing.png');
-                this.load.image('distilling', 'img/distilling.png'); 
-                this.load.image('ready', 'img/ready.png');
             }
+            
+            // Track loading progress
+            this.load.on('progress', (value) => {
+                console.log(`NightScene asset loading progress: ${Math.round(value * 100)}%`);
+            });
             
             // Create fallback graphics for any missing textures
             this.load.on('complete', () => {
-                console.log("NightScene assets loaded");
+                console.log("NightScene assets loading complete");
                 
-                // Check and create placeholders for essential textures
+                // Define all essential textures with their fallback colors
                 const essentialTextures = [
-                    'empty-night', 'brewing', 'distilling', 'ready', 
-                    'bubble', 'glow'
+                    ...nightCellAssets,
+                    ...nightEffectAssets
                 ];
                 
-                essentialTextures.forEach(key => {
-                    if (!this.textures.exists(key) && typeof handleMissingTexture === 'function') {
-                        // Create colored placeholders based on the key
-                        let color = 0x000000;
-                        if (key === 'empty-night') color = 0x212121;
-                        if (key === 'brewing') color = 0x4a148c;
-                        if (key === 'distilling') color = 0x7c4dff;
-                        if (key === 'ready') color = 0xe040fb;
-                        if (key === 'bubble') color = 0x42a5f5;
-                        if (key === 'glow') color = 0xffeb3b;
-                        
-                        handleMissingTexture(this, key, 64, 64, color);
+                // Log the status of each texture and create fallbacks
+                essentialTextures.forEach(asset => {
+                    const exists = this.textures.exists(asset.key);
+                    console.log(`Night texture ${asset.key} loaded: ${exists}`);
+                    
+                    // Create fallback if missing
+                    if (!exists && typeof handleMissingTexture === 'function') {
+                        console.log(`Creating fallback for missing night texture: ${asset.key}`);
+                        handleMissingTexture(this, asset.key, 64, 64, asset.color);
                     }
                 });
+                
+                console.log('Assets loaded for', this.scene.key);
             });
-            
-            console.log("Night scene preload started");
         } catch (error) {
             console.error("Error in NightScene preload:", error);
         }
