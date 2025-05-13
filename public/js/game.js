@@ -5353,5 +5353,8 @@ function setupBettingSliders() {
     }
 }
 
-// End of the file wrapper
-});})();
+// End of document.addEventListener DOMContentLoaded
+});
+
+// End of IIFE
+})();
