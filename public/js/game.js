@@ -1350,6 +1350,9 @@ class NightScene extends Phaser.Scene {
         // Add resize listener
         this.scale.on('resize', this.resize, this);
         
+        // Add shutdown handler
+        this.events.on('shutdown', this.shutdown, this);
+        
         // Initialize the Phaser grid
         this.initPhaserGrid();
         
@@ -1439,6 +1442,139 @@ class NightScene extends Phaser.Scene {
         this.updatePotionGrid();
         
         console.log("NightScene created with potion crafting functionality");
+    }
+    
+    // Add brewing animation to a cell
+    addBrewingAnimation(cellIndex) {
+        if (!this.cellSprites[cellIndex]) return;
+        
+        // Clear any existing animation
+        if (this.bubblingTimers[cellIndex]) {
+            clearInterval(this.bubblingTimers[cellIndex]);
+        }
+        
+        const sprite = this.cellSprites[cellIndex];
+        const indicator = this.cellIndicators[cellIndex];
+        
+        // Get cell position
+        const x = sprite.x;
+        const y = sprite.y;
+        
+        // Create bubble effect
+        this.bubblingTimers[cellIndex] = setInterval(() => {
+            try {
+                // Don't add bubbles if scene is not active
+                if (!this.scene.isActive()) {
+                    clearInterval(this.bubblingTimers[cellIndex]);
+                    this.bubblingTimers[cellIndex] = null;
+                    return;
+                }
+                
+                // Create bubble particle
+                const size = Phaser.Math.Between(8, 16);
+                const bubble = this.add.image(
+                    x + Phaser.Math.Between(-20, 20),
+                    y + Phaser.Math.Between(-20, 20),
+                    'bubble'
+                );
+                
+                bubble.setDisplaySize(size, size);
+                bubble.setAlpha(0.7);
+                
+                // If we have cell data with potion type, use that color
+                if (window.shadowGrid?.cells[cellIndex]?.potion && window.potionTypes) {
+                    const potionType = window.shadowGrid.cells[cellIndex].potion;
+                    const potionColor = window.potionTypes[potionType]?.color || 0xffffff;
+                    bubble.setTint(potionColor);
+                }
+                
+                // Animate bubble rising and fading
+                this.tweens.add({
+                    targets: bubble,
+                    y: y - Phaser.Math.Between(30, 60),
+                    alpha: 0,
+                    scale: { from: 1, to: 0.5 },
+                    duration: Phaser.Math.Between(800, 1500),
+                    ease: 'Sine.easeOut',
+                    onComplete: () => {
+                        bubble.destroy();
+                    }
+                });
+            } catch (err) {
+                console.error('Error in brewing animation:', err);
+            }
+        }, Phaser.Math.Between(300, 700));
+    }
+    
+    // Add glow effect to a ready potion
+    addGlowEffect(cellIndex) {
+        if (!this.cellSprites[cellIndex]) return;
+        
+        // Clear any existing glow effect
+        if (this.glowTimers[cellIndex]) {
+            clearInterval(this.glowTimers[cellIndex]);
+        }
+        
+        const sprite = this.cellSprites[cellIndex];
+        const x = sprite.x;
+        const y = sprite.y;
+        
+        // Create initial glow
+        const glow = this.add.image(x, y, 'glow');
+        glow.setDisplaySize(100, 100);
+        glow.setAlpha(0.5);
+        
+        // Set color based on potion type
+        if (window.shadowGrid?.cells[cellIndex]?.potion && window.potionTypes) {
+            const potionType = window.shadowGrid.cells[cellIndex].potion;
+            const potionColor = window.potionTypes[potionType]?.color || 0xffffff;
+            glow.setTint(potionColor);
+        }
+        
+        // Pulsing animation
+        this.tweens.add({
+            targets: glow,
+            scale: { from: 1, to: 1.2 },
+            alpha: { from: 0.5, to: 0.8 },
+            duration: 1200,
+            yoyo: true,
+            repeat: -1
+        });
+        // Store reference to glow image
+        this.glowTimers[cellIndex] = setInterval(() => {
+            try {
+                // If the cell is no longer ready or scene is inactive, remove glow
+                if (!this.scene.isActive() || 
+                    !window.shadowGrid?.cells[cellIndex] || 
+                    window.shadowGrid.cells[cellIndex].state !== 'ready') {
+                    clearInterval(this.glowTimers[cellIndex]);
+                    this.glowTimers[cellIndex] = null;
+                    glow.destroy();
+                }
+            } catch (err) {
+                console.error('Error in glow effect:', err);
+            }
+        }, 500);
+    }
+    
+    // Clean up all animations when leaving the scene
+    shutdown() {
+        // Clear all brewing animations
+        this.bubblingTimers.forEach(timer => {
+            if (timer) clearInterval(timer);
+        });
+        this.bubblingTimers = [];
+        
+        // Clear all glow effects
+        this.glowTimers.forEach(timer => {
+            if (timer) clearInterval(timer);
+        });
+        this.glowTimers = [];
+        
+        // Call potion crafting cleanup if available
+        if (typeof window.cleanupPotionProcesses === 'function') {
+            window.cleanupPotionProcesses();
+        }
     }
     
     initPhaserGrid() {
