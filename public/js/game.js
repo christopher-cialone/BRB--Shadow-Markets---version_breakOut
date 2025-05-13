@@ -4673,6 +4673,89 @@ function harvestAllRanchCells() {
     }
 }
 
+// Function to sell all potions from inventory
+function sellAllPotions() {
+    // Check if player has potions to sell
+    if (!playerData.potionCollection || playerData.potionCollection.length === 0) {
+        showNotification('No potions to sell!', 'error');
+        return;
+    }
+    
+    // Calculate total sale value
+    let totalValue = 0;
+    const potionCount = playerData.potionCollection.length;
+    
+    // Calculate value based on potency and market conditions
+    playerData.potionCollection.forEach(potion => {
+        // Base value determined by potion potency
+        const baseValue = potion.value || (25 + potion.potency * 5);
+        
+        // Apply market multiplier from shadow grid
+        const marketMultiplier = shadowGrid.multiplier || 1.0;
+        
+        // Final value for this potion
+        const potionValue = Math.floor(baseValue * marketMultiplier);
+        totalValue += potionValue;
+    });
+    
+    // Add to player's balance
+    playerData.cattleBalance += totalValue;
+    
+    // Update stats
+    playerData.stats.totalEarned = (playerData.stats.totalEarned || 0) + totalValue;
+    
+    // Clear potions array
+    playerData.potionCollection = [];
+    
+    // Create celebration animation if we're in a Phaser scene
+    if (game && game.scene) {
+        const nightScene = game.scene.getScene('NightScene');
+        if (nightScene) {
+            // Add center screen animation
+            const x = nightScene.scale.width / 2;
+            const y = nightScene.scale.height / 2;
+            
+            // Create money text
+            const moneyText = nightScene.add.text(x, y, `+${totalValue}`, {
+                fontFamily: 'Anta',
+                fontSize: '36px',
+                color: '#00ff00',
+                stroke: '#000000',
+                strokeThickness: 4
+            }).setOrigin(0.5);
+            
+            // Add glow effect to money text if the function is available
+            if (typeof window.addTextGlow === 'function') {
+                window.addTextGlow(moneyText, '#00ffff', 8);
+            }
+            
+            // Create particle effect for selling if available
+            if (typeof window.createRaceWinParticleEffect === 'function') {
+                window.createRaceWinParticleEffect(nightScene, x, y);
+            }
+            
+            // Animation
+            nightScene.tweens.add({
+                targets: moneyText,
+                y: '-=100',
+                alpha: { from: 1, to: 0 },
+                duration: 2000,
+                ease: 'Power2',
+                onComplete: () => {
+                    moneyText.destroy();
+                }
+            });
+        }
+    }
+    
+    // Show notification
+    showNotification(`Sold ${potionCount} potions for ${totalValue} $CATTLE!`, 'success');
+    
+    // Update UI
+    updatePotionInventory();
+    updateUI();
+}
+
 // Distill all ready shadow market cells
 function distillAllShadowCells() {
     let distilledCount = 0;
