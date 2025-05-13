@@ -10,6 +10,26 @@
 let currentScene = 'main-menu';
 let gameInitialized = false;
 
+// Initialize game state
+window.gameState = {
+    player: {
+        cattleBalance: 100,
+        hay: 10,
+        wheat: 5,
+        crystals: 0,
+        potions: 0,
+        stats: {
+            racesWon: 0,
+            racesLost: 0,
+            totalEarned: 0,
+            totalBurned: 0
+        }
+    },
+    cattle: [],
+    fields: [],
+    lastLogin: Date.now()
+};
+
 // Reference to UI elements
 const uiElements = {
     mainMenu: null,

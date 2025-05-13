@@ -53,6 +53,46 @@ wss.on('connection', (ws) => {
           });
           break;
           
+        case 'scene_init':
+          // Handle scene initialization
+          ws.send(JSON.stringify({ 
+            type: 'scene_ready', 
+            scene: message.scene,
+            timestamp: Date.now()
+          }));
+          break;
+          
+        case 'race_progress':
+          // Handle race progress update
+          // Broadcast progress to other clients
+          wss.clients.forEach((client) => {
+            if (client !== ws && client.readyState === WebSocket.OPEN) {
+              client.send(JSON.stringify({
+                type: 'race_progress',
+                progress: message.progress,
+                timestamp: Date.now()
+              }));
+            }
+          });
+          break;
+          
+        case 'race_result':
+          // Handle race result
+          console.log('Race result received:', message);
+          
+          // Broadcast result to other clients
+          wss.clients.forEach((client) => {
+            if (client !== ws && client.readyState === WebSocket.OPEN) {
+              client.send(JSON.stringify({
+                type: 'race_result',
+                winner: message.winner,
+                winnings: message.winnings,
+                timestamp: Date.now()
+              }));
+            }
+          });
+          break;
+          
         default:
           console.log('Unknown message type:', message.type);
       }
