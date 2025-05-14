@@ -2057,6 +2057,34 @@ if (typeof window.NightScene === 'undefined') {
     }
     
     initPhaserGrid() {
+        console.log("NightScene.initPhaserGrid() called");
+        
+        // Make sure shadow grid is initialized
+        if (typeof window.ensureShadowGridInitialized === 'function') {
+            window.ensureShadowGridInitialized();
+        } else if (!window.shadowGrid || !window.shadowGrid.cells || window.shadowGrid.cells.length === 0) {
+            console.log("Shadow grid not initialized, creating it now");
+            window.shadowGrid = {
+                size: 4,
+                cells: [],
+                cycleTimer: 30,
+                cycleInterval: null,
+                marketState: 'stable'
+            };
+            
+            // Initialize cells
+            for (let i = 0; i < 16; i++) {
+                window.shadowGrid.cells.push({
+                    id: i,
+                    state: 'empty',
+                    stage: 0,
+                    maxStage: 3,
+                    supply: Math.floor(Math.random() * 5) + 3,
+                    demand: Math.floor(Math.random() * 5) + 3
+                });
+            }
+        }
+        
         // Store references to cell sprites
         this.cellSprites = [];
         this.cellIndicators = [];
@@ -2075,6 +2103,9 @@ if (typeof window.NightScene === 'undefined') {
         this.gridConfig.startY = height / 2 - totalGridHeight / 2 + cellSize / 2;
         
         // Create grid container
+        if (this.gridContainer) {
+            this.gridContainer.destroy();
+        }
         this.gridContainer = this.add.container(0, 0);
         
         // Add grid header text
@@ -3557,6 +3588,63 @@ function switchScene(scene) {
         console.warn(`No UI screen found for scene: ${scene}`);
     }
     
+    // Handle special scene initialization based on scene type
+    if (scene === 'ranch') {
+        // Ensure ranch grid is properly initialized
+        console.log("Initializing Ranch scene and grid");
+        
+        // Use our new comprehensive initialization if available
+        if (typeof window.ensureRanchGridInitialized === 'function') {
+            window.ensureRanchGridInitialized();
+        }
+        
+        if (typeof window.initRanchGridComplete === 'function') {
+            window.initRanchGridComplete();
+        } else {
+            // Fallback to original initRanchGrid
+            initRanchGrid();
+        }
+        
+        // Make sure harvest button works
+        const harvestAllBtn = document.getElementById('harvest-all');
+        if (harvestAllBtn) {
+            console.log("Setting up harvest-all button");
+            harvestAllBtn.onclick = function() {
+                console.log("Harvest all button clicked");
+                if (typeof harvestAllRanchCells === 'function') {
+                    harvestAllRanchCells();
+                }
+            };
+        }
+    } else if (scene === 'night') {
+        // Ensure shadow grid is properly initialized
+        console.log("Initializing Night scene and grid");
+        
+        // Use our new comprehensive initialization if available
+        if (typeof window.ensureShadowGridInitialized === 'function') {
+            window.ensureShadowGridInitialized();
+        }
+        
+        if (typeof window.initShadowGridComplete === 'function') {
+            window.initShadowGridComplete();
+        } else {
+            // Fallback to original initShadowGrid
+            initShadowGrid();
+        }
+        
+        // Make sure distill button works
+        const distillAllBtn = document.getElementById('distill-all');
+        if (distillAllBtn) {
+            console.log("Setting up distill-all button");
+            distillAllBtn.onclick = function() {
+                console.log("Distill all button clicked");
+                if (typeof distillAllShadowCells === 'function') {
+                    distillAllShadowCells();
+                }
+            };
+        }
+    }
+    
     // Switch the Phaser scene if game is available
     if (window.game && window.game.scene && sceneMap[scene]) {
         // Get the previous scene and new scene keys
@@ -3582,7 +3670,23 @@ function switchScene(scene) {
                 
                 // Check grid initialization after a short delay
                 if (scene === 'ranch' || scene === 'night') {
-                    setTimeout(checkGridStatus, 500, scene);
+                    setTimeout(function() {
+                        // Check grid status
+                        if (typeof checkGridStatus === 'function') {
+                            checkGridStatus(scene);
+                        }
+                        
+                        // Re-initialize grids for extra safety after scene is fully loaded
+                        if (scene === 'ranch') {
+                            if (typeof window.initRanchGridComplete === 'function') {
+                                window.initRanchGridComplete();
+                            }
+                        } else if (scene === 'night') {
+                            if (typeof window.initShadowGridComplete === 'function') {
+                                window.initShadowGridComplete();
+                            }
+                        }
+                    }, 800);
                 }
             } else {
                 console.log(`Scene ${newSceneKey} is already active`);
