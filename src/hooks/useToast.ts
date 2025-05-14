@@ -1,47 +1,25 @@
-import { useState } from 'react';
+import { useGameState } from './useGameState';
 
-interface Toast {
-  id: string;
+type ToastVariant = 'success' | 'error' | 'warning' | 'info' | 'default';
+
+interface ToastProps {
   title: string;
-  description?: string;
-  variant?: 'default' | 'success' | 'error' | 'warning';
-  duration?: number;
+  description: string;
+  variant?: ToastVariant;
 }
 
 export const useToast = () => {
-  const [toasts, setToasts] = useState<Toast[]>([]);
-
-  const toast = ({ 
-    title, 
-    description, 
-    variant = 'default', 
-    duration = 5000 
-  }: Omit<Toast, 'id'>) => {
-    const id = Math.random().toString(36).substring(2, 9);
-    const newToast = { id, title, description, variant, duration };
-
-    setToasts((currentToasts) => [...currentToasts, newToast]);
-
-    if (duration !== Infinity) {
-      setTimeout(() => {
-        dismissToast(id);
-      }, duration);
-    }
-
-    return id;
+  const { addNotification } = useGameState();
+  
+  const toast = ({ title, description, variant = 'default' }: ToastProps) => {
+    // Convert variant to notification type (they use slightly different naming)
+    const notificationType = variant === 'default' ? 'info' : variant;
+    
+    // Add notification to the game state
+    addNotification(notificationType, title, description);
   };
-
-  const dismissToast = (id: string) => {
-    setToasts((currentToasts) => 
-      currentToasts.filter((toast) => toast.id !== id)
-    );
-  };
-
-  return {
-    toasts,
-    toast,
-    dismissToast,
-  };
+  
+  return { toast };
 };
 
-// Create a context wrapper later if needed to share toast state globally
+export default useToast;

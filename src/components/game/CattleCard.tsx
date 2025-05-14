@@ -1,110 +1,135 @@
 import React from 'react';
-import { Cattle } from '../../types';
+import { CattleItem } from '../../types';
 
 interface CattleCardProps {
-  cattle: Cattle;
-  onFeed: () => void;
-  onMilk: () => void;
-  canFeed: boolean;
-  canMilk: boolean;
+  cattle: CattleItem;
+  onFeed?: () => void;
+  onMilk?: () => void;
+  onSell?: () => void;
 }
 
 const CattleCard: React.FC<CattleCardProps> = ({
   cattle,
   onFeed,
   onMilk,
-  canFeed,
-  canMilk
+  onSell,
 }) => {
-  // Format relative time for readability
-  const formatRelativeTime = (timestamp?: number) => {
-    if (!timestamp) return 'Not ready';
+  // Calculate time since last fed
+  const getLastFedStatus = (): string => {
+    if (!cattle.lastFed) return 'Never fed';
     
     const now = Date.now();
-    if (now >= timestamp) return 'Ready now';
+    const lastFed = cattle.lastFed;
+    const hoursSinceLastFed = Math.floor((now - lastFed) / (1000 * 60 * 60));
     
-    const diffSeconds = Math.floor((timestamp - now) / 1000);
-    
-    if (diffSeconds < 60) return `${diffSeconds}s`;
-    if (diffSeconds < 3600) return `${Math.floor(diffSeconds / 60)}m`;
-    return `${Math.floor(diffSeconds / 3600)}h ${Math.floor((diffSeconds % 3600) / 60)}m`;
+    if (hoursSinceLastFed < 1) return 'Recently fed';
+    if (hoursSinceLastFed < 24) return `Fed ${hoursSinceLastFed} hours ago`;
+    return `Fed ${Math.floor(hoursSinceLastFed / 24)} days ago`;
   };
   
-  // Check if milk is ready
-  const isMilkReady = cattle.readyAt && Date.now() >= cattle.readyAt;
+  // Calculate time since last milked (for cows only)
+  const getLastMilkedStatus = (): string => {
+    if (cattle.type !== 'cow') return '';
+    if (!cattle.lastMilked) return 'Never milked';
+    
+    const now = Date.now();
+    const lastMilked = cattle.lastMilked;
+    const hoursSinceLastMilked = Math.floor((now - lastMilked) / (1000 * 60 * 60));
+    
+    if (hoursSinceLastMilked < 1) return 'Recently milked';
+    if (hoursSinceLastMilked < 24) return `Milked ${hoursSinceLastMilked} hours ago`;
+    return `Milked ${Math.floor(hoursSinceLastMilked / 24)} days ago`;
+  };
   
-  // Check if feed has expired
-  const hasFeedExpired = !cattle.feedExpiry || Date.now() >= cattle.feedExpiry;
+  // Get health status color
+  const getHealthStatusColor = (): string => {
+    switch (cattle.healthStatus) {
+      case 'healthy':
+        return 'text-green-500';
+      case 'hungry':
+        return 'text-yellow-500';
+      case 'sick':
+        return 'text-red-500';
+      default:
+        return '';
+    }
+  };
   
-  // Format ready time
-  const readyTime = formatRelativeTime(cattle.readyAt);
-
   return (
-    <div className="card">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="card-title">{cattle.name}</h3>
-        <div className="text-amber-300">
-          {'★'.repeat(cattle.quality)}
-          {'☆'.repeat(5 - cattle.quality)}
+    <div className="cattle-card">
+      <div className="cattle-card-header">
+        <h3 className="cattle-name">{cattle.name}</h3>
+        <div className={`cattle-health ${getHealthStatusColor()}`}>
+          {cattle.healthStatus}
         </div>
       </div>
       
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <div className="mb-3">
-            <div className="text-neon-pink font-pixel mb-1">TYPE</div>
-            <div>{cattle.type.replace('_', ' ').toUpperCase()}</div>
-          </div>
-          
-          {cattle.type === 'milk_cow' && (
-            <div className="mb-3">
-              <div className="text-neon-pink font-pixel mb-1">MILK PRODUCTION</div>
-              <div>{cattle.milkProduction || 'N/A'}</div>
-            </div>
-          )}
-          
-          {cattle.type === 'bull' && (
-            <div className="mb-3">
-              <div className="text-neon-pink font-pixel mb-1">RODEO STRENGTH</div>
-              <div>{cattle.rodeoStrength || 'N/A'}</div>
-            </div>
-          )}
+      <div className="cattle-card-body">
+        <div className="cattle-image">
+          {cattle.type === 'cow' ? '🐄' : '🐂'}
         </div>
         
-        <div>
-          <div className="mb-3">
-            <div className="text-neon-pink font-pixel mb-1">STATUS</div>
-            <div>
-              {hasFeedExpired ? (
-                <span className="text-yellow-400">Hungry</span>
-              ) : isMilkReady ? (
-                <span className="text-green-400">Ready for milking</span>
-              ) : (
-                <span className="text-cyan-400">Feeding ({readyTime})</span>
-              )}
-            </div>
+        <div className="cattle-stats">
+          <div className="cattle-stat">
+            <span className="stat-label">Type:</span>
+            <span className="stat-value">{cattle.type}</span>
           </div>
           
-          <div className="flex gap-2 mt-4">
-            <button
-              onClick={onFeed}
-              disabled={!canFeed}
-              className={`button button-primary text-xs py-1 px-3 ${!canFeed ? 'button-disabled' : ''}`}
-            >
-              Feed (20 BT)
-            </button>
-            
-            {cattle.type === 'milk_cow' && (
-              <button
-                onClick={onMilk}
-                disabled={!canMilk}
-                className={`button button-secondary text-xs py-1 px-3 ${!canMilk ? 'button-disabled' : ''}`}
-              >
-                Milk
-              </button>
-            )}
+          <div className="cattle-stat">
+            <span className="stat-label">Level:</span>
+            <span className="stat-value">{cattle.level}</span>
           </div>
+          
+          {cattle.type === 'cow' && cattle.milkRate && (
+            <div className="cattle-stat">
+              <span className="stat-label">Milk Rate:</span>
+              <span className="stat-value">{cattle.milkRate}/day</span>
+            </div>
+          )}
+          
+          {cattle.type === 'bull' && cattle.breedingRate && (
+            <div className="cattle-stat">
+              <span className="stat-label">Breeding Rate:</span>
+              <span className="stat-value">{cattle.breedingRate}/day</span>
+            </div>
+          )}
+          
+          <div className="cattle-stat">
+            <span className="stat-label">Feeding:</span>
+            <span className="stat-value">{getLastFedStatus()}</span>
+          </div>
+          
+          {cattle.type === 'cow' && (
+            <div className="cattle-stat">
+              <span className="stat-label">Milking:</span>
+              <span className="stat-value">{getLastMilkedStatus()}</span>
+            </div>
+          )}
         </div>
+      </div>
+      
+      <div className="cattle-card-footer">
+        {onFeed && (
+          <button className="button button-outline" onClick={onFeed}>
+            Feed
+          </button>
+        )}
+        
+        {cattle.type === 'cow' && onMilk && (
+          <button 
+            className="button button-primary"
+            onClick={onMilk}
+            disabled={cattle.lastMilked ? (Date.now() - cattle.lastMilked) < (12 * 60 * 60 * 1000) : false} // 12 hours cooldown
+          >
+            Milk
+          </button>
+        )}
+        
+        {onSell && (
+          <button className="button button-outline" onClick={onSell}>
+            Sell
+          </button>
+        )}
       </div>
     </div>
   );

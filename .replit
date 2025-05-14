@@ -16,6 +16,10 @@ author = "agent"
 task = "workflow.run"
 args = "GameServer"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "ReactApp"
+
 [[workflows.workflow]]
 name = "GameServer"
 author = "agent"
@@ -25,9 +29,22 @@ task = "shell.exec"
 args = "node server.js"
 waitForPort = 5000
 
+[[workflows.workflow]]
+name = "ReactApp"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node react-app.js"
+waitForPort = 5000
+
 [deployment]
 run = ["sh", "-c", "pip install unity-downloader-cli && unity-downloader-cli -u 2020.3.48f1 -c editor -c WebGL --wait && unity-editor -projectPath . -batchmode -buildTarget WebGL -executeMethod WebGLBuilder.Build -logFile unity.log -quit && cd WebGLBuild && python3 -m http.server 5000"]
 
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 5001
+externalPort = 3000

@@ -2,78 +2,82 @@ import React from 'react';
 import { useGameState } from '../../hooks/useGameState';
 
 interface NavBarProps {
-  currentScreen: 'main' | 'ranch' | 'shadowMarket' | 'saloon';
-  onNavigate: (screen: 'main' | 'ranch' | 'shadowMarket' | 'saloon') => void;
+  currentScene: 'ranch' | 'shadowMarket' | 'saloon';
+  onRanchClick: () => void;
+  onShadowMarketClick: () => void;
+  onSaloonClick: () => void;
 }
 
-const NavBar: React.FC<NavBarProps> = ({ currentScreen, onNavigate }) => {
+const NavBar: React.FC<NavBarProps> = ({
+  currentScene,
+  onRanchClick,
+  onShadowMarketClick,
+  onSaloonClick,
+}) => {
   const { gameState } = useGameState();
+  const player = gameState.player;
   
   return (
-    <nav className="navbar">
-      <div className="navbar-brand">
-        <a href="#" className="nav-brand" onClick={() => onNavigate('main')}>
-          Bull Run Boost
-        </a>
+    <header className="navbar">
+      <div className="navbar-logo">
+        <h1 className="text-neon-cyan font-pixel">Bull Run Boost</h1>
       </div>
       
-      <div className="navbar-center hidden md:flex">
-        <ul className="nav-links">
-          <li>
-            <a 
-              href="#" 
-              className={`nav-link ${currentScreen === 'main' ? 'active' : ''}`} 
-              onClick={() => onNavigate('main')}
-            >
-              Hub
-            </a>
-          </li>
-          <li>
-            <a 
-              href="#" 
-              className={`nav-link ${currentScreen === 'ranch' ? 'active' : ''}`} 
-              onClick={() => onNavigate('ranch')}
-            >
-              Ranch
-            </a>
-          </li>
-          <li>
-            <a 
-              href="#" 
-              className={`nav-link ${currentScreen === 'shadowMarket' ? 'active' : ''}`} 
-              onClick={() => onNavigate('shadowMarket')}
-            >
-              Shadow Market
-            </a>
-          </li>
-          <li>
-            <a 
-              href="#" 
-              className={`nav-link ${currentScreen === 'saloon' ? 'active' : ''}`} 
-              onClick={() => onNavigate('saloon')}
-            >
-              Saloon
-            </a>
-          </li>
-        </ul>
-      </div>
+      <nav className="navbar-links">
+        <button 
+          onClick={onRanchClick}
+          className={`button ${currentScene === 'ranch' ? 'button-primary' : 'button-outline'}`}
+        >
+          Ranch
+        </button>
+        <button 
+          onClick={onShadowMarketClick}
+          className={`button ${currentScene === 'shadowMarket' ? 'button-primary' : 'button-outline'}`}
+        >
+          Shadow Market
+        </button>
+        <button 
+          onClick={onSaloonClick}
+          className={`button ${currentScene === 'saloon' ? 'button-primary' : 'button-outline'}`}
+        >
+          Saloon
+        </button>
+      </nav>
       
-      <div className="navbar-end">
-        <div className="flex items-center gap-4">
-          <div className="text-sm flex items-center gap-2">
-            <span className="text-neon-cyan">BT: {gameState.player?.btBalance || 0}</span>
-            <span className="text-neon-pink">BC: {gameState.player?.bcBalance || 0}</span>
-            <span className="text-amber-300">LVL: {gameState.player?.level || 1}</span>
+      <div className="navbar-user">
+        {player ? (
+          <div className="user-info">
+            <div className="user-tokens">
+              <span className="token-amount">{player.btBalance}</span>
+              <span className="token-symbol">BT</span>
+            </div>
+            <div className="user-tokens">
+              <span className="token-amount">{player.bcBalance}</span>
+              <span className="token-symbol">BC</span>
+            </div>
+            <div className="user-level">
+              <span className="level-text">LVL</span>
+              <span className="level-number">{player.level}</span>
+            </div>
           </div>
-          
-          <button 
-            className="button button-primary text-xs py-1 px-3"
-          >
-            Connect Wallet
-          </button>
-        </div>
+        ) : (
+          <div className="user-info">
+            <div className="user-tokens">
+              <span className="token-amount">0</span>
+              <span className="token-symbol">BT</span>
+            </div>
+            <div className="user-tokens">
+              <span className="token-amount">0</span>
+              <span className="token-symbol">BC</span>
+            </div>
+            <div className="user-level">
+              <span className="level-text">LVL</span>
+              <span className="level-number">1</span>
+            </div>
+          </div>
+        )}
       </div>
-    </nav>
+    </header>
   );
 };
 

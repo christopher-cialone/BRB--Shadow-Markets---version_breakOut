@@ -1,13 +1,15 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import './styles/global.css';
-import { GameStateProvider } from './context/GameStateContext';
+import './index.css';
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+// Font imports
+import '@fontsource/montserrat';
+import '@fontsource/share-tech-mono';
+import '@fontsource/roboto';
+
+ReactDOM.createRoot(document.getElementById('react-root')!).render(
   <React.StrictMode>
-    <GameStateProvider>
-      <App />
-    </GameStateProvider>
-  </React.StrictMode>,
+    <App />
+  </React.StrictMode>
 );

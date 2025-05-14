@@ -1,68 +1,66 @@
-import React, { useState, useEffect } from 'react';
-import { useToast } from '../../hooks/useToast';
+import React, { useEffect, useState } from 'react';
 
 interface ToastProps {
-  id: string;
-  title: string;
-  description?: string;
-  variant?: 'default' | 'success' | 'error' | 'warning';
-  onDismiss: (id: string) => void;
+  message: string;
+  type: 'success' | 'error' | 'info';
+  duration?: number;
+  onClose?: () => void;
 }
 
-const Toast: React.FC<ToastProps> = ({ 
-  id, 
-  title, 
-  description, 
-  variant = 'default', 
-  onDismiss 
+const Toast: React.FC<ToastProps> = ({
+  message,
+  type = 'info',
+  duration = 3000,
+  onClose,
 }) => {
-  const [isVisible, setIsVisible] = useState(true);
-
-  // Handle animation before dismissal
-  const dismiss = () => {
-    setIsVisible(false);
-    setTimeout(() => {
-      onDismiss(id);
-    }, 300); // Match animation duration
+  const [visible, setVisible] = useState(true);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setVisible(false);
+      if (onClose) onClose();
+    }, duration);
+    
+    return () => clearTimeout(timer);
+  }, [duration, onClose]);
+  
+  // Get appropriate styles based on toast type
+  const getTypeStyles = () => {
+    switch (type) {
+      case 'success':
+        return 'bg-green-800/70 border-green-500 text-white';
+      case 'error':
+        return 'bg-red-800/70 border-red-500 text-white';
+      case 'info':
+      default:
+        return 'bg-neon-purple/30 border-neon-cyan text-white';
+    }
   };
-
+  
+  // Get appropriate icon based on toast type
+  const getTypeIcon = () => {
+    switch (type) {
+      case 'success':
+        return '✓';
+      case 'error':
+        return '✗';
+      case 'info':
+      default:
+        return 'ℹ';
+    }
+  };
+  
+  if (!visible) return null;
+  
   return (
-    <div 
-      className={`toast toast-${variant} ${isVisible ? 'animate-in' : 'animate-out'}`}
-      role="alert"
-    >
-      <div className="toast-icon">
-        {variant === 'success' && '✓'}
-        {variant === 'error' && '✗'}
-        {variant === 'warning' && '⚠'}
-        {variant === 'default' && 'ℹ'}
-      </div>
-      <div className="toast-content">
-        <div className="toast-title">{title}</div>
-        {description && <div className="toast-message">{description}</div>}
-      </div>
-      <button onClick={dismiss} className="toast-close" aria-label="Close toast">
+    <div className={`toast ${getTypeStyles()}`}>
+      <div className="toast-icon">{getTypeIcon()}</div>
+      <div className="toast-message">{message}</div>
+      <button className="toast-close" onClick={() => { setVisible(false); if (onClose) onClose(); }}>
         ×
       </button>
     </div>
   );
 };
 
-export const ToastContainer: React.FC = () => {
-  const { toasts, dismissToast } = useToast();
-
-  return (
-    <div className="toast-container">
-      {toasts.map((toast) => (
-        <Toast
-          key={toast.id}
-          id={toast.id}
-          title={toast.title}
-          description={toast.description}
-          variant={toast.variant}
-          onDismiss={dismissToast}
-        />
-      ))}
-    </div>
-  );
-};
+export default Toast;

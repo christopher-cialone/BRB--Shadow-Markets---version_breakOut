@@ -2,68 +2,64 @@ import React from 'react';
 import { RanchTile as RanchTileType } from '../../types';
 
 interface RanchTileProps {
-  tile?: RanchTileType;
-  isLocked?: boolean;
+  tile: RanchTileType;
   onClick: () => void;
 }
 
-const RanchTile: React.FC<RanchTileProps> = ({ 
-  tile, 
-  isLocked = false, 
-  onClick 
-}) => {
-  // Determine appropriate CSS classes based on tile state
-  const tileClasses = [
-    'grid-tile',
-    isLocked ? 'grid-tile-locked' : '',
-    !tile ? 'grid-tile-empty' : '',
-    tile?.hasPassture ? 'grid-tile-pasture' : '',
-    tile?.status === 'growing' ? 'grid-tile-growing' : '',
-    tile?.status === 'ready' ? 'grid-tile-ready' : ''
-  ].filter(Boolean).join(' ');
-
-  // Calculate growth progress if applicable
-  const getProgressPercentage = () => {
-    if (tile?.growthStartTime && tile?.growthEndTime) {
-      const now = Date.now();
-      const total = tile.growthEndTime - tile.growthStartTime;
-      const elapsed = now - tile.growthStartTime;
-      
-      if (elapsed >= total) return 100;
-      return Math.floor((elapsed / total) * 100);
+const RanchTile: React.FC<RanchTileProps> = ({ tile, onClick }) => {
+  // Render appropriate content based on tile type
+  const renderTileContent = () => {
+    switch (tile.type) {
+      case 'pasture':
+        return (
+          <div className={`growth-stage-${tile.growthStage || 0}`}>
+            {tile.growthStage === 3 ? (
+              <div className="ready-indicator">✓</div>
+            ) : (
+              <div className="growth-indicator">{tile.growthStage || 0}/3</div>
+            )}
+          </div>
+        );
+        
+      case 'barn':
+        return (
+          <div className="barn-content">
+            {tile.cattleId ? (
+              <div className="cattle-indicator">🐄</div>
+            ) : (
+              <div className="empty-indicator">Empty</div>
+            )}
+          </div>
+        );
+        
+      case 'water':
+        return <div className="water-content">💧</div>;
+        
+      case 'empty':
+      default:
+        return <div className="empty-content">+</div>;
     }
-    return 0;
   };
-
+  
+  // Get appropriate classes based on tile status and type
+  const getTileClasses = () => {
+    let classes = 'ranch-tile';
+    
+    // Add type-specific class
+    classes += ` tile-${tile.type}`;
+    
+    // Add status-specific class
+    classes += ` ${tile.status === 'locked' ? 'tile-locked' : 'tile-active'}`;
+    
+    return classes;
+  };
+  
   return (
     <div 
-      className={tileClasses}
-      onClick={isLocked ? undefined : onClick}
-      title={isLocked ? "Locked - Expand your ranch to unlock this tile" : undefined}
+      className={getTileClasses()}
+      onClick={tile.status === 'locked' ? undefined : onClick}
     >
-      {isLocked && (
-        <span className="grid-tile-icon">🔒</span>
-      )}
-      
-      {!isLocked && !tile?.hasPassture && (
-        <span className="grid-tile-icon opacity-50">+</span>
-      )}
-      
-      {tile?.status === 'growing' && (
-        <span className="grid-tile-icon">🌱</span>
-      )}
-      
-      {tile?.status === 'ready' && (
-        <span className="grid-tile-icon">🌾</span>
-      )}
-      
-      {/* Progress bar for growing crops */}
-      {tile?.status === 'growing' && (
-        <div 
-          className="grid-tile-progress"
-          style={{ width: `${getProgressPercentage()}%` }}
-        ></div>
-      )}
+      {renderTileContent()}
     </div>
   );
 };

@@ -1,9 +1,14 @@
 import React from 'react';
 
-const FullScreenLoader: React.FC = () => {
+interface FullScreenLoaderProps {
+  message?: string;
+}
+
+const FullScreenLoader: React.FC<FullScreenLoaderProps> = ({ message = 'Loading...' }) => {
   return (
-    <div className="fullscreen-loader">
-      <span className="loader"></span>
+    <div className="loading-screen">
+      <div className="loading-title">{message}</div>
+      <div className="loading-spinner"></div>
     </div>
   );
 };

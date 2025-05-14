@@ -2,86 +2,98 @@ import React from 'react';
 import { ShadowMarketTile as ShadowMarketTileType } from '../../types';
 
 interface ShadowMarketTileProps {
-  tile?: ShadowMarketTileType;
-  isLocked?: boolean;
+  tile: ShadowMarketTileType;
   onClick: () => void;
 }
 
-const ShadowMarketTile: React.FC<ShadowMarketTileProps> = ({ 
-  tile, 
-  isLocked = false, 
-  onClick 
-}) => {
-  // Determine appropriate CSS classes based on tile state
-  const tileClasses = [
-    'grid-tile',
-    isLocked ? 'grid-tile-locked' : '',
-    !tile ? 'grid-tile-empty' : '',
-    tile?.hasLab ? 'grid-tile-lab' : '',
-    tile?.status === 'producing' ? 'grid-tile-producing' : '',
-    tile?.status === 'ready' ? 'grid-tile-ready' : ''
-  ].filter(Boolean).join(' ');
-
-  // Calculate production progress if applicable
-  const getProgressPercentage = () => {
-    if (tile?.productionStartTime && tile?.productionEndTime) {
-      const now = Date.now();
-      const total = tile.productionEndTime - tile.productionStartTime;
-      const elapsed = now - tile.productionStartTime;
-      
-      if (elapsed >= total) return 100;
-      return Math.floor((elapsed / total) * 100);
-    }
-    return 0;
+const ShadowMarketTile: React.FC<ShadowMarketTileProps> = ({ tile, onClick }) => {
+  // Calculate production progress percentage if applicable
+  const calculateProgress = (): number => {
+    if (!tile.productionStarted || !tile.productionCompleted) return 0;
+    
+    const now = Date.now();
+    const start = tile.productionStarted;
+    const end = tile.productionCompleted;
+    
+    // If production is complete
+    if (now >= end) return 100;
+    
+    // Calculate percentage
+    const totalTime = end - start;
+    const elapsed = now - start;
+    return Math.floor((elapsed / totalTime) * 100);
   };
-
-  // Get potion icon based on type
-  const getPotionIcon = () => {
-    switch (tile?.potionType) {
-      case 'speed':
-        return '⚡';
-      case 'growth':
-        return '🌱';
-      case 'yield':
-        return '💰';
+  
+  // Render appropriate content based on tile type
+  const renderTileContent = () => {
+    switch (tile.type) {
+      case 'lab':
+        return (
+          <div className="lab-content">
+            {tile.productionStarted && tile.productionCompleted ? (
+              <>
+                <div className="production-type">
+                  {tile.potionType === 'speed' && '⚡'}
+                  {tile.potionType === 'growth' && '🌱'}
+                  {tile.potionType === 'yield' && '💰'}
+                </div>
+                <div className="progress-bar">
+                  <div 
+                    className="progress-fill"
+                    style={{ width: `${calculateProgress()}%` }}
+                  ></div>
+                </div>
+                <div className="progress-text">
+                  {calculateProgress() === 100 ? 'Ready' : `${calculateProgress()}%`}
+                </div>
+              </>
+            ) : (
+              <div className="lab-icon">🧪</div>
+            )}
+          </div>
+        );
+        
+      case 'market':
+        return <div className="market-content">🏪</div>;
+        
+      case 'staking':
+        return <div className="staking-content">💎</div>;
+        
+      case 'empty':
       default:
-        return '🧪';
+        return <div className="empty-content">+</div>;
     }
   };
-
+  
+  // Get appropriate classes based on tile status and type
+  const getTileClasses = () => {
+    let classes = 'shadow-market-tile';
+    
+    // Add type-specific class
+    classes += ` tile-${tile.type}`;
+    
+    // Add status-specific class
+    classes += ` ${tile.status === 'locked' ? 'tile-locked' : 'tile-active'}`;
+    
+    // Add production-specific class if applicable
+    if (tile.type === 'lab' && tile.productionStarted && tile.productionCompleted) {
+      const progress = calculateProgress();
+      if (progress === 100) {
+        classes += ' production-complete';
+      } else {
+        classes += ' production-in-progress';
+      }
+    }
+    
+    return classes;
+  };
+  
   return (
     <div 
-      className={tileClasses}
-      onClick={isLocked ? undefined : onClick}
-      title={isLocked ? "Locked - Expand your shadow market to unlock this tile" : undefined}
+      className={getTileClasses()}
+      onClick={tile.status === 'locked' ? undefined : onClick}
     >
-      {isLocked && (
-        <span className="grid-tile-icon">🔒</span>
-      )}
-      
-      {!isLocked && !tile?.hasLab && (
-        <span className="grid-tile-icon opacity-50">+</span>
-      )}
-      
-      {tile?.hasLab && tile?.status === 'empty' && (
-        <span className="grid-tile-icon">🧪</span>
-      )}
-      
-      {tile?.status === 'producing' && (
-        <span className="grid-tile-icon">{getPotionIcon()}</span>
-      )}
-      
-      {tile?.status === 'ready' && (
-        <span className="grid-tile-icon">{getPotionIcon()}</span>
-      )}
-      
-      {/* Progress bar for producing potions */}
-      {tile?.status === 'producing' && (
-        <div 
-          className="grid-tile-progress"
-          style={{ width: `${getProgressPercentage()}%` }}
-        ></div>
-      )}
+      {renderTileContent()}
     </div>
   );
 };
