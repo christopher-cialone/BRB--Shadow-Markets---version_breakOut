@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ranch - Bull Run Boost</title>
+  <link rel="icon" type="image/png" href="/images/favicon.png">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #1a1a2e;
+      color: white;
+      font-family: 'Montserrat', sans-serif;
+    }
+    
+    .game-container {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    
+    .header {
+      background-color: #0f0f23;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #00ffff;
+    }
+    
+    .header-title {
+      font-family: 'Share Tech Mono', monospace;
+      color: #00ffff;
+      font-size: 1.5rem;
+      text-shadow: 0 0 5px rgba(0, 255, 255, 0.7);
+    }
+    
+    .nav-links {
+      display: flex;
+      gap: 20px;
+    }
+    
+    .nav-link {
+      color: white;
+      text-decoration: none;
+      padding: 5px 10px;
+      border-radius: 3px;
+      transition: background-color 0.3s;
+    }
+    
+    .nav-link:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .active {
+      border-bottom: 2px solid #ff44cc;
+    }
+    
+    .main-content {
+      flex-grow: 1;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .ranch-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      grid-template-rows: repeat(5, 1fr);
+      gap: 10px;
+      margin: 20px 0;
+      max-width: 800px;
+      width: 100%;
+    }
+    
+    .ranch-tile {
+      aspect-ratio: 1;
+      background-color: #2a2a4e;
+      border-radius: 5px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .ranch-tile:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+    }
+    
+    .ranch-tile.empty {
+      background-color: #2a2a4e;
+    }
+    
+    .ranch-tile.pasture {
+      background-color: #1e5128;
+    }
+    
+    .ranch-tile.barn {
+      background-color: #8b4513;
+    }
+    
+    .ranch-tile.water {
+      background-color: #1e3a8a;
+    }
+    
+    .ranch-tile.locked {
+      background-color: #3a3a3a;
+      cursor: not-allowed;
+    }
+    
+    .cattle-info {
+      background-color: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 5px;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      font-size: 0.8rem;
+      text-align: center;
+    }
+    
+    .player-stats {
+      background-color: #2a2a4e;
+      border-radius: 5px;
+      padding: 15px;
+      margin-bottom: 20px;
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .stat-item {
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 1.5rem;
+      color: #00ffff;
+      margin: 5px 0;
+    }
+    
+    .stat-label {
+      font-size: 0.8rem;
+      color: #999;
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    
+    .action-button {
+      background-color: #6a2ca0;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+    
+    .action-button:hover {
+      background-color: #8a3cc0;
+      transform: translateY(-2px);
+    }
+    
+    .footer {
+      background-color: #0f0f23;
+      padding: 10px 20px;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #999;
+      border-top: 2px solid #ff44cc;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <header class="header">
+      <div class="header-title">Bull Run Boost</div>
+      <nav class="nav-links">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/ranch" class="nav-link active">Ranch</a>
+        <a href="/shadow-market" class="nav-link">Shadow Market</a>
+        <a href="/saloon" class="nav-link">Saloon</a>
+      </nav>
+    </header>
+    
+    <main class="main-content">
+      <h1>Cattle Ranch</h1>
+      
+      <div class="player-stats">
+        <div class="stat-item">
+          <div class="stat-value" id="btBalance">100</div>
+          <div class="stat-label">BT Balance</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="cattleCount">0</div>
+          <div class="stat-label">Cattle</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="hayCount">100</div>
+          <div class="stat-label">Hay</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="waterCount">100</div>
+          <div class="stat-label">Water</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="playerLevel">1</div>
+          <div class="stat-label">Level</div>
+        </div>
+      </div>
+      
+      <div class="ranch-grid" id="ranchGrid">
+        <!-- Ranch tiles will be generated here -->
+      </div>
+      
+      <div class="action-buttons">
+        <button class="action-button" id="breedButton">Breed Cattle (10 Hay, 10 Water)</button>
+        <button class="action-button" id="upgradeButton">Upgrade Barn (50 BT)</button>
+        <button class="action-button" id="buyHayButton">Buy Hay (10 BT)</button>
+        <button class="action-button" id="buyWaterButton">Buy Water (10 BT)</button>
+      </div>
+    </main>
+    
+    <footer class="footer">
+      <div>Bull Run Boost - Shadow Markets of the Cyber-West</div>
+      <div>© 2025 Cyber-Western Games</div>
+    </footer>
+  </div>
+  
+  <script>
+    // Ranch game logic
+    const playerData = {
+      name: 'Cowboy',
+      btBalance: 100,
+      cattleCount: 0,
+      hay: 100,
+      water: 100,
+      level: 1,
+      ranchTiles: []
+    };
+    
+    // Generate ranch grid
+    function generateRanchGrid() {
+      const gridContainer = document.getElementById('ranchGrid');
+      gridContainer.innerHTML = '';
+      
+      // Generate 25 tiles (5x5 grid)
+      for (let i = 0; i < 25; i++) {
+        const tile = document.createElement('div');
+        tile.className = 'ranch-tile empty';
+        
+        // Lock some tiles initially
+        if (i > 15) {
+          tile.className = 'ranch-tile locked';
+          tile.title = 'Locked - Upgrade your ranch to unlock';
+        }
+        
+        tile.dataset.position = i;
+        tile.addEventListener('click', () => handleTileClick(i));
+        
+        gridContainer.appendChild(tile);
+      }
+      
+      // Add some example data
+      setTileType(0, 'barn');
+      setTileType(1, 'pasture');
+      setTileType(2, 'water');
+    }
+    
+    function setTileType(position, type) {
+      const tiles = document.querySelectorAll('.ranch-tile');
+      if (tiles[position]) {
+        tiles[position].className = `ranch-tile ${type}`;
+      }
+    }
+    
+    function handleTileClick(position) {
+      const tiles = document.querySelectorAll('.ranch-tile');
+      const tile = tiles[position];
+      
+      if (tile.classList.contains('locked')) {
+        showMessage('This tile is locked. Upgrade your ranch to unlock.');
+        return;
+      }
+      
+      // Show what the user can do with this tile
+      if (tile.classList.contains('empty')) {
+        const options = ['pasture', 'barn', 'water'];
+        const selectedType = options[Math.floor(Math.random() * options.length)];
+        setTileType(position, selectedType);
+        showMessage(`Tile changed to ${selectedType}`);
+      } else {
+        showMessage(`This is a ${tile.classList[1]} tile`);
+      }
+    }
+    
+    function showMessage(message) {
+      alert(message);
+    }
+    
+    function updateStats() {
+      document.getElementById('btBalance').textContent = playerData.btBalance;
+      document.getElementById('cattleCount').textContent = playerData.cattleCount;
+      document.getElementById('hayCount').textContent = playerData.hay;
+      document.getElementById('waterCount').textContent = playerData.water;
+      document.getElementById('playerLevel').textContent = playerData.level;
+    }
+    
+    // Add event listeners to buttons
+    document.getElementById('breedButton').addEventListener('click', () => {
+      // Check if player has enough resources
+      if (playerData.hay >= 10 && playerData.water >= 10) {
+        playerData.hay -= 10;
+        playerData.water -= 10;
+        playerData.cattleCount += 1;
+        updateStats();
+        showMessage('You successfully bred a new cattle!');
+      } else {
+        showMessage('Not enough resources! Breeding requires 10 Hay and 10 Water.');
+      }
+    });
+    
+    document.getElementById('upgradeButton').addEventListener('click', () => {
+      // Check if player has enough BT
+      if (playerData.btBalance >= 50) {
+        playerData.btBalance -= 50;
+        
+        // Unlock a random locked tile
+        const lockedTiles = document.querySelectorAll('.ranch-tile.locked');
+        if (lockedTiles.length > 0) {
+          const randomIndex = Math.floor(Math.random() * lockedTiles.length);
+          lockedTiles[randomIndex].classList.remove('locked');
+          lockedTiles[randomIndex].classList.add('empty');
+          updateStats();
+          showMessage('Barn upgraded! A new tile has been unlocked.');
+        } else {
+          showMessage('Your ranch is already fully upgraded!');
+        }
+      } else {
+        showMessage('Not enough BT! Upgrading costs 50 BT.');
+      }
+    });
+    
+    document.getElementById('buyHayButton').addEventListener('click', () => {
+      // Check if player has enough BT
+      if (playerData.btBalance >= 10) {
+        playerData.btBalance -= 10;
+        playerData.hay += 50;
+        updateStats();
+        showMessage('You bought 50 Hay for 10 BT.');
+      } else {
+        showMessage('Not enough BT! Hay costs 10 BT for 50 units.');
+      }
+    });
+    
+    document.getElementById('buyWaterButton').addEventListener('click', () => {
+      // Check if player has enough BT
+      if (playerData.btBalance >= 10) {
+        playerData.btBalance -= 10;
+        playerData.water += 50;
+        updateStats();
+        showMessage('You bought 50 Water for 10 BT.');
+      } else {
+        showMessage('Not enough BT! Water costs 10 BT for 50 units.');
+      }
+    });
+    
+    // Connect to WebSocket for real-time updates
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    const socket = new WebSocket(wsUrl);
+    
+    socket.onopen = function() {
+      console.log('WebSocket connection established to game server');
+      
+      // Send an initial message to get player data
+      socket.send(JSON.stringify({
+        type: 'get_player_data',
+        scene: 'ranch'
+      }));
+    };
+    
+    socket.onmessage = function(event) {
+      console.log('Message from server:', event.data);
+      try {
+        const data = JSON.parse(event.data);
+        
+        // Handle different message types
+        if (data.type === 'player_data' && data.scene === 'ranch') {
+          // Update player data
+          Object.assign(playerData, data.player);
+          updateStats();
+        }
+      } catch (error) {
+        console.error('Error parsing message:', error);
+      }
+    };
+    
+    socket.onerror = function(error) {
+      console.error('WebSocket error:', error);
+    };
+    
+    // Fetch initial player data from API
+    fetch('/api/player-data')
+      .then(response => response.json())
+      .then(data => {
+        // Update player data
+        playerData.name = data.name || playerData.name;
+        playerData.btBalance = data.btBalance || playerData.btBalance;
+        playerData.level = data.level || playerData.level;
+        updateStats();
+      })
+      .catch(error => {
+        console.error('Error fetching player data:', error);
+      });
+    
+    // Initialize the game
+    generateRanchGrid();
+    updateStats();
+  </script>
+</body>
+</html>

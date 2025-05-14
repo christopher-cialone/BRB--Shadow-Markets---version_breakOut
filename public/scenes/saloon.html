@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Saloon - Bull Run Boost</title>
+  <link rel="icon" type="image/png" href="/images/favicon.png">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #1a1a2e;
+      color: white;
+      font-family: 'Montserrat', sans-serif;
+    }
+    
+    .game-container {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    
+    .header {
+      background-color: #0f0f23;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #6a2ca0;
+    }
+    
+    .header-title {
+      font-family: 'Share Tech Mono', monospace;
+      color: #6a2ca0;
+      font-size: 1.5rem;
+      text-shadow: 0 0 5px rgba(106, 44, 160, 0.7);
+    }
+    
+    .nav-links {
+      display: flex;
+      gap: 20px;
+    }
+    
+    .nav-link {
+      color: white;
+      text-decoration: none;
+      padding: 5px 10px;
+      border-radius: 3px;
+      transition: background-color 0.3s;
+    }
+    
+    .nav-link:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .active {
+      border-bottom: 2px solid #00ffff;
+    }
+    
+    .main-content {
+      flex-grow: 1;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .player-stats {
+      background-color: #2a2a4e;
+      border-radius: 5px;
+      padding: 15px;
+      margin-bottom: 20px;
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .stat-item {
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 1.5rem;
+      color: #6a2ca0;
+      margin: 5px 0;
+    }
+    
+    .stat-label {
+      font-size: 0.8rem;
+      color: #999;
+    }
+    
+    .saloon-content {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+      width: 100%;
+      max-width: 800px;
+    }
+    
+    .race-track {
+      background-color: #2a2a4e;
+      border-radius: 5px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .race-title {
+      font-size: 1.5rem;
+      color: #00ffff;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    
+    .lanes {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .lane {
+      display: flex;
+      align-items: center;
+      background-color: #3a3a5e;
+      border-radius: 5px;
+      padding: 10px;
+    }
+    
+    .lane-label {
+      width: 100px;
+      font-weight: bold;
+      color: #00ffff;
+    }
+    
+    .progress-bar {
+      flex-grow: 1;
+      height: 20px;
+      background-color: #222236;
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .progress {
+      height: 100%;
+      width: 0%;
+      background-color: #6a2ca0;
+      transition: width 0.5s ease-in-out;
+    }
+    
+    .progress-hearts {
+      background-color: #ff44cc;
+    }
+    
+    .progress-diamonds {
+      background-color: #00ffff;
+    }
+    
+    .progress-clubs {
+      background-color: #228B22;
+    }
+    
+    .progress-spades {
+      background-color: #4169E1;
+    }
+    
+    .betting-panel {
+      background-color: #2a2a4e;
+      border-radius: 5px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .betting-title {
+      font-size: 1.5rem;
+      color: #ff44cc;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    
+    .betting-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .bet-option {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #3a3a5e;
+      border-radius: 5px;
+      padding: 10px;
+    }
+    
+    .suit-label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .suit-icon {
+      font-size: 1.2rem;
+    }
+    
+    .odds {
+      color: #00ffff;
+    }
+    
+    .bet-slider {
+      width: 80%;
+      margin: 10px auto;
+    }
+    
+    .total-bet {
+      text-align: center;
+      margin: 15px 0;
+      font-size: 1.2rem;
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    
+    .action-button {
+      background-color: #6a2ca0;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s;
+      width: 100%;
+    }
+    
+    .action-button:hover {
+      background-color: #8a3cc0;
+      transform: translateY(-2px);
+    }
+    
+    .action-button.primary {
+      background-color: #ff44cc;
+      color: black;
+    }
+    
+    .race-results {
+      margin-top: 20px;
+      background-color: #3a3a5e;
+      border-radius: 5px;
+      padding: 15px;
+      text-align: center;
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    .footer {
+      background-color: #0f0f23;
+      padding: 10px 20px;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #999;
+      border-top: 2px solid #ff44cc;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <header class="header">
+      <div class="header-title">Bull Run Boost</div>
+      <nav class="nav-links">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/ranch" class="nav-link">Ranch</a>
+        <a href="/shadow-market" class="nav-link">Shadow Market</a>
+        <a href="/saloon" class="nav-link active">Saloon</a>
+      </nav>
+    </header>
+    
+    <main class="main-content">
+      <h1>Cipher Gulch Saloon</h1>
+      
+      <div class="player-stats">
+        <div class="stat-item">
+          <div class="stat-value" id="btBalance">100</div>
+          <div class="stat-label">BT Balance</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="bcBalance">0</div>
+          <div class="stat-label">BC Balance</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="lastRaceWinnings">0</div>
+          <div class="stat-label">Last Race Winnings</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="totalBet">0</div>
+          <div class="stat-label">Current Total Bet</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="playerLevel">1</div>
+          <div class="stat-label">Level</div>
+        </div>
+      </div>
+      
+      <div class="saloon-content">
+        <div class="race-track">
+          <div class="race-title">Card Suit Race</div>
+          
+          <div class="lanes">
+            <div class="lane">
+              <div class="lane-label">♥ Hearts</div>
+              <div class="progress-bar">
+                <div class="progress progress-hearts" id="hearts-progress"></div>
+              </div>
+            </div>
+            <div class="lane">
+              <div class="lane-label">♦ Diamonds</div>
+              <div class="progress-bar">
+                <div class="progress progress-diamonds" id="diamonds-progress"></div>
+              </div>
+            </div>
+            <div class="lane">
+              <div class="lane-label">♣ Clubs</div>
+              <div class="progress-bar">
+                <div class="progress progress-clubs" id="clubs-progress"></div>
+              </div>
+            </div>
+            <div class="lane">
+              <div class="lane-label">♠ Spades</div>
+              <div class="progress-bar">
+                <div class="progress progress-spades" id="spades-progress"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="race-results hidden" id="race-results">
+            <h3>Race Results</h3>
+            <p id="winner-text">The winner is: <span id="winner-suit"></span></p>
+            <p id="winnings-text">Your winnings: <span id="winnings-amount"></span> BT</p>
+          </div>
+        </div>
+        
+        <div class="betting-panel">
+          <div class="betting-title">Place Your Bets</div>
+          
+          <div class="betting-options">
+            <div class="bet-option">
+              <div class="suit-label">
+                <span class="suit-icon" style="color: #ff44cc;">♥</span> Hearts
+              </div>
+              <div class="odds" id="hearts-odds">4.0x</div>
+            </div>
+            <input type="range" min="0" max="50" value="0" class="bet-slider" id="hearts-slider">
+            
+            <div class="bet-option">
+              <div class="suit-label">
+                <span class="suit-icon" style="color: #00ffff;">♦</span> Diamonds
+              </div>
+              <div class="odds" id="diamonds-odds">4.0x</div>
+            </div>
+            <input type="range" min="0" max="50" value="0" class="bet-slider" id="diamonds-slider">
+            
+            <div class="bet-option">
+              <div class="suit-label">
+                <span class="suit-icon" style="color: #228B22;">♣</span> Clubs
+              </div>
+              <div class="odds" id="clubs-odds">4.0x</div>
+            </div>
+            <input type="range" min="0" max="50" value="0" class="bet-slider" id="clubs-slider">
+            
+            <div class="bet-option">
+              <div class="suit-label">
+                <span class="suit-icon" style="color: #4169E1;">♠</span> Spades
+              </div>
+              <div class="odds" id="spades-odds">4.0x</div>
+            </div>
+            <input type="range" min="0" max="50" value="0" class="bet-slider" id="spades-slider">
+          </div>
+          
+          <div class="total-bet">
+            Total Bet: <span id="bet-amount">0</span> BT
+          </div>
+          
+          <div class="action-buttons">
+            <button class="action-button primary" id="start-race-button">Start Race</button>
+            <button class="action-button" id="clear-bets-button">Clear Bets</button>
+            <button class="action-button" id="claim-bonus-button">Claim Bonus</button>
+          </div>
+        </div>
+      </div>
+    </main>
+    
+    <footer class="footer">
+      <div>Bull Run Boost - Shadow Markets of the Cyber-West</div>
+      <div>© 2025 Cyber-Western Games</div>
+    </footer>
+  </div>
+  
+  <script>
+    // Saloon game logic
+    const playerData = {
+      name: 'Cowboy',
+      btBalance: 100,
+      bcBalance: 0,
+      lastRaceWinnings: 0,
+      level: 1
+    };
+    
+    const betData = {
+      hearts: 0,
+      diamonds: 0,
+      clubs: 0,
+      spades: 0,
+      total: 0
+    };
+    
+    const raceData = {
+      status: 'idle', // 'idle', 'racing', 'finished'
+      progress: {
+        hearts: 0,
+        diamonds: 0,
+        clubs: 0,
+        spades: 0
+      },
+      winner: null,
+      winnings: 0
+    };
+    
+    // Update UI stats
+    function updateStats() {
+      document.getElementById('btBalance').textContent = playerData.btBalance;
+      document.getElementById('bcBalance').textContent = playerData.bcBalance;
+      document.getElementById('lastRaceWinnings').textContent = playerData.lastRaceWinnings;
+      document.getElementById('totalBet').textContent = betData.total;
+      document.getElementById('playerLevel').textContent = playerData.level;
+      
+      // Update bet amount display
+      document.getElementById('bet-amount').textContent = betData.total;
+    }
+    
+    // Update race progress
+    function updateRaceProgress() {
+      document.getElementById('hearts-progress').style.width = `${raceData.progress.hearts}%`;
+      document.getElementById('diamonds-progress').style.width = `${raceData.progress.diamonds}%`;
+      document.getElementById('clubs-progress').style.width = `${raceData.progress.clubs}%`;
+      document.getElementById('spades-progress').style.width = `${raceData.progress.spades}%`;
+    }
+    
+    // Handle betting input
+    function setupBettingSliders() {
+      const sliders = {
+        hearts: document.getElementById('hearts-slider'),
+        diamonds: document.getElementById('diamonds-slider'),
+        clubs: document.getElementById('clubs-slider'),
+        spades: document.getElementById('spades-slider')
+      };
+      
+      // Update bet data when sliders change
+      Object.keys(sliders).forEach(suit => {
+        sliders[suit].addEventListener('input', () => {
+          betData[suit] = parseInt(sliders[suit].value);
+          updateTotalBet();
+        });
+      });
+    }
+    
+    // Update total bet amount
+    function updateTotalBet() {
+      betData.total = betData.hearts + betData.diamonds + betData.clubs + betData.spades;
+      updateStats();
+    }
+    
+    // Clear all bets
+    function clearBets() {
+      const sliders = document.querySelectorAll('.bet-slider');
+      sliders.forEach(slider => {
+        slider.value = 0;
+      });
+      
+      betData.hearts = 0;
+      betData.diamonds = 0;
+      betData.clubs = 0;
+      betData.spades = 0;
+      betData.total = 0;
+      
+      updateStats();
+    }
+    
+    // Show race results
+    function showRaceResults(winner, winnings) {
+      document.getElementById('race-results').classList.remove('hidden');
+      document.getElementById('winner-suit').textContent = winner;
+      document.getElementById('winnings-amount').textContent = winnings;
+      
+      playerData.lastRaceWinnings = winnings;
+      updateStats();
+    }
+    
+    // Start a new race
+    function startRace() {
+      if (raceData.status === 'racing') {
+        showMessage('A race is already in progress!');
+        return;
+      }
+      
+      if (betData.total <= 0) {
+        showMessage('You need to place at least one bet to start a race!');
+        return;
+      }
+      
+      if (betData.total > playerData.btBalance) {
+        showMessage('You don\'t have enough BT tokens for this bet!');
+        return;
+      }
+      
+      // Deduct bet amount from balance
+      playerData.btBalance -= betData.total;
+      updateStats();
+      
+      // Reset race progress
+      raceData.progress = {
+        hearts: 0,
+        diamonds: 0,
+        clubs: 0,
+        spades: 0
+      };
+      
+      raceData.status = 'racing';
+      document.getElementById('race-results').classList.add('hidden');
+      updateRaceProgress();
+      
+      // Send race start to server
+      socket.send(JSON.stringify({
+        type: 'start_race',
+        bets: {
+          hearts: betData.hearts,
+          diamonds: betData.diamonds,
+          clubs: betData.clubs,
+          spades: betData.spades
+        }
+      }));
+      
+      // Simulate the race if no server response within 500ms
+      setTimeout(() => {
+        if (raceData.status === 'racing') {
+          simulateRace();
+        }
+      }, 500);
+    }
+    
+    // Simulate a race (client-side fallback)
+    function simulateRace() {
+      let raceInterval = setInterval(() => {
+        // Random progress for each suit
+        const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
+        let anyFinished = false;
+        
+        suits.forEach(suit => {
+          if (raceData.progress[suit] < 100) {
+            raceData.progress[suit] += Math.random() * 5;
+            
+            // Ensure progress doesn't exceed 100%
+            if (raceData.progress[suit] > 100) {
+              raceData.progress[suit] = 100;
+              anyFinished = true;
+            }
+          }
+        });
+        
+        updateRaceProgress();
+        
+        // Check if any suit has finished
+        if (anyFinished) {
+          clearInterval(raceInterval);
+          finishRace();
+        }
+      }, 100);
+    }
+    
+    // Finish the race and determine winner
+    function finishRace() {
+      raceData.status = 'finished';
+      
+      // Find the suit with the highest progress (first to finish)
+      const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
+      let maxProgress = 0;
+      let winnerSuit = null;
+      
+      suits.forEach(suit => {
+        if (raceData.progress[suit] > maxProgress) {
+          maxProgress = raceData.progress[suit];
+          winnerSuit = suit;
+        }
+      });
+      
+      // Map suit to display name with symbol
+      const suitSymbols = {
+        'hearts': '♥ Hearts',
+        'diamonds': '♦ Diamonds',
+        'clubs': '♣ Clubs',
+        'spades': '♠ Spades'
+      };
+      
+      raceData.winner = winnerSuit;
+      
+      // Calculate winnings if player bet on the winner
+      let winnings = 0;
+      if (betData[winnerSuit] > 0) {
+        // Get odds for the winning suit
+        const odds = parseFloat(document.getElementById(`${winnerSuit}-odds`).textContent);
+        winnings = Math.floor(betData[winnerSuit] * odds);
+        
+        // Add winnings to player balance
+        playerData.btBalance += winnings;
+      }
+      
+      raceData.winnings = winnings;
+      
+      // Show results
+      showRaceResults(suitSymbols[winnerSuit], winnings);
+    }
+    
+    // Simple alert message
+    function showMessage(message) {
+      alert(message);
+    }
+    
+    // Set up event listeners
+    document.getElementById('start-race-button').addEventListener('click', startRace);
+    document.getElementById('clear-bets-button').addEventListener('click', clearBets);
+    document.getElementById('claim-bonus-button').addEventListener('click', () => {
+      // Send claim bonus request to server
+      socket.send(JSON.stringify({
+        type: 'claim_bonus'
+      }));
+    });
+    
+    // Connect to WebSocket for real-time updates
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    const socket = new WebSocket(wsUrl);
+    
+    socket.onopen = function() {
+      console.log('WebSocket connection established to game server');
+      
+      // Send an initial message to get player data
+      socket.send(JSON.stringify({
+        type: 'get_player_data',
+        scene: 'saloon'
+      }));
+    };
+    
+    socket.onmessage = function(event) {
+      console.log('Message from server:', event.data);
+      try {
+        const data = JSON.parse(event.data);
+        
+        // Handle different message types
+        if (data.type === 'player_data' && data.scene === 'saloon') {
+          // Update player data
+          Object.assign(playerData, data.player);
+          updateStats();
+        } else if (data.type === 'race_progress') {
+          // Update race progress
+          Object.assign(raceData.progress, data.progress);
+          updateRaceProgress();
+        } else if (data.type === 'race_result') {
+          // Handle race results
+          raceData.status = 'finished';
+          raceData.winner = data.winner;
+          raceData.winnings = data.winnings;
+          
+          // Update player balance
+          playerData.btBalance += data.winnings;
+          playerData.lastRaceWinnings = data.winnings;
+          
+          // Show results
+          const suitSymbols = {
+            'hearts': '♥ Hearts',
+            'diamonds': '♦ Diamonds',
+            'clubs': '♣ Clubs',
+            'spades': '♠ Spades'
+          };
+          
+          showRaceResults(suitSymbols[data.winner], data.winnings);
+        } else if (data.type === 'bonus_claimed') {
+          playerData.btBalance += data.amount;
+          updateStats();
+          showMessage(`Bonus claimed! You received ${data.amount} BT tokens.`);
+        }
+      } catch (error) {
+        console.error('Error parsing message:', error);
+      }
+    };
+    
+    socket.onerror = function(error) {
+      console.error('WebSocket error:', error);
+    };
+    
+    // Fetch initial player data from API
+    fetch('/api/player-data')
+      .then(response => response.json())
+      .then(data => {
+        // Update player data
+        playerData.name = data.name || playerData.name;
+        playerData.btBalance = data.btBalance || playerData.btBalance;
+        playerData.bcBalance = data.bcBalance || playerData.bcBalance;
+        playerData.level = data.level || playerData.level;
+        updateStats();
+      })
+      .catch(error => {
+        console.error('Error fetching player data:', error);
+      });
+    
+    // Initialize the game
+    setupBettingSliders();
+    updateStats();
+    updateRaceProgress();
+  </script>
+</body>
+</html>

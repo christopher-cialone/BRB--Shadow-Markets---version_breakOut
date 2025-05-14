@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shadow Market - Bull Run Boost</title>
+  <link rel="icon" type="image/png" href="/images/favicon.png">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #1a1a2e;
+      color: white;
+      font-family: 'Montserrat', sans-serif;
+    }
+    
+    .game-container {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    
+    .header {
+      background-color: #0f0f23;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #ff44cc;
+    }
+    
+    .header-title {
+      font-family: 'Share Tech Mono', monospace;
+      color: #ff44cc;
+      font-size: 1.5rem;
+      text-shadow: 0 0 5px rgba(255, 68, 204, 0.7);
+    }
+    
+    .nav-links {
+      display: flex;
+      gap: 20px;
+    }
+    
+    .nav-link {
+      color: white;
+      text-decoration: none;
+      padding: 5px 10px;
+      border-radius: 3px;
+      transition: background-color 0.3s;
+    }
+    
+    .nav-link:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .active {
+      border-bottom: 2px solid #00ffff;
+    }
+    
+    .main-content {
+      flex-grow: 1;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: #1a1a2e;
+      background-image: linear-gradient(rgba(255, 68, 204, 0.05) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255, 68, 204, 0.05) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+    
+    .shadow-market-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      grid-template-rows: repeat(5, 1fr);
+      gap: 10px;
+      margin: 20px 0;
+      max-width: 800px;
+      width: 100%;
+    }
+    
+    .market-tile {
+      aspect-ratio: 1;
+      background-color: #2a2a4e;
+      border-radius: 5px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .market-tile:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 10px rgba(255, 68, 204, 0.4);
+    }
+    
+    .market-tile.empty {
+      background-color: #2a2a4e;
+    }
+    
+    .market-tile.lab {
+      background-color: #4b0082;
+    }
+    
+    .market-tile.market {
+      background-color: #800020;
+    }
+    
+    .market-tile.staking {
+      background-color: #006400;
+    }
+    
+    .market-tile.locked {
+      background-color: #3a3a3a;
+      cursor: not-allowed;
+    }
+    
+    .tile-info {
+      background-color: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 5px;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      font-size: 0.8rem;
+      text-align: center;
+    }
+    
+    .player-stats {
+      background-color: #2a2a4e;
+      border-radius: 5px;
+      padding: 15px;
+      margin-bottom: 20px;
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .stat-item {
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 1.5rem;
+      color: #ff44cc;
+      margin: 5px 0;
+    }
+    
+    .stat-label {
+      font-size: 0.8rem;
+      color: #999;
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    
+    .action-button {
+      background-color: #6a2ca0;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+    
+    .action-button:hover {
+      background-color: #8a3cc0;
+      transform: translateY(-2px);
+    }
+    
+    .footer {
+      background-color: #0f0f23;
+      padding: 10px 20px;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #999;
+      border-top: 2px solid #00ffff;
+    }
+    
+    .potion-lab-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .modal-content {
+      background-color: #2a2a4e;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      border: 2px solid #ff44cc;
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #444;
+      padding-bottom: 10px;
+    }
+    
+    .modal-title {
+      font-size: 1.5rem;
+      color: #ff44cc;
+    }
+    
+    .close-modal {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+    
+    .potion-types {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .potion-type {
+      background-color: #3a3a5e;
+      padding: 10px;
+      border-radius: 5px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .potion-type:hover {
+      background-color: #4a4a6e;
+      transform: translateY(-2px);
+    }
+    
+    .potion-type.selected {
+      border: 2px solid #ff44cc;
+    }
+    
+    .potion-name {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .potion-description {
+      font-size: 0.8rem;
+      color: #ccc;
+    }
+    
+    .craft-button {
+      background-color: #ff44cc;
+      color: black;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      width: 100%;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <header class="header">
+      <div class="header-title">Bull Run Boost</div>
+      <nav class="nav-links">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/ranch" class="nav-link">Ranch</a>
+        <a href="/shadow-market" class="nav-link active">Shadow Market</a>
+        <a href="/saloon" class="nav-link">Saloon</a>
+      </nav>
+    </header>
+    
+    <main class="main-content">
+      <h1>Shadow Market</h1>
+      
+      <div class="player-stats">
+        <div class="stat-item">
+          <div class="stat-value" id="bcBalance">0</div>
+          <div class="stat-label">BC Balance</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="potionCount">0</div>
+          <div class="stat-label">Potions</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="marketPrice">1.0</div>
+          <div class="stat-label">Market Price</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="stakeAmount">0</div>
+          <div class="stat-label">Staked BC</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="playerLevel">1</div>
+          <div class="stat-label">Level</div>
+        </div>
+      </div>
+      
+      <div class="shadow-market-grid" id="marketGrid">
+        <!-- Market tiles will be generated here -->
+      </div>
+      
+      <div class="action-buttons">
+        <button class="action-button" id="createLabButton">Create Potion Lab (50 BC)</button>
+        <button class="action-button" id="createMarketButton">Create Market Stall (75 BC)</button>
+        <button class="action-button" id="createStakingButton">Create Staking Pool (100 BC)</button>
+        <button class="action-button" id="convertButton">Convert BT to BC (2:1 ratio)</button>
+      </div>
+    </main>
+    
+    <footer class="footer">
+      <div>Bull Run Boost - Shadow Markets of the Cyber-West</div>
+      <div>© 2025 Cyber-Western Games</div>
+    </footer>
+    
+    <!-- Potion Lab Modal -->
+    <div class="potion-lab-modal" id="potionLabModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title">Potion Laboratory</div>
+          <button class="close-modal" id="closeModal">&times;</button>
+        </div>
+        
+        <p>Select a potion type to craft:</p>
+        
+        <div class="potion-types">
+          <div class="potion-type" data-type="speed">
+            <div class="potion-name">Speed Potion</div>
+            <div class="potion-description">Increases cattle movement and production speed by 20%</div>
+          </div>
+          <div class="potion-type" data-type="growth">
+            <div class="potion-name">Growth Potion</div>
+            <div class="potion-description">Accelerates pasture growth by 30%</div>
+          </div>
+          <div class="potion-type" data-type="yield">
+            <div class="potion-name">Yield Potion</div>
+            <div class="potion-description">Increases milk production by 25%</div>
+          </div>
+        </div>
+        
+        <p>Crafting a potion costs 20 BC tokens.</p>
+        <p>50% of tokens are burned in the crafting process.</p>
+        
+        <button class="craft-button" id="craftButton">Craft Potion</button>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Shadow Market game logic
+    const playerData = {
+      name: 'Cowboy',
+      bcBalance: 0,
+      potionCount: 0,
+      marketPrice: 1.0,
+      stakeAmount: 0,
+      level: 1,
+      btBalance: 100, // For conversion from BT to BC
+      marketTiles: []
+    };
+    
+    let selectedPotionType = null;
+    let selectedTileIndex = null;
+    
+    // Generate market grid
+    function generateMarketGrid() {
+      const gridContainer = document.getElementById('marketGrid');
+      gridContainer.innerHTML = '';
+      
+      // Generate 25 tiles (5x5 grid)
+      for (let i = 0; i < 25; i++) {
+        const tile = document.createElement('div');
+        tile.className = 'market-tile empty';
+        
+        // Lock some tiles initially
+        if (i > 12) {
+          tile.className = 'market-tile locked';
+          tile.title = 'Locked - Upgrade your market access to unlock';
+        }
+        
+        tile.dataset.position = i;
+        tile.addEventListener('click', () => handleTileClick(i));
+        
+        gridContainer.appendChild(tile);
+      }
+      
+      // Add some example data
+      setTileType(0, 'lab');
+      setTileType(1, 'market');
+      setTileType(2, 'staking');
+    }
+    
+    function setTileType(position, type) {
+      const tiles = document.querySelectorAll('.market-tile');
+      if (tiles[position]) {
+        tiles[position].className = `market-tile ${type}`;
+      }
+    }
+    
+    function handleTileClick(position) {
+      const tiles = document.querySelectorAll('.market-tile');
+      const tile = tiles[position];
+      
+      if (tile.classList.contains('locked')) {
+        showMessage('This tile is locked. Upgrade your market access to unlock.');
+        return;
+      }
+      
+      // If it's a lab, open the potion lab modal
+      if (tile.classList.contains('lab')) {
+        openPotionLabModal(position);
+        return;
+      }
+      
+      // Show what the user can do with this tile
+      if (tile.classList.contains('empty')) {
+        showMessage('This is an empty tile. Use the buttons below to build something here.');
+      } else if (tile.classList.contains('market')) {
+        showMessage('This is a market stall. You can sell potions here.');
+      } else if (tile.classList.contains('staking')) {
+        showMessage('This is a staking pool. You can stake BC tokens here.');
+      }
+    }
+    
+    function openPotionLabModal(position) {
+      selectedTileIndex = position;
+      document.getElementById('potionLabModal').style.display = 'flex';
+    }
+    
+    function showMessage(message) {
+      alert(message);
+    }
+    
+    function updateStats() {
+      document.getElementById('bcBalance').textContent = playerData.bcBalance;
+      document.getElementById('potionCount').textContent = playerData.potionCount;
+      document.getElementById('marketPrice').textContent = playerData.marketPrice.toFixed(1);
+      document.getElementById('stakeAmount').textContent = playerData.stakeAmount;
+      document.getElementById('playerLevel').textContent = playerData.level;
+    }
+    
+    // Add event listeners to buttons
+    document.getElementById('createLabButton').addEventListener('click', () => {
+      // Check if player has enough BC
+      if (playerData.bcBalance >= 50) {
+        // Find an empty tile
+        const emptyTiles = document.querySelectorAll('.market-tile.empty');
+        if (emptyTiles.length > 0) {
+          const tile = emptyTiles[0];
+          const position = tile.dataset.position;
+          
+          playerData.bcBalance -= 50;
+          setTileType(position, 'lab');
+          updateStats();
+          showMessage('Potion Lab created successfully!');
+        } else {
+          showMessage('No empty tiles available. Unlock more tiles or clear some existing buildings.');
+        }
+      } else {
+        showMessage('Not enough BC tokens! Creating a lab costs 50 BC.');
+      }
+    });
+    
+    document.getElementById('createMarketButton').addEventListener('click', () => {
+      // Check if player has enough BC
+      if (playerData.bcBalance >= 75) {
+        // Find an empty tile
+        const emptyTiles = document.querySelectorAll('.market-tile.empty');
+        if (emptyTiles.length > 0) {
+          const tile = emptyTiles[0];
+          const position = tile.dataset.position;
+          
+          playerData.bcBalance -= 75;
+          setTileType(position, 'market');
+          updateStats();
+          showMessage('Market Stall created successfully!');
+        } else {
+          showMessage('No empty tiles available. Unlock more tiles or clear some existing buildings.');
+        }
+      } else {
+        showMessage('Not enough BC tokens! Creating a market stall costs 75 BC.');
+      }
+    });
+    
+    document.getElementById('createStakingButton').addEventListener('click', () => {
+      // Check if player has enough BC
+      if (playerData.bcBalance >= 100) {
+        // Find an empty tile
+        const emptyTiles = document.querySelectorAll('.market-tile.empty');
+        if (emptyTiles.length > 0) {
+          const tile = emptyTiles[0];
+          const position = tile.dataset.position;
+          
+          playerData.bcBalance -= 100;
+          setTileType(position, 'staking');
+          updateStats();
+          showMessage('Staking Pool created successfully!');
+        } else {
+          showMessage('No empty tiles available. Unlock more tiles or clear some existing buildings.');
+        }
+      } else {
+        showMessage('Not enough BC tokens! Creating a staking pool costs 100 BC.');
+      }
+    });
+    
+    document.getElementById('convertButton').addEventListener('click', () => {
+      // Check if player has BT to convert
+      if (playerData.btBalance >= 2) {
+        const amountToConvert = Math.min(10, Math.floor(playerData.btBalance / 2)) * 2;
+        const bcReceived = amountToConvert / 2;
+        
+        playerData.btBalance -= amountToConvert;
+        playerData.bcBalance += bcReceived;
+        updateStats();
+        showMessage(`Converted ${amountToConvert} BT to ${bcReceived} BC tokens.`);
+      } else {
+        showMessage('Not enough BT tokens! Conversion requires at least 2 BT.');
+      }
+    });
+    
+    // Set up modal event listeners
+    document.getElementById('closeModal').addEventListener('click', () => {
+      document.getElementById('potionLabModal').style.display = 'none';
+      selectedTileIndex = null;
+    });
+    
+    // Select potion type
+    document.querySelectorAll('.potion-type').forEach(item => {
+      item.addEventListener('click', () => {
+        // Clear previous selection
+        document.querySelectorAll('.potion-type').forEach(p => p.classList.remove('selected'));
+        
+        // Set new selection
+        item.classList.add('selected');
+        selectedPotionType = item.dataset.type;
+      });
+    });
+    
+    // Craft potion
+    document.getElementById('craftButton').addEventListener('click', () => {
+      if (!selectedPotionType) {
+        showMessage('Please select a potion type first.');
+        return;
+      }
+      
+      // Check if player has enough BC
+      if (playerData.bcBalance >= 20) {
+        playerData.bcBalance -= 20;
+        playerData.potionCount += 1;
+        updateStats();
+        
+        // Close modal
+        document.getElementById('potionLabModal').style.display = 'none';
+        selectedTileIndex = null;
+        
+        showMessage(`You crafted a ${selectedPotionType} potion!`);
+      } else {
+        showMessage('Not enough BC tokens! Crafting a potion costs 20 BC.');
+      }
+    });
+    
+    // Connect to WebSocket for real-time updates
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    const socket = new WebSocket(wsUrl);
+    
+    socket.onopen = function() {
+      console.log('WebSocket connection established to game server');
+      
+      // Send an initial message to get player data
+      socket.send(JSON.stringify({
+        type: 'get_player_data',
+        scene: 'shadow_market'
+      }));
+    };
+    
+    socket.onmessage = function(event) {
+      console.log('Message from server:', event.data);
+      try {
+        const data = JSON.parse(event.data);
+        
+        // Handle different message types
+        if (data.type === 'player_data' && data.scene === 'shadow_market') {
+          // Update player data
+          Object.assign(playerData, data.player);
+          updateStats();
+        }
+      } catch (error) {
+        console.error('Error parsing message:', error);
+      }
+    };
+    
+    socket.onerror = function(error) {
+      console.error('WebSocket error:', error);
+    };
+    
+    // Fetch initial player data from API
+    fetch('/api/player-data')
+      .then(response => response.json())
+      .then(data => {
+        // Update player data
+        playerData.name = data.name || playerData.name;
+        playerData.btBalance = data.btBalance || playerData.btBalance;
+        playerData.bcBalance = data.bcBalance || playerData.bcBalance;
+        playerData.level = data.level || playerData.level;
+        updateStats();
+      })
+      .catch(error => {
+        console.error('Error fetching player data:', error);
+      });
+    
+    // Initialize the game
+    generateMarketGrid();
+    updateStats();
+  </script>
+</body>
+</html>

@@ -19,6 +19,32 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Scene Routes
+app.get('/ranch', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'scenes', 'ranch.html'));
+});
+
+app.get('/shadow-market', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'scenes', 'shadow-market.html'));
+});
+
+app.get('/saloon', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'scenes', 'saloon.html'));
+});
+
+// Game action handlers
+app.post('/api/ranch/feed-cattle', express.json(), (req, res) => {
+  console.log('Ranch action: Feed cattle', req.body);
+  // Process feed cattle action
+  res.json({ success: true, message: 'Cattle fed successfully' });
+});
+
+app.post('/api/shadow-market/craft-potion', express.json(), (req, res) => {
+  console.log('Shadow Market action: Craft potion', req.body);
+  // Process craft potion action
+  res.json({ success: true, message: 'Potion crafted successfully' });
+});
+
 // API Routes for React App
 app.get('/api/player-data', (req, res) => {
   // Send dummy player data for testing
