@@ -3,7 +3,7 @@
  * Handles crop and cattle management in the ranch scene
  */
 
-// Ranch grid configuration
+// Ranch grid UI configuration
 const ranchGridConfig = {
     rows: 5,
     cols: 5,
@@ -12,73 +12,40 @@ const ranchGridConfig = {
     actionMenuId: 'ranch-action-menu'
 };
 
-// Cell types and states
-const CELL_TYPES = {
-    EMPTY: 'empty',
-    CROP: 'crop',
-    CATTLE: 'cattle'
-};
-
-// Crop types and states
-const CROP_STATES = {
-    SEED: 'seed',
-    GROWING: 'growing',
-    READY: 'ready'
-};
-
-// Cattle types
-const CATTLE_TYPES = {
-    COW: 'cow',
-    BULL: 'bull'
-};
-
-// Cattle states
-const CATTLE_STATES = {
-    HUNGRY: 'hungry',
-    FED: 'fed',
-    PRODUCING: 'producing' // For cows producing milk
-};
-
-// Initialize ranch grid data if not exists
-if (!window.ranchGrid) {
-    window.ranchGrid = {
-        cells: []
-    };
-
-    // Create 5x5 grid of empty cells
-    for (let i = 0; i < ranchGridConfig.rows * ranchGridConfig.cols; i++) {
-        window.ranchGrid.cells.push({
-            id: i,
-            type: CELL_TYPES.EMPTY,
-            state: null,
-            data: {}
-        });
-    }
-}
-
-// Cell prices and configurations
-const PRICES = {
-    SEEDS: 5,
-    COW: 50,
-    BULL: 100,
-    FEED: 2,
-    MILK_SELL_PRICE: 10,
-    RODEO_ENTRY_FEE: 20
-};
-
-// Time in milliseconds for crop growth and milk production
-const TIMERS = {
-    CROP_GROWING: 30000, // 30 seconds for crops to grow
-    COW_MILK_PRODUCTION: 60000 // 60 seconds for milk production
+// Import shared constants from the ranch data module
+// These are now available through window.RANCH_CONFIG
+const { CELL_TYPES, CROP_STATES, CATTLE_TYPES, CATTLE_STATES, PRICES, TIMERS } = window.RANCH_CONFIG || {
+    // Fallback values if RANCH_CONFIG is not available
+    CELL_TYPES: { EMPTY: 'empty', CROP: 'crop', CATTLE: 'cattle' },
+    CROP_STATES: { SEED: 'seed', GROWING: 'growing', READY: 'ready' },
+    CATTLE_TYPES: { COW: 'cow', BULL: 'bull' },
+    CATTLE_STATES: { HUNGRY: 'hungry', FED: 'fed', PRODUCING: 'producing' },
+    PRICES: { SEEDS: 5, COW: 50, BULL: 100, FEED: 2, MILK_SELL_PRICE: 10, RODEO_ENTRY_FEE: 20 },
+    TIMERS: { CROP_GROWING: 30000, COW_MILK_PRODUCTION: 60000 }
 };
 
 /**
  * Initialize the ranch grid UI
  */
 function initRanchGrid() {
+    // Initialize ranch data first (if not already initialized)
+    if (typeof window.initRanchData === 'function') {
+        window.initRanchData();
+    }
+    
+    // Create UI elements
     createRanchGridUI();
     createActionMenu();
+    
+    // Render the grid based on current state
     renderRanchGrid();
+    
+    // Set up timers for ongoing processes
+    setupRanchTimers();
+    
+    // Update UI elements with player data
+    updateUI();
+    
     console.log("Ranch grid initialized with vanilla JS");
 }
 
@@ -1073,6 +1040,145 @@ window.renderRanchGrid = renderRanchGrid;
 window.showNotification = showNotification;
 
 // Add ranch grid to DOMContentLoaded
+/**
+ * Set up timers for automated ranch grid processes
+ */
+function setupRanchTimers() {
+    // Process for crop growth checking
+    const checkCropGrowth = () => {
+        if (window.ranchGrid && window.ranchGrid.cells) {
+            let updatesFound = false;
+            
+            window.ranchGrid.cells.forEach((cell, index) => {
+                if (cell.type === CELL_TYPES.CROP && cell.state === CROP_STATES.GROWING) {
+                    const now = Date.now();
+                    const plantedTime = cell.data.plantedTime || 0;
+                    const growthTime = TIMERS.CROP_GROWING;
+                    
+                    // Check if growth time has passed
+                    if (now - plantedTime >= growthTime) {
+                        // Update to ready state
+                        cell.state = CROP_STATES.READY;
+                        updatesFound = true;
+                        
+                        console.log(`Crop in cell ${index} is now ready for harvest`);
+                    }
+                }
+            });
+            
+            // Re-render if any updates were made
+            if (updatesFound) {
+                renderRanchGrid();
+                
+                // Save changes
+                if (typeof window.saveRanchData === 'function') {
+                    window.saveRanchData();
+                }
+                
+                // Show notification
+                if (typeof window.showNotification === 'function') {
+                    window.showNotification('Some crops are ready for harvest!', 'success');
+                }
+            }
+        }
+    };
+    
+    // Process for milk production checking
+    const checkMilkProduction = () => {
+        if (window.ranchGrid && window.ranchGrid.cells) {
+            let updatesFound = false;
+            
+            window.ranchGrid.cells.forEach((cell, index) => {
+                if (cell.type === CELL_TYPES.CATTLE && 
+                    cell.data.cattleType === CATTLE_TYPES.COW && 
+                    cell.state === CATTLE_STATES.FED) {
+                    
+                    const now = Date.now();
+                    const fedTime = cell.data.fedTime || 0;
+                    const productionTime = TIMERS.COW_MILK_PRODUCTION;
+                    
+                    // Check if production time has passed
+                    if (now - fedTime >= productionTime) {
+                        // Update to producing state
+                        cell.state = CATTLE_STATES.PRODUCING;
+                        updatesFound = true;
+                        
+                        console.log(`Cow in cell ${index} is now producing milk`);
+                    }
+                }
+            });
+            
+            // Re-render if any updates were made
+            if (updatesFound) {
+                renderRanchGrid();
+                
+                // Save changes
+                if (typeof window.saveRanchData === 'function') {
+                    window.saveRanchData();
+                }
+                
+                // Show notification
+                if (typeof window.showNotification === 'function') {
+                    window.showNotification('Cows are ready for milking!', 'success');
+                }
+            }
+        }
+    };
+    
+    // Set up interval timers
+    const cropCheckInterval = setInterval(checkCropGrowth, 5000); // Check every 5 seconds
+    const milkCheckInterval = setInterval(checkMilkProduction, 5000); // Check every 5 seconds
+    
+    // Store intervals for cleanup
+    window.ranchIntervals = {
+        cropCheck: cropCheckInterval,
+        milkCheck: milkCheckInterval
+    };
+    
+    console.log("Ranch timers initialized");
+}
+
+/**
+ * Clean up timers when switching away from ranch scene
+ */
+function cleanupRanchTimers() {
+    if (window.ranchIntervals) {
+        if (window.ranchIntervals.cropCheck) {
+            clearInterval(window.ranchIntervals.cropCheck);
+        }
+        
+        if (window.ranchIntervals.milkCheck) {
+            clearInterval(window.ranchIntervals.milkCheck);
+        }
+        
+        console.log("Ranch timers cleaned up");
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Ranch grid module loaded');
+    
+    // Add cleanup handling when leaving the ranch scene
+    const leaveRanchButtons = [
+        'go-to-saloon',
+        'go-to-night',
+        'go-to-profile-from-ranch'
+    ];
+    
+    leaveRanchButtons.forEach(buttonId => {
+        const button = document.getElementById(buttonId);
+        if (button) {
+            // Add our cleanup function
+            const originalOnClick = button.onclick;
+            button.onclick = function(event) {
+                // Clean up timers first
+                cleanupRanchTimers();
+                
+                // Then call original handler if it exists
+                if (typeof originalOnClick === 'function') {
+                    originalOnClick.call(this, event);
+                }
+            };
+        }
+    });
 });
