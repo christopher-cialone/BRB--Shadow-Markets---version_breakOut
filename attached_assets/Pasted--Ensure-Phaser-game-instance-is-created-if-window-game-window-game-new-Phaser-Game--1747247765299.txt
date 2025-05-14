@@ -1,0 +1,87 @@
+// Ensure Phaser game instance is created
+if (!window.game) {
+    window.game = new Phaser.Game({
+        type: Phaser.AUTO,
+        width: window.innerWidth,
+        height: window.innerHeight,
+        parent: 'game-container',
+        scene: [MainMenuScene, RanchScene, SaloonScene, NightScene],
+        scale: {
+            mode: Phaser.Scale.RESIZE,
+            autoCenter: Phaser.Scale.CENTER_BOTH
+        }
+    });
+}
+
+// Function to initialize or restart scenes
+function initializeScenes() {
+    if (game && game.scene) {
+        // Stop all scenes to avoid duplicates
+        game.scene.stop('MainMenuScene');
+        game.scene.stop('RanchScene');
+        game.scene.stop('SaloonScene');
+        game.scene.stop('NightScene');
+
+        // Start the appropriate scene based on currentScene
+        switch (currentScene) {
+            case 'ranch':
+                game.scene.start('RanchScene');
+                initRanchGrid();
+                break;
+            case 'night':
+                game.scene.start('NightScene');
+                initNightGrid();
+                break;
+            case 'saloon':
+                game.scene.start('SaloonScene');
+                break;
+            default:
+                game.scene.start('MainMenuScene');
+        }
+
+        // Reattach event listeners
+        attachButtonListeners();
+    }
+}
+
+// Initialize Ranch Grid
+function initRanchGrid() {
+    const ranchScene = game.scene.getScene('RanchScene');
+    if (ranchScene && ranchScene.initPhaserGrid) {
+        ranchScene.initPhaserGrid();
+        ranchScene.updateAllCells(); // Force grid render
+    }
+}
+
+// Initialize Night Grid (Ether Range)
+function initNightGrid() {
+    const nightScene = game.scene.getScene('NightScene');
+    if (nightScene && nightScene.initPhaserGrid) {
+        nightScene.initPhaserGrid();
+        nightScene.updateAllCells(); // Force grid render
+    }
+}
+
+// Attach button listeners
+function attachButtonListeners() {
+    // Ranch buttons
+    const harvestAllBtn = document.getElementById('harvest-all');
+    if (harvestAllBtn) {
+        harvestAllBtn.onclick = () => harvestAllRanchCells();
+    }
+
+    // Night buttons
+    const distillAllBtn = document.getElementById('distill-all');
+    if (distillAllBtn) {
+        distillAllBtn.onclick = () => distillAllShadowCells();
+    }
+
+    // Travel buttons
+    document.querySelectorAll('.travel-button').forEach(btn => {
+        btn.onclick = () => {
+            currentScene = btn.dataset.scene;
+            initializeScenes();
+            switchScene(currentScene);
+        };
+    });
+}
