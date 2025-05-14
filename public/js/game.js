@@ -710,6 +710,32 @@ if (typeof window.RanchScene === 'undefined') {
     
     // Initialize the Phaser-based ranch grid
     initPhaserGrid() {
+        console.log("RanchScene.initPhaserGrid() called");
+        
+        // Make sure ranch grid is initialized
+        if (typeof window.ensureRanchGridInitialized === 'function') {
+            window.ensureRanchGridInitialized();
+        } else if (!window.ranchGrid || !window.ranchGrid.cells || window.ranchGrid.cells.length === 0) {
+            console.log("Ranch grid not initialized, creating it now");
+            window.ranchGrid = {
+                size: 5,
+                cells: [],
+                growthTimer: 60,
+                growthInterval: null,
+                multiplier: 1.0
+            };
+            
+            // Initialize cells
+            for (let i = 0; i < 25; i++) {
+                window.ranchGrid.cells.push({
+                    id: i,
+                    state: 'empty',
+                    growthStage: 0,
+                    growthMax: 3
+                });
+            }
+        }
+        
         // Calculate grid dimensions
         const { size, cellSize, padding } = this.gridConfig;
         const totalWidth = (cellSize + padding) * size;
@@ -724,8 +750,17 @@ if (typeof window.RanchScene === 'undefined') {
         this.gridConfig.startY = gridY - totalHeight/2 + cellSize/2;
         
         // Create grid container
+        if (this.gridContainer) {
+            this.gridContainer.destroy();
+        }
         this.gridContainer = this.add.container(0, 0);
-        this.ranchContainer.add(this.gridContainer);
+        
+        // Add the container to the ranch container if it exists
+        if (this.ranchContainer) {
+            this.ranchContainer.add(this.gridContainer);
+        } else {
+            console.warn("Ranch container not found, adding grid directly to scene");
+        }
         
         // Create grid header
         const gridHeader = this.add.text(gridX, gridY - totalHeight/2 - 40, 'Ranch Pasture', {
@@ -736,7 +771,13 @@ if (typeof window.RanchScene === 'undefined') {
             strokeThickness: 2,
             shadow: { color: '#000000', fill: true, offsetX: 1, offsetY: 1, blur: 2 }
         }).setOrigin(0.5);
-        this.ranchContainer.add(gridHeader);
+        
+        // Add header to appropriate container
+        if (this.ranchContainer) {
+            this.ranchContainer.add(gridHeader);
+        } else {
+            this.gridContainer.add(gridHeader);
+        }
         
         // Create the grid cells
         this.createGridCells();
@@ -807,6 +848,7 @@ if (typeof window.RanchScene === 'undefined') {
         
         // Clear existing cells if any
         if (this.gridCells && this.gridCells.length > 0) {
+            console.log('Clearing existing ranch grid cells');
             this.gridCells.forEach(cell => {
                 if (cell && cell.sprite) cell.sprite.destroy();
                 if (cell && cell.text) cell.text.destroy();
@@ -817,10 +859,28 @@ if (typeof window.RanchScene === 'undefined') {
             this.gridCells = [];
         }
         
+        // Make sure the grid container exists
+        if (!this.gridContainer) {
+            console.log('Creating new grid container');
+            this.gridContainer = this.add.container(0, 0);
+            
+            // Add to ranch container if it exists
+            if (this.ranchContainer) {
+                this.ranchContainer.add(this.gridContainer);
+            }
+        }
+        
         // Create the grid cells
         for (let row = 0; row < size; row++) {
             for (let col = 0; col < size; col++) {
                 const cellIndex = row * size + col;
+                
+                // Make sure we have a valid cell
+                if (!ranchGrid.cells[cellIndex]) {
+                    console.error(`Cell ${cellIndex} not found in ranchGrid`);
+                    continue;
+                }
+                
                 const cell = ranchGrid.cells[cellIndex];
                 
                 // Calculate position
@@ -833,10 +893,20 @@ if (typeof window.RanchScene === 'undefined') {
                 if (cell.state === 'growing') spriteName = 'cell-growing';
                 if (cell.state === 'harvestable') spriteName = 'cell-harvestable';
                 
+                // Check if the texture exists
+                if (!this.textures.exists(spriteName)) {
+                    console.warn(`Texture ${spriteName} not found, using fallback`);
+                    // Create a fallback texture
+                    this.createFallbackTexture(spriteName);
+                }
+                
                 // Add the cell sprite
                 const cellSprite = this.add.image(x, y, spriteName);
                 cellSprite.setDisplaySize(cellSize, cellSize);
                 cellSprite.setScale(0.8); // Start small for animation
+                
+                // Add the sprite to the grid container
+                this.gridContainer.add(cellSprite);
                 
                 // Add an animation for appearance
                 this.tweens.add({
@@ -848,7 +918,10 @@ if (typeof window.RanchScene === 'undefined') {
                 
                 // Add interactivity
                 cellSprite.setInteractive({ useHandCursor: true });
-                cellSprite.on('pointerdown', () => this.handleGridCellClick(cellIndex));
+                cellSprite.on('pointerdown', () => {
+                    console.log(`Ranch cell ${cellIndex} clicked`);
+                    this.handleGridCellClick(cellIndex);
+                });
                 
                 // Add growth stage indicator for non-empty cells
                 let growthText = null;
