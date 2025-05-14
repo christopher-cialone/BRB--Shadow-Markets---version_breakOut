@@ -16,10 +16,6 @@ author = "agent"
 task = "workflow.run"
 args = "GameServer"
 
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "ReactApp"
-
 [[workflows.workflow]]
 name = "GameServer"
 author = "agent"
@@ -27,15 +23,6 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "node server.js"
-waitForPort = 5000
-
-[[workflows.workflow]]
-name = "ReactApp"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node react-app.js"
 waitForPort = 5000
 
 [deployment]

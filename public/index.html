@@ -55,6 +55,128 @@
     </div>
   </div>
   
-  <script type="module" src="/src/main.tsx"></script>
+  <script>
+    // WebSocket connection
+    let socket;
+    let connectionStatus = 'disconnected';
+    let clientId = null;
+    let messageLog = [];
+
+    function connectWebSocket() {
+      // Set up WebSocket connection
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      
+      console.log(`Attempting to connect to WebSocket at ${wsUrl}`);
+      
+      socket = new WebSocket(wsUrl);
+      
+      socket.onopen = function() {
+        console.log('WebSocket connection established');
+        connectionStatus = 'connected';
+        updateUI();
+      };
+      
+      socket.onmessage = function(event) {
+        console.log('WebSocket message received:', event.data);
+        try {
+          const message = JSON.parse(event.data);
+          messageLog.push(message);
+          
+          if (message.type === 'connection' && message.data && message.data.clientId) {
+            clientId = message.data.clientId;
+          }
+          
+          updateUI();
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
+        }
+      };
+      
+      socket.onclose = function() {
+        console.log('WebSocket connection closed');
+        connectionStatus = 'disconnected';
+        updateUI();
+      };
+      
+      socket.onerror = function(error) {
+        console.error('WebSocket error:', error);
+        connectionStatus = 'error';
+        updateUI();
+      };
+    }
+    
+    function sendMessage() {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        const message = {
+          type: 'chat',
+          data: {
+            text: 'Hello from the client!',
+            timestamp: new Date().toISOString()
+          }
+        };
+        
+        socket.send(JSON.stringify(message));
+        console.log('Message sent to server:', message);
+      } else {
+        console.warn('WebSocket not connected, cannot send message');
+      }
+    }
+    
+    function updateUI() {
+      const appContent = document.getElementById('react-root');
+      
+      appContent.innerHTML = `
+        <div style="max-width: 800px; margin: 0 auto; padding: 20px; text-align: center;">
+          <h1 style="font-family: 'Share Tech Mono', monospace; color: #00ffff; text-shadow: 0 0 10px rgba(0, 255, 255, 0.7);">
+            Bull Run Boost
+          </h1>
+          <h2 style="color: #ff44cc; margin-top: 20px;">Shadow Markets of the Cyber-West</h2>
+          
+          <div style="display: flex; justify-content: center; gap: 20px; margin-top: 40px;">
+            <button onclick="alert('Ranch scene will be available soon!')" style="background-color: #00ffff; color: black; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold;">
+              Ranch
+            </button>
+            <button onclick="alert('Shadow Market scene will be available soon!')" style="background-color: #ff44cc; color: black; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold;">
+              Shadow Market
+            </button>
+            <button onclick="alert('Saloon scene will be available soon!')" style="background-color: #6a2ca0; color: white; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold;">
+              Saloon
+            </button>
+          </div>
+          
+          <div style="margin-top: 40px; text-align: left; border: 1px solid #444; padding: 15px; border-radius: 5px;">
+            <h3 style="color: #00ffff; margin-top: 0;">WebSocket Connection Status</h3>
+            <p>Status: <span style="color: ${connectionStatus === 'connected' ? '#00ff00' : connectionStatus === 'error' ? '#ff0000' : '#ffff00'}">${connectionStatus}</span></p>
+            <p>Client ID: ${clientId || 'Not assigned yet'}</p>
+            
+            <div style="margin-top: 15px;">
+              <button onclick="connectWebSocket()" style="background-color: #00ffff; color: black; border: none; padding: 5px 10px; cursor: pointer; margin-right: 10px;">
+                Connect
+              </button>
+              <button onclick="sendMessage()" style="background-color: #ff44cc; color: black; border: none; padding: 5px 10px; cursor: pointer;">
+                Send Test Message
+              </button>
+            </div>
+            
+            <div style="margin-top: 15px;">
+              <h4 style="color: #ff44cc; margin-top: 0;">Message Log</h4>
+              <pre style="background-color: #111; color: #eee; padding: 10px; max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px;">${messageLog.map(msg => JSON.stringify(msg, null, 2)).join('\n\n')}</pre>
+            </div>
+          </div>
+          
+          <p style="margin-top: 40px; color: #aaaaaa;">
+            Welcome to Bull Run Boost, a 2.5D pixel art cypherpunk Western game featuring strategic interactive storytelling and immersive gameplay mechanics. The React-based interface is currently under development.
+          </p>
+        </div>
+      `;
+    }
+    
+    window.onload = function() {
+      updateUI();
+      // Auto-connect WebSocket after a short delay
+      setTimeout(connectWebSocket, 500);
+    }
+  </script>
 </body>
 </html>

@@ -19,6 +19,25 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// API Routes for React App
+app.get('/api/player-data', (req, res) => {
+  // Send dummy player data for testing
+  console.log('API request for player data');
+  res.json({
+    name: 'Cowboy',
+    btBalance: 100,  // BT token balance (Ranch currency)
+    bcBalance: 0,    // BC token balance (Shadow Market currency)
+    level: 1,
+    xp: 0,
+    xpToNextLevel: 100
+  });
+});
+
+// Handle requests for favicon.ico
+app.get('/favicon.ico', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'images', 'favicon.png'));
+});
+
 // Handle WebSocket connections
 wss.on('connection', (ws) => {
   console.log('WebSocket client connected');
