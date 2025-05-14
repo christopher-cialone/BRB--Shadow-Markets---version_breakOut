@@ -13,10 +13,17 @@
     "@fontsource/montserrat": "^5.2.5",
     "@fontsource/roboto": "^5.2.5",
     "@fontsource/share-tech-mono": "^5.2.5",
+    "@types/react": "^19.1.4",
+    "@types/react-dom": "^19.1.5",
+    "@vitejs/plugin-react": "^4.4.1",
     "express": "^5.1.0",
     "phaser": "^3.88.2",
+    "react": "^18.3.1",
+    "react-dom": "^19.1.0",
     "react-spring": "^9.7.5",
     "socket.io": "^4.8.1",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5",
     "ws": "^8.18.2"
   }
 }
