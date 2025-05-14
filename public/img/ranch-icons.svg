@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="600" height="1000" viewBox="0 0 600 1000">
+  <!-- Cell backgrounds -->
+  <defs>
+    <!-- Empty cell -->
+    <rect id="empty-cell" width="100" height="100" rx="5" fill="#5c4a36" stroke="#7d6346" stroke-width="2"/>
+    
+    <!-- Crop cells -->
+    <rect id="seed-cell" width="100" height="100" rx="5" fill="#483c28" stroke="#7d6346" stroke-width="2"/>
+    <rect id="growing-cell" width="100" height="100" rx="5" fill="#5e5030" stroke="#7d6346" stroke-width="2"/>
+    <rect id="ready-cell" width="100" height="100" rx="5" fill="#6a9932" stroke="#7d6346" stroke-width="2"/>
+    
+    <!-- Cattle cells -->
+    <rect id="hungry-cattle-cell" width="100" height="100" rx="5" fill="#7d5a44" stroke="#7d6346" stroke-width="2"/>
+    <rect id="fed-cattle-cell" width="100" height="100" rx="5" fill="#8d7a64" stroke="#7d6346" stroke-width="2"/>
+    <rect id="milk-cattle-cell" width="100" height="100" rx="5" fill="#9d8a74" stroke="#7d6346" stroke-width="2"/>
+
+    <!-- Seeds icon -->
+    <g id="seeds-icon">
+      <path d="M50,30 C40,45 45,60 50,70 C55,60 60,45 50,30 Z" fill="#7a9e45"/>
+      <path d="M35,40 C25,55 30,70 35,80 C40,70 45,55 35,40 Z" fill="#8db34e"/>
+      <path d="M65,40 C55,55 60,70 65,80 C70,70 75,55 65,40 Z" fill="#8db34e"/>
+    </g>
+    
+    <!-- Growing crop icon -->
+    <g id="growing-icon">
+      <path d="M30,30 C20,50 25,65 30,80 C35,65 40,50 30,30 Z" fill="#8db34e"/>
+      <path d="M50,25 C40,45 45,60 50,75 C55,60 60,45 50,25 Z" fill="#8db34e"/>
+      <path d="M70,30 C60,50 65,65 70,80 C75,65 80,50 70,30 Z" fill="#8db34e"/>
+      <rect x="48" y="75" width="4" height="15" fill="#7a6045"/>
+    </g>
+    
+    <!-- Ready crop icon -->
+    <g id="ready-icon">
+      <path d="M30,20 C20,40 25,55 30,65 C35,55 40,40 30,20 Z" fill="#9cbe63"/>
+      <path d="M50,15 C40,35 45,50 50,60 C55,50 60,35 50,15 Z" fill="#9cbe63"/>
+      <path d="M70,20 C60,40 65,55 70,65 C75,55 80,40 70,20 Z" fill="#9cbe63"/>
+      <rect x="48" y="60" width="4" height="25" fill="#7a6045"/>
+      <circle cx="30" cy="55" r="5" fill="#f4d359"/>
+      <circle cx="50" cy="50" r="5" fill="#f4d359"/>
+      <circle cx="70" cy="55" r="5" fill="#f4d359"/>
+    </g>
+    
+    <!-- Cow icon -->
+    <g id="cow-icon">
+      <ellipse cx="50" cy="60" rx="30" ry="20" fill="#e8e0d0"/>
+      <ellipse cx="35" cy="45" rx="12" ry="8" fill="#e8e0d0"/>
+      <ellipse cx="65" cy="45" rx="12" ry="8" fill="#e8e0d0"/>
+      <circle cx="35" cy="45" r="2" fill="#333"/>
+      <circle cx="65" cy="45" r="2" fill="#333"/>
+      <path d="M45,52 C45,55 55,55 55,52" fill="none" stroke="#333" stroke-width="1"/>
+      <path d="M25,40 C20,30 25,25 30,35" fill="#e8e0d0"/>
+      <path d="M75,40 C80,30 75,25 70,35" fill="#e8e0d0"/>
+      <rect x="37" y="70" width="5" height="15" fill="#e8e0d0"/>
+      <rect x="58" y="70" width="5" height="15" fill="#e8e0d0"/>
+      
+      <!-- Milk bottle -->
+      <g id="milk-bottle" transform="translate(15, 15)">
+        <path d="M85,70 L80,80 L75,70 L85,70 Z" fill="#fff"/>
+        <rect x="77" y="70" width="6" height="10" fill="#fff"/>
+        <rect x="76" y="80" width="8" height="5" fill="#fff" rx="1"/>
+      </g>
+    </g>
+    
+    <!-- Bull icon -->
+    <g id="bull-icon">
+      <ellipse cx="50" cy="60" rx="30" ry="20" fill="#9f8d7c"/>
+      <ellipse cx="35" cy="45" rx="12" ry="8" fill="#9f8d7c"/>
+      <ellipse cx="65" cy="45" rx="12" ry="8" fill="#9f8d7c"/>
+      <circle cx="35" cy="45" r="2" fill="#333"/>
+      <circle cx="65" cy="45" r="2" fill="#333"/>
+      <path d="M45,52 C45,55 55,55 55,52" fill="none" stroke="#333" stroke-width="1.5"/>
+      
+      <!-- Horns -->
+      <path d="M20,35 C15,25 20,20 25,30" fill="#9f8d7c"/>
+      <path d="M80,35 C85,25 80,20 75,30" fill="#9f8d7c"/>
+      <path d="M25,35 L15,25" fill="none" stroke="#c8baa9" stroke-width="3"/>
+      <path d="M75,35 L85,25" fill="none" stroke="#c8baa9" stroke-width="3"/>
+      
+      <rect x="37" y="70" width="5" height="15" fill="#9f8d7c"/>
+      <rect x="58" y="70" width="5" height="15" fill="#9f8d7c"/>
+    </g>
+    
+    <!-- Hungry indicator -->
+    <g id="hungry-indicator">
+      <text x="50" y="90" font-family="Arial" font-size="10" fill="#ff9900" text-anchor="middle">Hungry</text>
+    </g>
+    
+    <!-- Quality stars -->
+    <g id="quality-stars">
+      <text x="80" y="20" font-family="Arial" font-size="10" fill="#ffcc00" text-anchor="middle">★★★</text>
+    </g>
+    
+    <!-- Progress bar empty -->
+    <rect id="progress-bar-bg" x="20" y="85" width="60" height="6" rx="3" fill="rgba(0,0,0,0.3)"/>
+    
+    <!-- Progress bar fill -->
+    <rect id="progress-bar-fill-50" x="20" y="85" width="30" height="6" rx="3" fill="#66ff66"/>
+    <rect id="progress-bar-fill-milk" x="20" y="85" width="30" height="6" rx="3" fill="#66ccff"/>
+  </defs>
+  
+  <!-- Row 1: Basic cell types -->
+  <use xlink:href="#empty-cell" x="50" y="50"/>
+  <use xlink:href="#seed-cell" x="200" y="50"/>
+  <use xlink:href="#growing-cell" x="350" y="50"/>
+  <use xlink:href="#ready-cell" x="500" y="50"/>
+  
+  <text x="50" y="30" font-family="Arial" font-size="12" fill="#ffffff">Empty Cell</text>
+  <text x="200" y="30" font-family="Arial" font-size="12" fill="#ffffff">Seeds Cell</text>
+  <text x="350" y="30" font-family="Arial" font-size="12" fill="#ffffff">Growing Cell</text>
+  <text x="500" y="30" font-family="Arial" font-size="12" fill="#ffffff">Ready Cell</text>
+  
+  <!-- Row 2: Cattle cell types -->
+  <use xlink:href="#hungry-cattle-cell" x="50" y="200"/>
+  <use xlink:href="#fed-cattle-cell" x="200" y="200"/>
+  <use xlink:href="#milk-cattle-cell" x="350" y="200"/>
+  
+  <text x="50" y="180" font-family="Arial" font-size="12" fill="#ffffff">Hungry Cattle</text>
+  <text x="200" y="180" font-family="Arial" font-size="12" fill="#ffffff">Fed Cattle</text>
+  <text x="350" y="180" font-family="Arial" font-size="12" fill="#ffffff">Producing Cattle</text>
+  
+  <!-- Row 3: Icons -->
+  <use xlink:href="#empty-cell" x="50" y="350"/>
+  <use xlink:href="#seeds-icon" x="50" y="350"/>
+  
+  <use xlink:href="#seed-cell" x="200" y="350"/>
+  <use xlink:href="#seeds-icon" x="200" y="350"/>
+  
+  <use xlink:href="#growing-cell" x="350" y="350"/>
+  <use xlink:href="#growing-icon" x="350" y="350"/>
+  
+  <use xlink:href="#ready-cell" x="500" y="350"/>
+  <use xlink:href="#ready-icon" x="500" y="350"/>
+  
+  <text x="50" y="330" font-family="Arial" font-size="12" fill="#ffffff">Seeds Icon</text>
+  <text x="200" y="330" font-family="Arial" font-size="12" fill="#ffffff">Seeds in Cell</text>
+  <text x="350" y="330" font-family="Arial" font-size="12" fill="#ffffff">Growing Icon</text>
+  <text x="500" y="330" font-family="Arial" font-size="12" fill="#ffffff">Ready Icon</text>
+  
+  <!-- Row 4: Cattle icons -->
+  <use xlink:href="#hungry-cattle-cell" x="50" y="500"/>
+  <use xlink:href="#cow-icon" x="50" y="500"/>
+  <use xlink:href="#hungry-indicator" x="50" y="500"/>
+  
+  <use xlink:href="#fed-cattle-cell" x="200" y="500"/>
+  <use xlink:href="#cow-icon" x="200" y="500"/>
+  <use xlink:href="#progress-bar-bg" x="200" y="500"/>
+  <use xlink:href="#progress-bar-fill-milk" x="200" y="500"/>
+  
+  <use xlink:href="#milk-cattle-cell" x="350" y="500"/>
+  <use xlink:href="#cow-icon" x="350" y="500"/>
+  <use xlink:href="#milk-bottle" x="350" y="500"/>
+  
+  <use xlink:href="#hungry-cattle-cell" x="500" y="500"/>
+  <use xlink:href="#bull-icon" x="500" y="500"/>
+  <use xlink:href="#hungry-indicator" x="500" y="500"/>
+  
+  <text x="50" y="480" font-family="Arial" font-size="12" fill="#ffffff">Hungry Cow</text>
+  <text x="200" y="480" font-family="Arial" font-size="12" fill="#ffffff">Fed Cow</text>
+  <text x="350" y="480" font-family="Arial" font-size="12" fill="#ffffff">Milk Cow</text>
+  <text x="500" y="480" font-family="Arial" font-size="12" fill="#ffffff">Hungry Bull</text>
+  
+  <!-- Row 5: Progression -->
+  <use xlink:href="#growing-cell" x="50" y="650"/>
+  <use xlink:href="#growing-icon" x="50" y="650"/>
+  <use xlink:href="#progress-bar-bg" x="50" y="650"/>
+  <use xlink:href="#progress-bar-fill-50" x="50" y="650" transform="scale(0.2,1) translate(100,0)"/>
+  
+  <use xlink:href="#growing-cell" x="200" y="650"/>
+  <use xlink:href="#growing-icon" x="200" y="650"/>
+  <use xlink:href="#progress-bar-bg" x="200" y="650"/>
+  <use xlink:href="#progress-bar-fill-50" x="200" y="650" transform="scale(0.5,1) translate(40,0)"/>
+  
+  <use xlink:href="#growing-cell" x="350" y="650"/>
+  <use xlink:href="#growing-icon" x="350" y="650"/>
+  <use xlink:href="#progress-bar-bg" x="350" y="650"/>
+  <use xlink:href="#progress-bar-fill-50" x="350" y="650" transform="scale(0.8,1) translate(10,0)"/>
+  
+  <use xlink:href="#ready-cell" x="500" y="650"/>
+  <use xlink:href="#ready-icon" x="500" y="650"/>
+  
+  <text x="50" y="630" font-family="Arial" font-size="12" fill="#ffffff">20% Grown</text>
+  <text x="200" y="630" font-family="Arial" font-size="12" fill="#ffffff">50% Grown</text>
+  <text x="350" y="630" font-family="Arial" font-size="12" fill="#ffffff">80% Grown</text>
+  <text x="500" y="630" font-family="Arial" font-size="12" fill="#ffffff">Ready (100%)</text>
+  
+  <!-- Row 6: Quality ratings -->
+  <use xlink:href="#hungry-cattle-cell" x="50" y="800"/>
+  <use xlink:href="#cow-icon" x="50" y="800"/>
+  <text x="65" y="815" font-family="Arial" font-size="10" fill="#ffcc00">★</text>
+  
+  <use xlink:href="#hungry-cattle-cell" x="200" y="800"/>
+  <use xlink:href="#cow-icon" x="200" y="800"/>
+  <text x="215" y="815" font-family="Arial" font-size="10" fill="#ffcc00">★★</text>
+  
+  <use xlink:href="#hungry-cattle-cell" x="350" y="800"/>
+  <use xlink:href="#cow-icon" x="350" y="800"/>
+  <text x="365" y="815" font-family="Arial" font-size="10" fill="#ffcc00">★★★</text>
+  
+  <use xlink:href="#hungry-cattle-cell" x="500" y="800"/>
+  <use xlink:href="#bull-icon" x="500" y="800"/>
+  <text x="515" y="815" font-family="Arial" font-size="10" fill="#ffcc00">★★★★★</text>
+  
+  <text x="50" y="780" font-family="Arial" font-size="12" fill="#ffffff">Quality 1-2</text>
+  <text x="200" y="780" font-family="Arial" font-size="12" fill="#ffffff">Quality 3-4</text>
+  <text x="350" y="780" font-family="Arial" font-size="12" fill="#ffffff">Quality 5-6</text>
+  <text x="500" y="780" font-family="Arial" font-size="12" fill="#ffffff">Quality 9-10</text>
+</svg>

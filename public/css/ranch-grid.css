@@ -1,0 +1,271 @@
+/* Ranch Grid CSS */
+
+/* Ranch grid container */
+.ranch-grid {
+    display: grid;
+    gap: 2px;
+    background: #3a2c1f;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 15px rgba(255, 68, 204, 0.4);
+    position: relative;
+    z-index: 10;
+    margin: 0 auto;
+}
+
+/* Ranch grid cell */
+.ranch-cell {
+    background: #5c4a36;
+    border-radius: 3px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #7d6346;
+    min-height: 100px;
+}
+
+.ranch-cell:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 10px rgba(255, 68, 204, 0.7);
+}
+
+/* Ranch action menu */
+.ranch-action-menu {
+    position: absolute;
+    z-index: 100;
+    background: #1e1a2e;
+    border: 2px solid #ff44cc;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 0 20px rgba(255, 68, 204, 0.8);
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 200px;
+    color: #ffffff;
+    font-family: 'Anta', sans-serif;
+}
+
+.menu-title {
+    font-size: 18px;
+    font-weight: bold;
+    border-bottom: 1px solid #ff44cc;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+}
+
+.menu-option {
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    background: #3a2c1f;
+    transition: all 0.2s ease;
+}
+
+.menu-option:hover {
+    background: #5c4a36;
+}
+
+.menu-option.disabled {
+    cursor: default;
+    opacity: 0.6;
+    background: #333333;
+}
+
+.option-title {
+    font-weight: bold;
+    font-size: 16px;
+    color: #00ffff;
+}
+
+.option-description {
+    font-size: 14px;
+    color: #ffffff;
+    opacity: 0.8;
+}
+
+.close-menu-btn {
+    margin-top: 10px;
+    background-color: #3a2c1f;
+    color: #fff;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    align-self: center;
+    transition: all 0.2s ease;
+}
+
+.close-menu-btn:hover {
+    background-color: #5c4a36;
+}
+
+/* Ranch controls panel */
+.ranch-controls {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px;
+    background: #2a2036;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    box-shadow: 0 0 10px rgba(255, 68, 204, 0.3);
+}
+
+.resource-display {
+    display: flex;
+    gap: 15px;
+}
+
+.resource-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.resource-label {
+    font-size: 14px;
+    color: #aaa;
+}
+
+.resource-value {
+    font-size: 16px;
+    color: #fff;
+    font-weight: bold;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.action-button {
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    background: #3a2c1f;
+    color: white;
+    border: 1px solid #5c4a36;
+    transition: all 0.2s ease;
+}
+
+.action-button:hover {
+    background: #5c4a36;
+    box-shadow: 0 0 10px rgba(255, 68, 204, 0.5);
+}
+
+/* Info and help panels */
+.ranch-info-panel {
+    background: #1e1a2e;
+    border: 1px solid #ff44cc;
+    border-radius: 5px;
+    padding: 15px;
+    margin-top: 20px;
+    color: #fff;
+}
+
+.ranch-info-panel h3 {
+    margin-top: 0;
+    color: #00ffff;
+    border-bottom: 1px solid #ff44cc;
+    padding-bottom: 8px;
+}
+
+.ranch-info-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    background: #2a2036;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.info-item-title {
+    font-weight: bold;
+    color: #ff44cc;
+    margin-bottom: 5px;
+}
+
+/* Cell icons and progress bars */
+.cell-icon {
+    font-size: 30px;
+}
+
+.progress-container {
+    width: 80%;
+    height: 10px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 5px;
+    margin-top: 5px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    transition: width 0.5s ease;
+}
+
+/* State indicators */
+.state-indicator {
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.state-hungry {
+    color: #ff9900;
+}
+
+.state-fed {
+    color: #66ff66;
+}
+
+.quality-indicator {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 10px;
+    color: #ffcc00;
+}
+
+/* Animation for glowing cells */
+@keyframes glow-pulse {
+    0% { box-shadow: 0 0 10px rgba(106, 153, 50, 0.4); }
+    50% { box-shadow: 0 0 20px rgba(106, 153, 50, 0.7); }
+    100% { box-shadow: 0 0 10px rgba(106, 153, 50, 0.4); }
+}
+
+.glow-effect {
+    animation: glow-pulse 2s infinite;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .ranch-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+    
+    .ranch-controls {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .ranch-info-items {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .ranch-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
