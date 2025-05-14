@@ -3878,23 +3878,27 @@ function switchScene(scene) {
     
     // Initialize Phaser scenes
     initializeScenes();
+    
+    // Initialize scene-specific elements
+    if (scene === 'ranch' && typeof window.initRanchGrid === 'function') {
+        // Initialize the vanilla JS ranch grid
+        window.initRanchGrid();
+        console.log('Ranch grid initialized with vanilla JS implementation');
     } else if (scene === 'night') {
         // Ensure shadow grid is properly initialized
         console.log("Initializing Night scene and grid");
         
-        // Use our new comprehensive initialization if available
+        // Use shadow grid initialization if available
+        if (typeof window.initShadowGrid === 'function') {
+            window.initShadowGrid();
+        }
+        
+        // Use enhanced initialization if available
         if (typeof window.ensureShadowGridInitialized === 'function') {
             window.ensureShadowGridInitialized();
         }
         
-        if (typeof window.initShadowGridComplete === 'function') {
-            window.initShadowGridComplete();
-        } else {
-            // Fallback to original initShadowGrid
-            initShadowGrid();
-        }
-        
-        // Make sure distill button works
+        // Setup the distill button if it exists
         const distillAllBtn = document.getElementById('distill-all');
         if (distillAllBtn) {
             console.log("Setting up distill-all button");
@@ -3903,6 +3907,12 @@ function switchScene(scene) {
                 if (typeof distillAllShadowCells === 'function') {
                     distillAllShadowCells();
                 }
+            };
+        }
+    }
+    
+    console.log(`UI updated for scene: ${scene}`);
+}
             };
         }
     }
