@@ -896,8 +896,28 @@ if (typeof window.RanchScene === 'undefined') {
                 // Check if the texture exists
                 if (!this.textures.exists(spriteName)) {
                     console.warn(`Texture ${spriteName} not found, using fallback`);
-                    // Create a fallback texture
-                    this.createFallbackTexture(spriteName);
+                    // Create a fallback texture using the global function if available
+                    if (typeof window.createFallbackTexture === 'function') {
+                        window.createFallbackTexture(this, spriteName);
+                    } else {
+                        // Fallback to creating a simple texture
+                        createSimpleFallbackTexture(this, spriteName);
+                    }
+                }
+                
+                // Helper function to create a simple fallback texture
+                function createSimpleFallbackTexture(scene, key) {
+                    try {
+                        const graphics = scene.make.graphics();
+                        graphics.fillStyle(0x333333, 0.8);
+                        graphics.fillRect(0, 0, 64, 64);
+                        graphics.lineStyle(2, 0xffffff, 0.8);
+                        graphics.strokeRect(0, 0, 64, 64);
+                        graphics.generateTexture(key, 64, 64);
+                        console.log(`Created simple fallback texture: ${key}`);
+                    } catch (error) {
+                        console.error(`Error creating simple fallback texture: ${error}`);
+                    }
                 }
                 
                 // Add the cell sprite
