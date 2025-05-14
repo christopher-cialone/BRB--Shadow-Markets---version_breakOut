@@ -64,18 +64,90 @@ app.get('/favicon.ico', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'images', 'favicon.png'));
 });
 
+// In-memory user data store for development/demo purposes
+const users = {
+  // Demo user with username 'demo' and password 'password'
+  'demo': {
+    id: 1,
+    username: 'demo',
+    // This would normally be hashed, but for demo purposes we'll use plaintext
+    password: 'password',
+    characterType: 'the-kid',
+    level: 1,
+    xp: 0,
+    xpToNextLevel: 100,
+    btBalance: 100,
+    bcBalance: 0,
+    createdAt: new Date().toISOString()
+  }
+};
+
+// Simple authentication functions
+function registerUser(username, password, characterType) {
+  // Check if username exists
+  if (users[username]) {
+    return { success: false, message: 'Username already exists' };
+  }
+  
+  // Create new user
+  const id = Object.keys(users).length + 1;
+  const newUser = {
+    id,
+    username,
+    password, // In a real system, this would be hashed
+    characterType: characterType || 'the-kid',
+    level: 1,
+    xp: 0,
+    xpToNextLevel: 100,
+    btBalance: 100,
+    bcBalance: 0,
+    createdAt: new Date().toISOString()
+  };
+  
+  // Store user
+  users[username] = newUser;
+  
+  // Return user data without password
+  const { password: _, ...userWithoutPassword } = newUser;
+  return { success: true, user: userWithoutPassword };
+}
+
+function loginUser(username, password) {
+  // Check if user exists
+  const user = users[username];
+  if (!user) {
+    return { success: false, message: 'Invalid username or password' };
+  }
+  
+  // Check password
+  if (user.password !== password) {
+    return { success: false, message: 'Invalid username or password' };
+  }
+  
+  // Return user data without password
+  const { password: _, ...userWithoutPassword } = user;
+  return { success: true, user: userWithoutPassword };
+}
+
 // Handle WebSocket connections
 wss.on('connection', (ws) => {
   console.log('WebSocket client connected');
   
+  // Initialize a client ID for this connection
+  const clientId = Math.random().toString(36).substring(2, 15);
+  ws.clientId = clientId;
+  
   // Send welcome message
   ws.send(JSON.stringify({
     type: 'connection',
-    message: 'Connected to Bull Run Boost WebSocket server'
+    data: { 
+      message: 'Connected to Bull Run Boost WebSocket server',
+      clientId 
+    }
   }));
   
   // Handle incoming messages
-  ws.on('message', (data) => {
+  ws.on('message', async (data) => {
     try {
       const message = JSON.parse(data);
       console.log('Received message:', message);
@@ -86,6 +158,64 @@ wss.on('connection', (ws) => {
           ws.send(JSON.stringify({ type: 'pong', timestamp: Date.now() }));
           break;
           
+        case 'auth_register':
+          // Handle user registration
+          if (message.data) {
+            const { username, password, characterType } = message.data;
+            const result = await registerUser(username, password, characterType || 'the-kid');
+            
+            if (result.success) {
+              ws.user = result.user;
+              ws.send(JSON.stringify({ 
+                type: 'auth_success', 
+                user: result.user
+              }));
+            } else {
+              ws.send(JSON.stringify({ 
+                type: 'auth_error', 
+                message: result.message 
+              }));
+            }
+          }
+          break;
+          
+        case 'auth_login':
+          // Handle user login
+          if (message.data) {
+            const { username, password } = message.data;
+            const result = await loginUser(username, password);
+            
+            if (result.success) {
+              ws.user = result.user;
+              ws.send(JSON.stringify({ 
+                type: 'auth_success', 
+                user: result.user
+              }));
+            } else {
+              ws.send(JSON.stringify({ 
+                type: 'auth_error', 
+                message: result.message 
+              }));
+            }
+          }
+          break;
+          
+        case 'get_player_data':
+          // Return player data if authenticated
+          if (ws.user) {
+            ws.send(JSON.stringify({
+              type: 'player_data',
+              scene: message.scene || 'unknown',
+              player: ws.user
+            }));
+          } else {
+            ws.send(JSON.stringify({
+              type: 'auth_error',
+              message: 'Not authenticated'
+            }));
+          }
+          break;
+        
         case 'game_update':
           // Broadcast game update to all connected clients
           wss.clients.forEach((client) => {
