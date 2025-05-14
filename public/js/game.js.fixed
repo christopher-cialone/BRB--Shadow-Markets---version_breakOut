@@ -1,0 +1,1894 @@
+// Begin main IIFE to encapsulate all code
+(function() {
+    'use strict';
+    
+// Connect to server
+const socket = io();
+
+// Game state
+let playerData = {
+    name: 'Cowboy',
+    archetype: 'Entrepreneur',
+    characterType: 'the-kid',
+    cattleBalance: 100,
+    hay: 100,
+    water: 100,
+    ether: 0,
+    barnCapacity: 100,
+    cattle: [],
+    potionCollection: [],
+    // Added progression system - Level and XP
+    level: 1,
+    xp: 0,
+    xpToNextLevel: 100,
+    stats: {
+        racesWon: 0,
+        racesLost: 0,
+        cattleBred: 0,
+        potionsCrafted: 0,
+        totalEarned: 0,
+        totalBurned: 0,
+        plantsHarvested: 0,
+        potionsDistilled: 0
+    },
+    // Added achievements system
+    achievements: {
+        farmer: { 
+            name: "Farmer", 
+            description: "Harvest 10 crops", 
+            requirement: 10, 
+            current: 0, 
+            reward: 100, 
+            unlocked: false 
+        },
+        alchemist: { 
+            name: "Alchemist", 
+            description: "Distill 5 potions", 
+            requirement: 5, 
+            current: 0, 
+            reward: 100, 
+            unlocked: false 
+        },
+        gambler: { 
+            name: "Gambler", 
+            description: "Win 3 races", 
+            requirement: 3, 
+            current: 0, 
+            reward: 100, 
+            unlocked: false 
+        }
+    }
+};
+
+let marketPrice = 1.0;
+let currentScene = 'main-menu';
+let wagerAmount = 10;
+
+// Function to add XP and handle level-ups
+function addPlayerXP(amount) {
+    if (!amount || amount <= 0) return;
+    
+    // Add XP
+    playerData.xp += amount;
+    console.log(`Added ${amount} XP! Total: ${playerData.xp}`);
+    
+    // Check for level up
+    if (playerData.xp >= playerData.xpToNextLevel) {
+        levelUpPlayer();
+    }
+    
+    // Update UI if available
+    updateXPDisplay();
+}
+
+// Function to handle player level up
+function levelUpPlayer() {
+    // Level up!
+    playerData.level += 1;
+    
+    // Calculate excess XP for next level
+    const excessXP = playerData.xp - playerData.xpToNextLevel;
+    playerData.xp = excessXP;
+    
+    // Increase XP required for next level
+    playerData.xpToNextLevel = playerData.level * 100;
+    
+    // Reward for leveling up
+    playerData.cattleBalance += 50;
+    
+    // Increase multipliers
+    if (window.ranchGrid && typeof ranchGrid.multiplier !== 'undefined') {
+        ranchGrid.multiplier += 0.1;
+    }
+    
+    if (window.shadowGrid && typeof shadowGrid.multiplier !== 'undefined') {
+        shadowGrid.multiplier += 0.1;
+    }
+    
+    // Show notification
+    showNotification(`Level Up! You reached level ${playerData.level}! +50 $CATTLE`, 'success');
+    
+    // Play level up sound if available
+    playSoundEffect('levelup');
+    
+    // Update UI
+    updateAllDisplays();
+}
+
+// Function to update XP display
+function updateXPDisplay() {
+    const xpValue = document.getElementById('xp-value');
+    const xpProgress = document.getElementById('xp-progress-bar');
+    const levelValue = document.getElementById('level-value');
+    
+    if (xpValue) {
+        xpValue.textContent = `${playerData.xp} / ${playerData.xpToNextLevel}`;
+    }
+    
+    if (xpProgress) {
+        const progressPercent = (playerData.xp / playerData.xpToNextLevel) * 100;
+        xpProgress.style.width = `${progressPercent}%`;
+    }
+    
+    if (levelValue) {
+        levelValue.textContent = playerData.level;
+    }
+}
+
+// Function to check and update achievements
+function checkAchievements() {
+    // Check Farmer Achievement
+    if (!playerData.achievements.farmer.unlocked && 
+        playerData.stats.plantsHarvested >= playerData.achievements.farmer.requirement) {
+        unlockAchievement('farmer');
+    }
+    
+    // Check Alchemist Achievement
+    if (!playerData.achievements.alchemist.unlocked && 
+        playerData.stats.potionsDistilled >= playerData.achievements.alchemist.requirement) {
+        unlockAchievement('alchemist');
+    }
+    
+    // Check Gambler Achievement
+    if (!playerData.achievements.gambler.unlocked && 
+        playerData.stats.racesWon >= playerData.achievements.gambler.requirement) {
+        unlockAchievement('gambler');
+    }
+}
+
+// Function to unlock achievement and give rewards
+function unlockAchievement(achievementId) {
+    if (!playerData.achievements[achievementId]) {
+        console.error(`Achievement ${achievementId} does not exist`);
+        return;
+    }
+    
+    const achievement = playerData.achievements[achievementId];
+    
+    // Already unlocked
+    if (achievement.unlocked) return;
+    
+    // Unlock the achievement
+    achievement.unlocked = true;
+    
+    // Give reward
+    playerData.cattleBalance += achievement.reward;
+    
+    // Show notification
+    showNotification(`Achievement Unlocked: ${achievement.name}! +${achievement.reward} $CATTLE`, 'achievement');
+    
+    // Play achievement sound
+    playSoundEffect('achievement');
+    
+    // Update UI
+    updateAchievementsDisplay();
+    updateAllDisplays();
+}
+
+// Function to update achievements display
+function updateAchievementsDisplay() {
+    const achievementsContainer = document.getElementById('achievements-container');
+    
+    if (!achievementsContainer) return;
+    
+    // Clear existing achievements
+    achievementsContainer.innerHTML = '';
+    
+    // Add each achievement
+    for (const id in playerData.achievements) {
+        const achievement = playerData.achievements[id];
+        
+        // Create achievement element
+        const element = document.createElement('div');
+        element.className = `achievement ${achievement.unlocked ? 'unlocked' : 'locked'}`;
+        
+        // Create title
+        const title = document.createElement('div');
+        title.className = 'achievement-title';
+        title.textContent = achievement.name;
+        
+        // Create description
+        const description = document.createElement('div');
+        description.className = 'achievement-description';
+        description.textContent = achievement.description;
+        
+        // Create progress
+        const progress = document.createElement('div');
+        progress.className = 'achievement-progress';
+        progress.textContent = `${achievement.current}/${achievement.requirement}`;
+        
+        // Create reward
+        const reward = document.createElement('div');
+        reward.className = 'achievement-reward';
+        reward.textContent = `Reward: ${achievement.reward} $CATTLE`;
+        
+        // Append children
+        element.appendChild(title);
+        element.appendChild(description);
+        element.appendChild(progress);
+        element.appendChild(reward);
+        
+        // Add to container
+        achievementsContainer.appendChild(element);
+    }
+}
+
+// Function to play sound effects
+function playSoundEffect(soundName) {
+    // Check if we're in a Phaser scene
+    const currentPhaserScene = window.phaserGame && window.phaserGame.scene.getScenes(true)[0];
+    
+    if (currentPhaserScene && currentPhaserScene.sound && currentPhaserScene.sound.play) {
+        // Use Phaser's sound system
+        try {
+            currentPhaserScene.sound.play(soundName);
+            console.log(`Playing sound: ${soundName} via Phaser`);
+        } catch (err) {
+            console.error(`Error playing sound ${soundName} via Phaser:`, err);
+        }
+    } else {
+        // Use HTML5 Audio as fallback
+        try {
+            const audio = new Audio(`img/${soundName}.mp3`);
+            audio.volume = 0.5; // 50% volume
+            audio.play().catch(err => console.error('Audio play error:', err));
+            console.log(`Playing sound: ${soundName} via HTML Audio`);
+        } catch (err) {
+            console.error(`Error playing sound ${soundName} via HTML Audio:`, err);
+        }
+    }
+}
+
+// Grid state for ranch and shadow market
+const ranchGrid = {
+    size: 5,
+    cells: [],
+    growthTimer: 60,
+    growthInterval: null,
+    multiplier: 1.0,
+    // Growth states: empty, planted, growing, harvestable
+};
+
+const shadowGrid = {
+    size: 4,
+    cells: [],
+    cycleTimer: 30,
+    cycleInterval: null,
+    marketState: 'stable', // can be stable, volatile, booming
+    multiplier: 1.0,
+    // Potion states: empty, brewing, distilling, ready
+};
+
+// DOM elements
+const mainMenu = document.getElementById('main-menu');
+const ranchUI = document.getElementById('ranch-ui');
+const saloonUI = document.getElementById('saloon-ui');
+const nightUI = document.getElementById('night-ui');
+const profileUI = document.getElementById('profile-ui');
+const notification = document.getElementById('notification');
+const resultModal = document.getElementById('result-modal');
+
+// Define the MainMenuScene class - simplified for stability
+// Define the MainMenuScene class - only if not already defined
+// This prevents duplicate declaration errors
+if (typeof window.MainMenuScene === 'undefined') {
+    console.log('Registering MainMenuScene class globally');
+    window.MainMenuScene = class MainMenuScene extends Phaser.Scene {
+    constructor() {
+        super('MainMenuScene');
+    }
+    
+    preload() {
+        // Load the background
+        this.load.image('menu-bg', 'img/game-background.jpeg');
+    }
+    
+    create() {
+        // Get the canvas dimensions
+        const width = this.scale.width;
+        const height = this.scale.height;
+        
+        // Set up background with desert tint
+        this.bg = this.add.image(width/2, height/2, 'menu-bg');
+        this.bg.setDisplaySize(width, height);
+        this.bg.setTint(0xf5deb3); // Warm desert tint
+        
+        // Add a semi-transparent overlay to make UI more readable
+        this.overlay = this.add.rectangle(width/2, height/2, width, height, 0x000000, 0.3);
+        
+        // Title text - "Bull Run Boost"
+        this.titleText = this.add.text(width / 2, height * 0.15, 'Bull Run Boost', {
+            fontFamily: 'Anta',
+            fontSize: '64px',
+            color: '#ffffff',
+            stroke: '#6a2ca0',
+            strokeThickness: 6
+        }).setOrigin(0.5);
+        
+        // Subtitle - "Shadow Markets"
+        this.subtitleText = this.add.text(width / 2, this.titleText.y + 80, 'Shadow Markets', {
+            fontFamily: 'Anta',
+            fontSize: '36px',
+            color: '#00ccff',
+            stroke: '#000000',
+            strokeThickness: 4
+        }).setOrigin(0.5);
+        
+        // Player name input field hint
+        this.nameText = this.add.text(width / 2, height * 0.35, 'Enter your name in the field below:', {
+            fontFamily: 'Roboto',
+            fontSize: '24px',
+            color: '#ffffff'
+        }).setOrigin(0.5);
+        
+        // Archetype selection title
+        this.archetypeTitle = this.add.text(width / 2, height * 0.5, 'Choose Your Archetype:', {
+            fontFamily: 'Roboto',
+            fontSize: '28px',
+            color: '#ffffff'
+        }).setOrigin(0.5);
+        
+        // Entrepreneur card background
+        this.entrepreneurCardBg = this.add.rectangle(width * 0.35, height * 0.65, 250, 200, 0x222222, 0.7);
+        this.entrepreneurCardBg.setStrokeStyle(3, 0x00ffff);
+        
+        // Entrepreneur card title
+        this.entrepreneurTitle = this.add.text(width * 0.35, height * 0.65 - 70, 'Entrepreneur', {
+            fontFamily: 'Roboto',
+            fontSize: '24px',
+            color: '#ffffff',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        
+        // Entrepreneur card description
+        this.entrepreneurDesc = this.add.text(width * 0.35, height * 0.65 + 20, '+10% $CATTLE\nearning rate', {
+            fontFamily: 'Roboto',
+            fontSize: '18px',
+            color: '#00ffff',
+            align: 'center'
+        }).setOrigin(0.5);
+        
+        // Make entrepreneur card interactive
+        this.entrepreneurCardBg.setInteractive({ useHandCursor: true })
+            .on('pointerdown', () => {
+                // Set selected
+                this.entrepreneurCardBg.setStrokeStyle(3, 0x00ff00);
+                playerData.archetype = 'Entrepreneur';
+                
+                // Update HTML selection too
+                const htmlCards = document.querySelectorAll('.archetype-card');
+                htmlCards.forEach(card => {
+                    if (card.dataset.archetype === 'Entrepreneur') {
+                        card.classList.add('selected');
+                    } else {
+                        card.classList.remove('selected');
+                    }
+                });
+            });
+        
+        /*
+         * Adventurer Archetype: Future Implementation Plan
+         * 
+         * Planned features for the Adventurer archetype:
+         * 1. Heist missions with risk/reward mechanics
+         * 2. Raid special locations for rare resources
+         * 3. Unlock unique items and power-ups
+         * 4. Special abilities like lockpicking and stealth
+         * 5. Chance-based outcomes with skill modifiers
+         * 
+         * The Adventurer will be implemented in a future update
+         * after the core Entrepreneur gameplay loop is refined.
+         */
+        
+        // Adventurer card - TEMPORARILY HIDDEN
+        // Will be re-enabled when the heist mechanics are implemented
+        /*
+        this.adventurerCardBg = this.add.rectangle(width * 0.65, height * 0.65, 250, 200, 0x222222, 0.7);
+        this.adventurerCardBg.setStrokeStyle(3, 0x555555);
+        
+        this.adventurerTitle = this.add.text(width * 0.65, height * 0.65 - 70, 'Adventurer', {
+            fontFamily: 'Roboto',
+            fontSize: '24px',
+            color: '#888888',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        
+        this.adventurerDesc = this.add.text(width * 0.65, height * 0.65 + 20, '+10% heist\nsuccess rate', {
+            fontFamily: 'Roboto',
+            fontSize: '18px',
+            color: '#888888',
+            align: 'center'
+        }).setOrigin(0.5);
+        
+        // Disabled overlay
+        this.disabledText = this.add.text(width * 0.65, height * 0.65, 'Coming Soon', {
+            fontFamily: 'Roboto',
+            fontSize: '20px',
+            color: '#ff0000',
+            backgroundColor: '#000000',
+            padding: { x: 10, y: 5 }
+        }).setOrigin(0.5).setAngle(-15);
+        */
+        
+        // Start button
+        this.startBtnBg = this.add.rectangle(width / 2, height * 0.85, 200, 60, 0x6a2ca0);
+        this.startBtnBg.setStrokeStyle(2, 0xff44cc);
+        
+        // Button text
+        this.startBtnText = this.add.text(width / 2, height * 0.85, 'Start Game', {
+            fontFamily: 'Anta',
+            fontSize: '28px',
+            color: '#ffffff'
+        }).setOrigin(0.5);
+        
+        // Make start button interactive
+        this.startBtnBg.setInteractive({ useHandCursor: true })
+            .on('pointerdown', () => {
+                this.startGame();
+            });
+            
+        // Set initial selection based on playerData
+        if (playerData.archetype === 'Entrepreneur') {
+            this.entrepreneurCardBg.setStrokeStyle(3, 0x00ff00);
+        }
+        
+        // Add resize listener
+        this.scale.on('resize', this.resize, this);
+    }
+    
+    startGame() {
+        console.log("Start Game button clicked");
+        
+        // Get player name from HTML input
+        const nameInput = document.getElementById('player-name');
+        if (nameInput) {
+            playerData.name = nameInput.value || 'Cowboy';
+        }
+        
+        // Send to server
+        socket.emit('new-player', {
+            name: playerData.name,
+            archetype: playerData.archetype
+        });
+        
+        // Hide the main menu HTML element
+        const mainMenuElement = document.getElementById('main-menu');
+        if (mainMenuElement) {
+            mainMenuElement.classList.add('hidden');
+        }
+        
+        // Ensure game object exists
+        if (window.game && window.game.scene) {
+            // First stop this scene
+            this.scene.stop('MainMenuScene');
+            
+            // Start RanchScene in Phaser
+            console.log("Starting RanchScene from MainMenuScene");
+            this.scene.start('RanchScene');
+        } else {
+            console.error("Phaser game instance not available in startGame()");
+        }
+        
+        // Switch UI to ranch scene
+        switchScene('ranch');
+    }
+    
+    resize(gameSize) {
+        const width = gameSize.width;
+        const height = gameSize.height;
+        
+        // Resize and reposition background
+        if (this.bg) {
+            this.bg.setPosition(width/2, height/2);
+            this.bg.setDisplaySize(width, height);
+        }
+        
+        if (this.overlay) {
+            this.overlay.setPosition(width/2, height/2);
+            this.overlay.width = width;
+            this.overlay.height = height;
+        }
+        
+        // Reposition elements
+        if (this.titleText) this.titleText.setPosition(width / 2, height * 0.15);
+        if (this.subtitleText) this.subtitleText.setPosition(width / 2, this.titleText.y + 80);
+        if (this.nameText) this.nameText.setPosition(width / 2, height * 0.35);
+        if (this.archetypeTitle) this.archetypeTitle.setPosition(width / 2, height * 0.5);
+        
+        // Reposition entrepreneur card
+        if (this.entrepreneurCardBg) this.entrepreneurCardBg.setPosition(width * 0.35, height * 0.65);
+        if (this.entrepreneurTitle) this.entrepreneurTitle.setPosition(width * 0.35, height * 0.65 - 70);
+        if (this.entrepreneurDesc) this.entrepreneurDesc.setPosition(width * 0.35, height * 0.65 + 20);
+        
+        // Reposition adventurer card
+        if (this.adventurerCardBg) this.adventurerCardBg.setPosition(width * 0.65, height * 0.65);
+        if (this.adventurerTitle) this.adventurerTitle.setPosition(width * 0.65, height * 0.65 - 70);
+        if (this.adventurerDesc) this.adventurerDesc.setPosition(width * 0.65, height * 0.65 + 20);
+        if (this.disabledText) this.disabledText.setPosition(width * 0.65, height * 0.65);
+        
+        // Reposition start button
+        if (this.startBtnBg) this.startBtnBg.setPosition(width / 2, height * 0.85);
+        if (this.startBtnText) this.startBtnText.setPosition(width / 2, height * 0.85);
+    }
+} // End of MainMenuScene class
+
+} // End of MainMenuScene if block
+
+// Define the RanchScene class - only if not already defined
+if (typeof window.RanchScene === 'undefined') {
+    console.log('RanchScene class initialized');
+    window.RanchScene = class RanchScene extends Phaser.Scene {
+    constructor() {
+        super('RanchScene');
+        
+        // Store grid cell sprites and data
+        this.gridCells = [];
+        this.gridTexts = [];
+        this.cattle = [];
+        this.cattleMilkTimers = [];
+        
+        // Grid configuration
+        this.gridConfig = {
+            size: 5,
+            cellSize: 80,
+            padding: 10,
+            startX: 0, // Will be calculated in create
+            startY: 0  // Will be calculated in create
+        };
+    }
+    
+    preload() {
+        console.log('RanchScene preload starting');
+        try {
+            // Explicitly load essential textures for the ranch grid
+            const cellAssets = [
+                { key: 'cell-empty', url: 'img/cell-empty.png' },
+                { key: 'cell-planted', url: 'img/cell-planted.png' },
+                { key: 'cell-growing', url: 'img/cell-growing.png' },
+                { key: 'cell-harvestable', url: 'img/cell-harvestable.png' }
+            ];
+            
+            // Load each cell asset
+            cellAssets.forEach(asset => {
+                console.log(`Loading asset: ${asset.key}`);
+                if (typeof safePhaserImageLoad === 'function') {
+                    safePhaserImageLoad(this, asset.key, asset.url);
+                } else {
+                    this.load.image(asset.key, asset.url);
+                }
+            });
+            
+            // Load additional ranch assets
+            const ranchAssets = [
+                { key: 'cattle', url: 'img/cattle.png' },
+                { key: 'water-drop', url: 'img/water-drop.png' },
+                { key: 'hay-icon', url: 'img/hay-icon.png' },
+                { key: 'milk-bottle', url: 'img/milk-bottle.png' },
+                { key: 'barn', url: 'https://i.imgur.com/t32QEZB.png' }
+            ];
+            
+            // Load each ranch asset
+            ranchAssets.forEach(asset => {
+                console.log(`Loading asset: ${asset.key}`);
+                if (typeof safePhaserImageLoad === 'function') {
+                    safePhaserImageLoad(this, asset.key, asset.url);
+                } else {
+                    this.load.image(asset.key, asset.url);
+                }
+            });
+            
+            // Use common asset loader if available
+            if (typeof preloadCommonAssets === 'function') {
+                preloadCommonAssets(this);
+            }
+            
+            // Track loading progress
+            this.load.on('progress', (value) => {
+                console.log(`RanchScene asset loading progress: ${Math.round(value * 100)}%`);
+            });
+            
+            // Create fallback graphics for any missing textures when load completes
+            this.load.on('complete', () => {
+                console.log("RanchScene assets loading complete");
+                
+                // Check which textures were successfully loaded
+                const essentialTextures = [
+                    'cell-empty', 'cell-planted', 'cell-growing', 'cell-harvestable', 
+                    'cattle', 'water-drop', 'hay-icon', 'milk-bottle', 'barn'
+                ];
+                
+                // Log the status of each texture
+                essentialTextures.forEach(key => {
+                    const exists = this.textures.exists(key);
+                    console.log(`Texture ${key} loaded: ${exists}`);
+                    
+                    // Create fallback if missing
+                    if (!exists && typeof handleMissingTexture === 'function') {
+                        console.log(`Creating fallback for missing texture: ${key}`);
+                        handleMissingTexture(this, key);
+                    }
+                });
+                
+                console.log('Assets loaded for', this.scene.key);
+            });
+        } catch (error) {
+            console.error("Error in RanchScene preload:", error);
+        }
+    }
+    
+    create() {
+        // Get dimensions
+        const width = this.scale.width;
+        const height = this.scale.height;
+        
+        // Set up background
+        this.bg = this.add.image(width/2, height/2, 'game-bg');
+        this.bg.setDisplaySize(width, height);
+        this.bg.setTint(0xffeedd); // Warm daylight tint
+        
+        // Create a container for our ranch elements
+        this.ranchContainer = this.add.container(0, 0);
+        
+        // Add barn to ranch scene - with error handling
+        try {
+            // Create a default barn graphic if texture isn't available
+            if (!this.textures.exists('barn')) {
+                console.log("Creating barn placeholder graphic");
+                const barnGraphics = this.add.graphics();
+                barnGraphics.fillStyle(0x8b4513, 1); // Brown
+                barnGraphics.fillRect(-100, -75, 200, 150);
+                barnGraphics.fillStyle(0xff0000, 1); // Red roof
+                barnGraphics.fillTriangle(-110, -75, 110, -75, 0, -150);
+                barnGraphics.generateTexture('barn-placeholder', 220, 200);
+                barnGraphics.destroy();
+                
+                this.barn = this.add.image(width * 0.7, height * 0.4, 'barn-placeholder');
+            } else {
+                this.barn = this.add.image(width * 0.7, height * 0.4, 'barn');
+            }
+            
+            this.barn.setScale(0.5);
+            this.ranchContainer.add(this.barn);
+            console.log("Barn successfully added to scene");
+        } catch (error) {
+            console.error("Error adding barn:", error);
+            // Create a simple barn as a graphics object as fallback
+            const fallbackBarn = this.add.graphics();
+            fallbackBarn.fillStyle(0x8b4513, 1); // Brown
+            fallbackBarn.fillRect(width * 0.7 - 50, height * 0.4 - 40, 100, 80);
+            fallbackBarn.fillStyle(0xff0000, 1); // Red roof
+            fallbackBarn.fillTriangle(width * 0.7 - 60, height * 0.4 - 40, width * 0.7 + 60, height * 0.4 - 40, width * 0.7, height * 0.4 - 80);
+            
+            // Add to container
+            this.ranchContainer.add(fallbackBarn);
+            
+            // Create a reference to it as this.barn for later code
+            this.barn = {
+                x: width * 0.7,
+                y: height * 0.4,
+                // Add minimal methods to avoid null ref errors
+                setScale: function() {},
+                setPosition: function(x, y) { this.x = x; this.y = y; }
+            };
+            console.log("Created fallback barn graphics object");
+        }
+        
+        // Initialize the Phaser grid
+        this.initPhaserGrid();
+        
+        // Set up cattle milking timer
+        this.milkTimer = this.time.addEvent({
+            delay: 30000, // 30 seconds
+            callback: this.milkAllCattle,
+            callbackScope: this,
+            loop: true
+        });
+        
+        // Add resize listener
+        this.scale.on('resize', this.resize, this);
+    }
+    
+    // Initialize the Phaser-based ranch grid
+    initPhaserGrid() {
+        console.log("RanchScene.initPhaserGrid() called");
+        
+        // Make sure ranch grid is initialized
+        if (typeof window.ensureRanchGridInitialized === 'function') {
+            window.ensureRanchGridInitialized();
+        } else if (!window.ranchGrid || !window.ranchGrid.cells || window.ranchGrid.cells.length === 0) {
+            console.log("Ranch grid not initialized, creating it now");
+            window.ranchGrid = {
+                size: 5,
+                cells: [],
+                growthTimer: 60,
+                growthInterval: null,
+                multiplier: 1.0
+            };
+            
+            // Initialize cells
+            for (let i = 0; i < 25; i++) {
+                window.ranchGrid.cells.push({
+                    id: i,
+                    state: 'empty',
+                    growthStage: 0,
+                    growthMax: 3
+                });
+            }
+        }
+        
+        // Calculate grid dimensions
+        const { size, cellSize, padding } = this.gridConfig;
+        const totalWidth = (cellSize + padding) * size;
+        const totalHeight = (cellSize + padding) * size;
+        
+        // Position grid on left side of screen
+        const gridX = this.scale.width * 0.25;
+        const gridY = this.scale.height * 0.5;
+        
+        // Calculate starting position (top-left of grid)
+        this.gridConfig.startX = gridX - totalWidth/2 + cellSize/2;
+        this.gridConfig.startY = gridY - totalHeight/2 + cellSize/2;
+        
+        // Create grid container
+        if (this.gridContainer) {
+            this.gridContainer.destroy();
+        }
+        this.gridContainer = this.add.container(0, 0);
+        
+        // Add the container to the ranch container if it exists
+        if (this.ranchContainer) {
+            this.ranchContainer.add(this.gridContainer);
+        } else {
+            console.warn("Ranch container not found, adding grid directly to scene");
+        }
+        
+        // Create grid header
+        const gridHeader = this.add.text(gridX, gridY - totalHeight/2 - 40, 'Ranch Pasture', {
+            fontFamily: 'Anta',
+            fontSize: '24px',
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 2,
+            shadow: { color: '#000000', fill: true, offsetX: 1, offsetY: 1, blur: 2 }
+        }).setOrigin(0.5);
+        
+        // Add header to appropriate container
+        if (this.ranchContainer) {
+            this.ranchContainer.add(gridHeader);
+        } else {
+            this.gridContainer.add(gridHeader);
+        }
+        
+        // Create the grid cells
+        this.createGridCells();
+        
+        // Add harvest all button
+        const harvestAllBtn = this.add.text(gridX - 100, gridY + totalHeight/2 + 40, '🌾 Harvest All', {
+            fontFamily: 'Anta',
+            fontSize: '20px',
+            color: '#ffffff',
+            backgroundColor: '#3a7d44',
+            padding: { x: 10, y: 5 },
+            shadow: { color: '#000000', fill: true, offsetX: 1, offsetY: 1, blur: 2 }
+        }).setOrigin(0.5);
+        
+        harvestAllBtn.setInteractive({ useHandCursor: true })
+            .on('pointerdown', () => harvestAllRanchCells());
+            
+        // Add sell cattle button
+        const sellCattleBtn = this.add.text(gridX + 100, gridY + totalHeight/2 + 40, '💰 Sell Cattle', {
+            fontFamily: 'Anta',
+            fontSize: '20px',
+            color: '#ffffff',
+            backgroundColor: '#6a2ca0', // Purple color for selling
+            padding: { x: 10, y: 5 },
+            shadow: { color: '#000000', fill: true, offsetX: 1, offsetY: 1, blur: 2 }
+        }).setOrigin(0.5);
+        
+        // Add glow effect to button
+        if (typeof window.addTextGlow === 'function') {
+            window.addTextGlow(sellCattleBtn, '#ff44cc', 5);
+        }
+        
+        sellCattleBtn.setInteractive({ useHandCursor: true })
+            .on('pointerdown', () => this.sellAllCattle());
+            
+        this.ranchContainer.add(harvestAllBtn);
+        this.ranchContainer.add(sellCattleBtn);
+    }
+    
+    // Create individual grid cells
+    createGridCells() {
+        console.log('Creating ranch grid cells');
+        const { size, cellSize, padding, startX, startY } = this.gridConfig;
+        
+        // Ensure ranchGrid is defined
+        if (typeof ranchGrid === 'undefined') {
+            console.error('ranchGrid is undefined, initializing it');
+            window.ranchGrid = {
+                cells: []
+            };
+        }
+        
+        // Initialize the cells array if it's empty
+        if (!ranchGrid.cells || ranchGrid.cells.length === 0) {
+            console.log('Initializing ranch grid with empty cells');
+            ranchGrid.cells = [];
+            for (let i = 0; i < size * size; i++) {
+                ranchGrid.cells.push({
+                    id: i,
+                    state: 'empty',
+                    growthStage: 0,
+                    growthMax: 3
+                });
+            }
+        }
+        
+        console.log(`Creating ${ranchGrid.cells.length} grid cells for ranch`);
+        
+        // Clear existing cells if any
+        if (this.gridCells && this.gridCells.length > 0) {
+            console.log('Clearing existing ranch grid cells');
+            this.gridCells.forEach(cell => {
+                if (cell && cell.sprite) cell.sprite.destroy();
+                if (cell && cell.text) cell.text.destroy();
+            });
+            // Reset array
+            this.gridCells = [];
+        } else {
+            this.gridCells = [];
+        }
+        
+        // Make sure the grid container exists
+        if (!this.gridContainer) {
+            console.log('Creating new grid container');
+            this.gridContainer = this.add.container(0, 0);
+            
+            // Add to ranch container if it exists
+            if (this.ranchContainer) {
+                this.ranchContainer.add(this.gridContainer);
+            }
+        }
+        
+        // Create the grid cells
+        for (let row = 0; row < size; row++) {
+            for (let col = 0; col < size; col++) {
+                const cellIndex = row * size + col;
+                
+                // Make sure we have a valid cell
+                if (!ranchGrid.cells[cellIndex]) {
+                    console.error(`Cell ${cellIndex} not found in ranchGrid`);
+                    continue;
+                }
+                
+                const cell = ranchGrid.cells[cellIndex];
+                
+                // Calculate position
+                const x = startX + col * (cellSize + padding);
+                const y = startY + row * (cellSize + padding);
+                
+                // Determine which sprite to use based on state
+                let spriteName = 'cell-empty';
+                if (cell.state === 'planted') spriteName = 'cell-planted';
+                if (cell.state === 'growing') spriteName = 'cell-growing';
+                if (cell.state === 'harvestable') spriteName = 'cell-harvestable';
+                
+                // Check if the texture exists
+                if (!this.textures.exists(spriteName)) {
+                    console.warn(`Texture ${spriteName} not found, using fallback`);
+                    // Create a fallback texture using the global function if available
+                    if (typeof window.createFallbackTexture === 'function') {
+                        window.createFallbackTexture(this, spriteName);
+                    } else {
+                        // Fallback to creating a simple texture
+                        createSimpleFallbackTexture(this, spriteName);
+                    }
+                }
+                
+                // Helper function to create a simple fallback texture
+                function createSimpleFallbackTexture(scene, key) {
+                    try {
+                        const graphics = scene.make.graphics();
+                        graphics.fillStyle(0x333333, 0.8);
+                        graphics.fillRect(0, 0, 64, 64);
+                        graphics.lineStyle(2, 0xffffff, 0.8);
+                        graphics.strokeRect(0, 0, 64, 64);
+                        graphics.generateTexture(key, 64, 64);
+                        console.log(`Created simple fallback texture: ${key}`);
+                    } catch (error) {
+                        console.error(`Error creating simple fallback texture: ${error}`);
+                    }
+                }
+                
+                // Add the cell sprite
+                const cellSprite = this.add.image(x, y, spriteName);
+                cellSprite.setDisplaySize(cellSize, cellSize);
+                cellSprite.setScale(0.8); // Start small for animation
+                
+                // Add the sprite to the grid container
+                this.gridContainer.add(cellSprite);
+                
+                // Add an animation for appearance
+                this.tweens.add({
+                    targets: cellSprite,
+                    scale: 1,
+                    duration: 500,
+                    ease: 'Bounce.easeOut'
+                });
+                
+                // Add interactivity
+                cellSprite.setInteractive({ useHandCursor: true });
+                cellSprite.on('pointerdown', () => {
+                    console.log(`Ranch cell ${cellIndex} clicked`);
+                    this.handleGridCellClick(cellIndex);
+                });
+                
+                // Add growth stage indicator for non-empty cells
+                let growthText = null;
+                if (cell.state !== 'empty') {
+                    growthText = this.add.text(x, y, `${cell.growthStage}/${cell.growthMax}`, {
+                        fontFamily: 'Anta',
+                        fontSize: '16px',
+                        color: '#ffffff',
+                        stroke: '#000000',
+                        strokeThickness: 2
+                    }).setOrigin(0.5);
+                }
+                
+                // Store the cell reference
+                this.gridCells.push({
+                    sprite: cellSprite,
+                    text: growthText,
+                    index: cellIndex
+                });
+                
+                // Add to container
+                this.gridContainer.add(cellSprite);
+                if (growthText) this.gridContainer.add(growthText);
+            }
+        }
+    }
+    
+    // Handle grid cell clicks
+    handleGridCellClick(cellIndex) {
+        // Call the existing handler function
+        handleRanchCellClick(cellIndex);
+        
+        // Update cell appearance after click
+        this.updateCellAppearance(cellIndex);
+    }
+    
+    // Update the appearance of a specific cell
+    updateCellAppearance(cellIndex) {
+        const cell = ranchGrid.cells[cellIndex];
+        const cellObj = this.gridCells[cellIndex];
+        
+        if (!cellObj || !cellObj.sprite) return;
+        
+        // Determine which sprite to use based on state
+        let spriteName = 'cell-empty';
+        if (cell.state === 'planted') spriteName = 'cell-planted';
+        if (cell.state === 'growing') spriteName = 'cell-growing';
+        if (cell.state === 'harvestable') spriteName = 'cell-harvestable';
+        
+        // Update the sprite with animation
+        cellObj.sprite.setTexture(spriteName);
+        
+        // Add scale animation for state change
+        this.tweens.add({
+            targets: cellObj.sprite,
+            scale: { from: 0.8, to: 1 },
+            duration: 500,
+            ease: 'Bounce.easeOut'
+        });
+        
+        // Update growth text
+        if (cellObj.text) {
+            if (cell.state === 'empty') {
+                cellObj.text.setVisible(false);
+            } else {
+                cellObj.text.setVisible(true);
+                cellObj.text.setText(`${cell.growthStage}/${cell.growthMax}`);
+            }
+        } else if (cell.state !== 'empty') {
+            // Create text if it doesn't exist
+            const { startX, startY, cellSize, padding, size } = this.gridConfig;
+            const row = Math.floor(cellIndex / size);
+            const col = cellIndex % size;
+            const x = startX + col * (cellSize + padding);
+            const y = startY + row * (cellSize + padding);
+            
+            cellObj.text = this.add.text(x, y, `${cell.growthStage}/${cell.growthMax}`, {
+                fontFamily: 'Anta',
+                fontSize: '16px',
+                color: '#ffffff',
+                stroke: '#000000',
+                strokeThickness: 2
+            }).setOrigin(0.5);
+            
+            this.gridContainer.add(cellObj.text);
+        }
+    }
+    
+    // Update all cells with current data
+    updateAllCells() {
+        ranchGrid.cells.forEach((cell, index) => {
+            this.updateCellAppearance(index);
+        });
+    }
+    
+    // Add a cattle sprite to the scene with animation
+    addCattleSprite(cattle) {
+        // Check if barn exists
+        if (!this.barn) {
+            console.warn("Barn not initialized, cannot place cattle");
+            return null;
+        }
+        
+        // Random position near the barn
+        const x = this.barn.x + (Math.random() * 200 - 100);
+        const y = this.barn.y + (Math.random() * 200 - 50);
+        
+        // Initialize cattle arrays if needed
+        if (!this.cattle) this.cattle = [];
+        if (!this.cattleMilkTimers) this.cattleMilkTimers = [];
+        
+        try {
+            // Create the cattle sprite
+            const cattleSprite = this.add.image(x, y, 'cattle');
+            cattleSprite.setScale(0.2);
+            cattleSprite.setData('cattle', cattle);
+            
+            // Add to scene and store reference
+            if (this.ranchContainer) {
+                this.ranchContainer.add(cattleSprite);
+            }
+            this.cattle.push(cattleSprite);
+            
+            // Add bouncing animation
+            this.tweens.add({
+                targets: cattleSprite,
+                y: y - 10,
+                duration: 1000,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+            
+            // Set up milk production timer for this cattle
+            this.cattleMilkTimers.push({
+                cattleId: cattle.id,
+                lastMilked: Date.now()
+            });
+            
+            console.log(`Added cattle #cattle-${cattle.id} to scene with milk production`);
+            return cattleSprite;
+        } catch (error) {
+            console.error("Error adding cattle sprite:", error);
+            return null;
+        }
+    }
+    
+    // Milk all cattle
+    milkAllCattle() {
+        try {
+            // Check if this is being called from an inactive scene
+            if (!this.scene || !this.scene.isActive()) {
+                console.log("milkAllCattle called from inactive scene, skipping");
+                return;
+            }
+            
+            // Check if playerData exists
+            if (!window.playerData) {
+                console.log("Player data not initialized, skipping milk production");
+                return;
+            }
+            
+            // Initialize if needed - defensive programming
+            if (typeof window.playerData.cattle === 'undefined') {
+                console.log("Initializing empty cattle array");
+                window.playerData.cattle = [];
+                return;
+            }
+            
+            // Ensure cattle is an array
+            if (!Array.isArray(window.playerData.cattle)) {
+                console.warn("playerData.cattle is not an array:", window.playerData.cattle);
+                // Convert to array if possible, or initialize empty array
+                if (typeof window.playerData.cattle === 'object') {
+                    window.playerData.cattle = Object.values(window.playerData.cattle);
+                } else {
+                    window.playerData.cattle = [];
+                }
+                return; // Skip this cycle as we've just fixed the data structure
+            }
+            
+            // Skip if no cattle
+            if (window.playerData.cattle.length === 0) {
+                return;
+            }
+            
+            let totalMilk = 0;
+            
+            // Now safely use forEach since we've verified it's an array
+            window.playerData.cattle.forEach(cattle => {
+                if (!cattle || typeof cattle !== 'object') return;
+                
+                // Default to 1 if milk property isn't set
+                const milkAmount = typeof cattle.milk === 'number' ? cattle.milk : 1;
+                const milkProduced = milkAmount * 2;
+                totalMilk += milkProduced;
+                
+                try {
+                    // Create milk animation only if we're in the proper scene
+                    this.createMilkAnimation(cattle.id, milkProduced);
+                } catch (animError) {
+                    console.warn("Could not create milk animation:", animError);
+                }
+            });
+            
+            if (totalMilk > 0) {
+                // Update player balance
+                window.playerData.cattleBalance += totalMilk;
+                
+                // Show notification
+                if (typeof window.showNotification === 'function') {
+                    window.showNotification(`Your cattle produced ${totalMilk} $CATTLE!`, 'success');
+                }
+                
+                // Update UI
+                if (typeof window.updateUI === 'function') {
+                    window.updateUI();
+                }
+            }
+        } catch (error) {
+            console.error("Error in milkAllCattle:", error);
+        }
+    }
+    
+    // Create milk animation for a specific cattle
+    createMilkAnimation(cattleId, amount) {
+        try {
+            // Safety check for scene
+            if (!this.scene || !this.scene.isActive()) {
+                console.log("createMilkAnimation called from inactive scene, skipping");
+                return;
+            }
+            
+            // Safety check for cattle array
+            if (!this.cattle || !Array.isArray(this.cattle) || this.cattle.length === 0) {
+                console.log("No cattle sprites in scene, skipping milk animation");
+                return;
+            }
+            
+            // Find the cattle sprite
+            const cattleSprite = this.cattle.find(sprite => 
+                sprite && sprite.getData && typeof sprite.getData === 'function' && 
+                sprite.getData('cattle') && sprite.getData('cattle').id === cattleId
+            );
+            
+            if (!cattleSprite) {
+                console.log(`No cattle sprite found with ID ${cattleId}`);
+                return;
+            }
+            
+            // Check if container exists
+            if (!this.ranchContainer) {
+                console.warn("Ranch container not found, creating fallback container");
+                this.ranchContainer = this.add.container(0, 0);
+            }
+            
+            let milkIcon, milkText;
+            
+            try {
+                // Create milk bottle icon - with fallback
+                if (this.textures.exists('milk-bottle')) {
+                    milkIcon = this.add.image(cattleSprite.x, cattleSprite.y - 30, 'milk-bottle');
+                    milkIcon.setScale(0.15);
+                } else {
+                    // Create a simple milk icon as fallback
+                    const graphics = this.add.graphics();
+                    graphics.fillStyle(0xffffff, 1);
+                    graphics.fillRect(-5, -10, 10, 15);
+                    graphics.generateTexture('milk-bottle-fallback', 20, 30);
+                    graphics.destroy();
+                    
+                    milkIcon = this.add.image(cattleSprite.x, cattleSprite.y - 30, 'milk-bottle-fallback');
+                }
+                
+                this.ranchContainer.add(milkIcon);
+                
+                // Create milk amount text
+                milkText = this.add.text(cattleSprite.x + 20, cattleSprite.y - 30, `+${amount}`, {
+                    fontFamily: '"Anta", "Arial", sans-serif',
+                    fontSize: '16px',
+                    color: '#ffffff',
+                    stroke: '#000000',
+                    strokeThickness: 2
+                }).setOrigin(0, 0.5);
+                this.ranchContainer.add(milkText);
+                
+                // Animate milk icon and text
+                this.tweens.add({
+                    targets: [milkIcon, milkText],
+                    y: '-=50',
+                    alpha: { from: 1, to: 0 },
+                    duration: 2000,
+                    onComplete: () => {
+                        if (milkIcon && milkIcon.destroy) milkIcon.destroy();
+                        if (milkText && milkText.destroy) milkText.destroy();
+                    }
+                });
+            } catch (error) {
+                console.error("Error creating milk animation:", error);
+                // Clean up if error occurs
+                if (milkIcon && milkIcon.destroy) milkIcon.destroy();
+                if (milkText && milkText.destroy) milkText.destroy();
+            }
+        } catch (outerError) {
+            console.error("Fatal error in createMilkAnimation:", outerError);
+        }
+    }
+    
+    resize(gameSize) {
+        const width = gameSize.width;
+        const height = gameSize.height;
+        
+        // Resize background
+        if (this.bg) {
+            this.bg.setPosition(width/2, height/2);
+            this.bg.setDisplaySize(width, height);
+        }
+        
+        // Reposition elements
+        if (this.barn) {
+            this.barn.x = width * 0.7;
+            this.barn.y = height * 0.4;
+        }
+        
+        // Recalculate grid position
+        if (this.gridContainer) {
+            const { size, cellSize, padding } = this.gridConfig;
+            const totalWidth = (cellSize + padding) * size;
+            const totalHeight = (cellSize + padding) * size;
+            
+            // Update grid position
+            const gridX = width * 0.25;
+            const gridY = height * 0.5;
+            
+            // Recalculate starting position
+            this.gridConfig.startX = gridX - totalWidth/2 + cellSize/2;
+            this.gridConfig.startY = gridY - totalHeight/2 + cellSize/2;
+            
+            // Update cell positions
+            this.updateGridCellPositions();
+        }
+    }
+    
+    // Update the positions of all grid cells after resize
+    updateGridCellPositions() {
+        const { size, cellSize, padding, startX, startY } = this.gridConfig;
+        
+        // Update position of each cell
+        this.gridCells.forEach((cellObj, index) => {
+            if (!cellObj.sprite) return;
+            
+            const row = Math.floor(index / size);
+            const col = index % size;
+            const x = startX + col * (cellSize + padding);
+            const y = startY + row * (cellSize + padding);
+            
+            // Update sprite position
+            cellObj.sprite.setPosition(x, y);
+            
+            // Update text position if it exists
+            if (cellObj.text) {
+                cellObj.text.setPosition(x, y);
+            }
+        });
+        
+        // Update grid header and harvest button positions
+        const children = this.ranchContainer.getAll();
+        children.forEach(child => {
+            if (child.type === 'Text' && child.text === 'Ranch Pasture') {
+                const gridX = this.scale.width * 0.25;
+                const totalHeight = (cellSize + padding) * size;
+                const gridY = this.scale.height * 0.5;
+                
+                child.setPosition(gridX, gridY - totalHeight/2 - 40);
+            }
+            
+            if (child.type === 'Text' && child.text === '🌾 Harvest All') {
+                const gridX = this.scale.width * 0.25;
+                const totalHeight = (cellSize + padding) * size;
+                const gridY = this.scale.height * 0.5;
+                
+                child.setPosition(gridX, gridY + totalHeight/2 + 40);
+            }
+        });
+    }
+    
+    // Method to sell all cattle
+    sellAllCattle() {
+        if (!playerData.cattle || playerData.cattle.length === 0) {
+            showNotification('No cattle to sell!', 'error');
+            return;
+        }
+        
+        // Calculate total sale price based on market conditions and cattle stats
+        const marketPrice = playerData.resources && playerData.resources.cattlePrice 
+            ? playerData.resources.cattlePrice 
+            : 50; // Default price if not set
+            
+        let totalSaleAmount = 0;
+        let cattleCount = playerData.cattle.length;
+        
+        // Calculate total value of all cattle
+        playerData.cattle.forEach(cattle => {
+            // Base value determined by cattle stats (speed is the primary value driver)
+            const baseValue = cattle.speed * 10;
+            totalSaleAmount += baseValue;
+        });
+        
+        // Apply market conditions (could be adjusted by game events/economy)
+        const finalAmount = Math.floor(totalSaleAmount * (marketPrice / 50));
+        
+        // Add to player's balance
+        playerData.cattleBalance += finalAmount;
+        
+        // Clear cattle array
+        playerData.cattle = [];
+        
+        // Remove all cattle sprites from the scene
+        if (this.cattle && this.cattle.length > 0) {
+            // Create a copy of the array to avoid modification during iteration
+            const cattleToRemove = [...this.cattle];
+            
+            cattleToRemove.forEach(cattleSprite => {
+                // Add selling animation with staggered timing for visual appeal
+                this.tweens.add({
+                    targets: cattleSprite,
+                    alpha: 0,
+                    y: '-=50',
+                    duration: 500,
+                    ease: 'Power2',
+                    delay: Math.random() * 300, // Stagger effect
+                    onComplete: () => {
+                        // Destroy the sprite
+                        cattleSprite.destroy();
+                    }
+                });
+            });
+            
+            // Clear the cattle arrays
+            this.cattle = [];
+            this.cattleMilkTimers = [];
+        }
+        
+        // Show celebration notification
+        showNotification(`Sold ${cattleCount} cattle for ${finalAmount} $CATTLE!`, 'success');
+        
+        // Create money animation in the center of the screen
+        const x = this.scale.width / 2;
+        const y = this.scale.height / 2;
+        
+        const moneyText = this.add.text(x, y, `+${finalAmount}`, {
+            fontFamily: 'Anta',
+            fontSize: '36px',
+            color: '#00ff00',
+            stroke: '#000000',
+            strokeThickness: 4
+        }).setOrigin(0.5);
+        
+        // Add glow effect to money text
+        if (typeof window.addTextGlow === 'function') {
+            window.addTextGlow(moneyText, '#00ffff', 8);
+        }
+        
+        // Create particle effect for selling if available
+        if (typeof window.createRaceWinParticleEffect === 'function') {
+            window.createRaceWinParticleEffect(this, x, y);
+        }
+        
+        this.tweens.add({
+            targets: moneyText,
+            y: '-=100',
+            alpha: { from: 1, to: 0 },
+            duration: 2000,
+            ease: 'Power2',
+            onComplete: () => {
+                moneyText.destroy();
+            }
+        });
+        
+        // Update UI
+        updateCattleInventory();
+        updateUI();
+    }
+} // End of RanchScene class
+
+} // End of RanchScene if block
+
+// Define the SaloonScene class - only if not already defined
+if (typeof window.SaloonScene === 'undefined') {
+    console.log('SaloonScene class initialized');
+    window.SaloonScene = class SaloonScene extends Phaser.Scene {
+    constructor() {
+        super('SaloonScene');
+        this.raceCardImages = {};
+        this.raceData = {
+            status: 'betting', // 'betting', 'racing', or 'finished'
+            currentCard: null,
+            progress: {
+                hearts: 0,
+                diamonds: 0,
+                clubs: 0,
+                spades: 0
+            }
+        };
+    }
+    
+    preload() {
+        // Load the background and card assets
+        this.load.image('game-bg', 'img/game-background.jpeg');
+        
+        // Load card images if they don't already exist - with fallback detection
+        try {
+            // Create placeholder card textures
+            const suits = ['♥', '♦', '♠', '♣'];
+            const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+            
+            this.graphics = this.add.graphics();
+            
+            // Create card base
+            this.graphics.fillStyle(0xffffff);
+            this.graphics.fillRoundedRect(0, 0, 120, 168, 10);
+            this.graphics.generateTexture('card-base', 120, 168);
+            
+            // Create heart symbol
+            this.graphics.clear();
+            this.graphics.fillStyle(0xff0000);
+            this.graphics.fillCircle(15, 15, 10);
+            this.graphics.fillCircle(35, 15, 10);
+            this.graphics.fillTriangle(5, 20, 45, 20, 25, 40);
+            this.graphics.generateTexture('heart-symbol', 50, 50);
+            
+            // Create diamond symbol
+            this.graphics.clear();
+            this.graphics.fillStyle(0xff0000);
+            this.graphics.fillTriangle(25, 5, 5, 25, 25, 45, 45, 25);
+            this.graphics.generateTexture('diamond-symbol', 50, 50);
+            
+            // Create spade symbol
+            this.graphics.clear();
+            this.graphics.fillStyle(0x000000);
+            this.graphics.fillCircle(15, 25, 10);
+            this.graphics.fillCircle(35, 25, 10);
+            this.graphics.fillTriangle(5, 20, 45, 20, 25, 0);
+            this.graphics.fillRect(20, 35, 10, 15);
+            this.graphics.generateTexture('spade-symbol', 50, 50);
+            
+            // Create club symbol
+            this.graphics.clear();
+            this.graphics.fillStyle(0x000000);
+            this.graphics.fillCircle(15, 15, 10);
+            this.graphics.fillCircle(35, 15, 10);
+            this.graphics.fillCircle(25, 30, 10);
+            this.graphics.fillRect(20, 35, 10, 15);
+            this.graphics.generateTexture('club-symbol', 50, 50);
+        } catch (error) {
+            console.error("Error creating card textures:", error);
+        }
+    }
+    
+    create() {
+        // Get dimensions
+        const width = this.scale.width;
+        const height = this.scale.height;
+        
+        // Set up background
+        this.bg = this.add.image(width/2, height/2, 'game-bg');
+        this.bg.setDisplaySize(width, height);
+        this.bg.setTint(0xddbb88); // Warm indoor lighting tint
+        
+        // Create container for racing elements
+        this.raceContainer = this.add.container(0, 0);
+        
+        // Add table display (background for cards)
+        const tableGraphics = this.add.graphics();
+        tableGraphics.fillStyle(0x331100, 0.6);
+        tableGraphics.fillRoundedRect(width/2 - 200, height/2 - 120, 400, 240, 20);
+        this.raceContainer.add(tableGraphics);
+        
+        // Add a callback to initialize racing game in the DOM
+        if (window.racingGame && typeof window.racingGame.init === 'function') {
+            setTimeout(() => {
+                console.log("Triggering racing game initialization from SaloonScene");
+                window.racingGame.init();
+                
+                // Dispatch a scene change event
+                const event = new CustomEvent('scene-changed', {
+                    detail: { scene: 'saloon' }
+                });
+                document.dispatchEvent(event);
+            }, 100);
+        }
+        
+        // Add resize listener
+        this.scale.on('resize', this.resize, this);
+    }
+    
+    // Update the card display with a new card
+    updateCardDisplay(card) {
+        if (!card) return;
+        
+        this.raceData.currentCard = card;
+        
+        // Clear existing card sprite
+        if (this.currentCardSprite) {
+            this.currentCardSprite.destroy();
+        }
+        
+        // Create new card sprite
+        const width = this.scale.width;
+        const height = this.scale.height;
+        
+        try {
+            // Create a card from scratch using generated textures
+            const cardGroup = this.add.container(width/2, height/2 - 40);
+            
+            const cardBase = this.add.image(0, 0, 'card-base');
+            cardGroup.add(cardBase);
+            
+            const suitMap = {
+                '♥': { texture: 'heart-symbol', color: 0xff0000 },
+                '♦': { texture: 'diamond-symbol', color: 0xff0000 },
+                '♠': { texture: 'spade-symbol', color: 0x000000 },
+                '♣': { texture: 'club-symbol', color: 0x000000 }
+            };
+            
+            const suitInfo = suitMap[card.suit] || { texture: 'heart-symbol', color: 0xff0000 };
+            
+            // Add suit symbol in center
+            const suitSymbol = this.add.image(0, 0, suitInfo.texture);
+            suitSymbol.setScale(1.5);
+            cardGroup.add(suitSymbol);
+            
+            // Add rank text
+            const rankStyle = {
+                fontFamily: 'Arial',
+                fontSize: '32px',
+                color: suitInfo.color === 0xff0000 ? '#ff0000' : '#000000',
+                fontStyle: 'bold'
+            };
+            
+            const topRank = this.add.text(-45, -65, card.rank, rankStyle).setOrigin(0, 0);
+            const bottomRank = this.add.text(45, 65, card.rank, rankStyle).setOrigin(1, 1);
+            bottomRank.setAngle(180);
+            
+            cardGroup.add(topRank);
+            cardGroup.add(bottomRank);
+            
+            // Add small suit icons by the rank
+            const topSuit = this.add.image(-45, -40, suitInfo.texture).setOrigin(0, 0);
+            const bottomSuit = this.add.image(45, 40, suitInfo.texture).setOrigin(1, 1);
+            topSuit.setScale(0.4);
+            bottomSuit.setScale(0.4);
+            bottomSuit.setAngle(180);
+            
+            cardGroup.add(topSuit);
+            cardGroup.add(bottomSuit);
+            
+            // Add card to scene
+            this.currentCardSprite = cardGroup;
+            this.raceContainer.add(cardGroup);
+            
+            // Animation effect
+            this.tweens.add({
+                targets: cardGroup,
+                y: { from: height/2 - 100, to: height/2 - 40 },
+                scaleX: { from: 0.8, to: 1 },
+                scaleY: { from: 0.8, to: 1 },
+                duration: 300,
+                ease: 'Bounce.out'
+            });
+            
+        } catch (error) {
+            console.error("Error creating card display:", error);
+        }
+    }
+    
+    // Update race progress
+    updateRaceProgress(progress) {
+        if (!progress) return;
+        
+        this.raceData.progress = progress;
+        
+        // Update the DOM progress bars through the racing-game.js helper
+        try {
+            if (window.racingGame && typeof window.racingGame.updateProgress === 'function') {
+                window.racingGame.updateProgress(progress);
+            }
+        } catch (error) {
+            console.error("Error updating race progress:", error);
+        }
+    }
+    
+    resize(gameSize) {
+        const width = gameSize.width;
+        const height = gameSize.height;
+        
+        // Resize background
+        if (this.bg) {
+            this.bg.setPosition(width/2, height/2);
+            this.bg.setDisplaySize(width, height);
+        }
+        
+        // Reposition card if it exists
+        if (this.currentCardSprite) {
+            this.currentCardSprite.setPosition(width/2, height/2 - 40);
+        }
+    }
+} // End of SaloonScene class
+
+// NightScene class definition
+if (typeof window.NightScene === 'undefined') {
+    window.NightScene = class NightScene extends Phaser.Scene {
+        constructor() {
+            super('NightScene');
+            this.gridCells = [];
+            this.gridConfig = {
+                size: 4,
+                cellSize: 80,
+                padding: 10,
+                startX: 0,
+                startY: 0
+            };
+        }
+
+        preload() {
+            this.load.image('cell-empty', 'img/cell-empty.png');
+            this.load.image('cell-brewing', 'img/cell-brewing.png');
+            this.load.image('cell-distilling', 'img/cell-distilling.png');
+            this.load.image('cell-ready', 'img/cell-ready.png');
+        }
+
+        create() {
+            const width = this.scale.width;
+            const height = this.scale.height;
+            this.bg = this.add.image(width/2, height/2, 'game-bg');
+            this.bg.setDisplaySize(width, height).setTint(0x1a1a2e);
+            this.initPhaserGrid();
+            this.scale.on('resize', this.resize, this);
+        }
+
+        initPhaserGrid() {
+            const { size, cellSize, padding } = this.gridConfig;
+            const totalWidth = (cellSize + padding) * size;
+            const totalHeight = (cellSize + padding) * size;
+            this.gridConfig.startX = this.scale.width * 0.25 - totalWidth/2 + cellSize/2;
+            this.gridConfig.startY = this.scale.height * 0.5 - totalHeight/2 + cellSize/2;
+
+            this.gridContainer = this.add.container(0, 0);
+            this.add.text(this.scale.width * 0.25, this.scale.height * 0.5 - totalHeight/2 - 40, 'Shadow Market Lab', {
+                fontFamily: 'Anta', fontSize: '24px', color: '#ffffff'
+            }).setOrigin(0.5);
+
+            // Create all cells
+            this.createGridCells();
+        }
+        
+        createGridCells() {
+            const { size, cellSize, padding, startX, startY } = this.gridConfig;
+            
+            this.gridCells = []; // Reset the grid cells array
+            
+            for (let row = 0; row < size; row++) {
+                for (let col = 0; col < size; col++) {
+                    const cellIndex = row * size + col;
+                    const x = startX + col * (cellSize + padding);
+                    const y = startY + row * (cellSize + padding);
+                    
+                    // Determine sprite name based on cell state
+                    let spriteName = 'cell-empty';
+                    if (shadowGrid && shadowGrid.cells && shadowGrid.cells[cellIndex]) {
+                        const cell = shadowGrid.cells[cellIndex];
+                        if (cell.state === 'brewing') spriteName = 'cell-brewing';
+                        if (cell.state === 'distilling') spriteName = 'cell-distilling';
+                        if (cell.state === 'ready') spriteName = 'cell-ready';
+                    }
+                    
+                    // Check if the texture exists
+                    if (!this.textures.exists(spriteName)) {
+                        console.warn(`Texture ${spriteName} not found, using fallback`);
+                        // Create a fallback texture using the global function if available
+                        if (typeof window.createFallbackTexture === 'function') {
+                            window.createFallbackTexture(this, spriteName);
+                        } else {
+                            // Fallback to creating a simple texture
+                            this.createSimpleFallbackTexture(spriteName);
+                        }
+                    }
+                    
+                    const cellSprite = this.add.image(x, y, spriteName).setDisplaySize(cellSize, cellSize);
+                    cellSprite.setInteractive().on('pointerdown', () => {
+                        if (typeof window.handleShadowCellClick === 'function') {
+                            window.handleShadowCellClick(cellIndex);
+                        } else {
+                            console.warn(`Shadow cell click handler not found for cell ${cellIndex}`);
+                        }
+                    });
+                    
+                    this.gridCells.push({ sprite: cellSprite, index: cellIndex });
+                    this.gridContainer.add(cellSprite);
+                }
+            }
+        }
+        
+        // Helper function to create a simple fallback texture
+        createSimpleFallbackTexture(key) {
+            try {
+                const graphics = this.make.graphics();
+                graphics.fillStyle(0x333333, 0.8);
+                graphics.fillRect(0, 0, 64, 64);
+                graphics.lineStyle(2, 0xffffff, 0.8);
+                graphics.strokeRect(0, 0, 64, 64);
+                graphics.generateTexture(key, 64, 64);
+                console.log(`Created simple fallback texture: ${key}`);
+            } catch (error) {
+                console.error(`Error creating simple fallback texture: ${error}`);
+            }
+        }
+
+        updateCellAppearance(cellIndex) {
+            if (!shadowGrid || !shadowGrid.cells || !this.gridCells) return;
+            
+            const cell = shadowGrid.cells[cellIndex];
+            const cellObj = this.gridCells[cellIndex];
+            
+            if (!cellObj || !cellObj.sprite) return;
+            
+            let spriteName = 'cell-empty';
+            if (cell.state === 'brewing') spriteName = 'cell-brewing';
+            if (cell.state === 'distilling') spriteName = 'cell-distilling';
+            if (cell.state === 'ready') spriteName = 'cell-ready';
+            
+            cellObj.sprite.setTexture(spriteName);
+        }
+
+        updateAllCells() {
+            if (!shadowGrid || !shadowGrid.cells) return;
+            
+            shadowGrid.cells.forEach((_, index) => this.updateCellAppearance(index));
+        }
+
+        resize(gameSize) {
+            const width = gameSize.width;
+            const height = gameSize.height;
+            this.bg.setPosition(width/2, height/2).setDisplaySize(width, height);
+            const { size, cellSize, padding } = this.gridConfig;
+            const totalWidth = (cellSize + padding) * size;
+            const totalHeight = (cellSize + padding) * size;
+            this.gridConfig.startX = width * 0.25 - totalWidth/2 + cellSize/2;
+            this.gridConfig.startY = height * 0.5 - totalHeight/2 + cellSize/2;
+            this.updateGridCellPositions();
+        }
+
+        updateGridCellPositions() {
+            const { size, cellSize, padding, startX, startY } = this.gridConfig;
+            
+            if (!this.gridCells) return;
+            
+            this.gridCells.forEach((cellObj, index) => {
+                const row = Math.floor(index / size);
+                const col = index % size;
+                const x = startX + col * (cellSize + padding);
+                const y = startY + row * (cellSize + padding);
+                cellObj.sprite.setPosition(x, y);
+            });
+        }
+    };
+}
+
+} // End of SaloonScene if block
+function setupBettingSliders() {
+    // Get elements
+    const betButtons = document.querySelectorAll('.bet-button');
+    const betSliderOverlay = document.getElementById('bet-slider-overlay');
+    if (!betButtons.length || !betSliderOverlay) return; // Skip if elements not found
+    
+    const betSlider = document.getElementById('bet-slider');
+    const betSliderValue = document.getElementById('bet-slider-value');
+    const confirmBetBtn = document.getElementById('confirm-bet');
+    const cancelBetBtn = document.getElementById('cancel-bet');
+    let currentSuit = '';
+    
+    console.log("Setting up betting sliders for " + betButtons.length + " bet buttons");
+    
+    // Set up bet button clicks
+    betButtons.forEach(button => {
+        // Remove any existing listeners
+        const newButton = button.cloneNode(true);
+        button.parentNode.replaceChild(newButton, button);
+        
+        newButton.addEventListener('click', function() {
+            const suit = this.getAttribute('data-suit');
+            currentSuit = suit;
+            console.log("Bet button clicked for suit:", suit);
+            
+            // Set slider title with capitalized suit name
+            const capitalizedSuit = suit.charAt(0).toUpperCase() + suit.slice(1);
+            document.getElementById('bet-slider-title').textContent = `Place Bet on ${capitalizedSuit}`;
+            
+            // Get current bet value for this suit
+            const currentBet = parseInt(document.getElementById(`${suit}-bet-display`).textContent) || 0;
+            betSlider.value = currentBet;
+            betSliderValue.textContent = currentBet;
+            
+            // Set max value based on player balance
+            betSlider.max = Math.min(50, Math.floor(playerData.cattleBalance));
+            
+            // Show the slider overlay
+            betSliderOverlay.classList.remove('hidden');
+        });
+    });
+    
+    // Update slider value display as it changes
+    if (betSlider) {
+        betSlider.addEventListener('input', function() {
+            betSliderValue.textContent = this.value;
+        });
+    }
+    
+    // Handle confirm bet
+    if (confirmBetBtn) {
+        confirmBetBtn.addEventListener('click', function() {
+            if (currentSuit) {
+                console.log(`Confirming bet of ${betSlider.value} on ${currentSuit}`);
+                
+                // Update bet display
+                document.getElementById(`${currentSuit}-bet-display`).textContent = betSlider.value;
+                
+                // Update total bet
+                updateTotalBet();
+                
+                // Hide the slider overlay
+                betSliderOverlay.classList.add('hidden');
+            }
+        });
+    }
+    
+    // Handle cancel bet
+    if (cancelBetBtn) {
+        cancelBetBtn.addEventListener('click', function() {
+            console.log("Canceling bet");
+            betSliderOverlay.classList.add('hidden');
+        });
+    }
+}
+
+// End of document.addEventListener DOMContentLoaded
+});
+
+// End of IIFE
+})();
