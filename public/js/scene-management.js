@@ -1,127 +1,113 @@
-/**
- * Scene Management Utilities
- * 
- * This module provides functions for managing scene transitions and setup
- * to ensure smooth scene switching and prevent errors.
- */
+// Scene Management Module
 
-(function() {
-    'use strict';
+// Function to switch scenes (enhanced version)
+window.switchScene = function(scene) {
+    console.log(`Switching to scene: ${scene}`);
     
-    /**
-     * Safely switches between Phaser scenes with proper cleanup
-     * @param {string} sceneName - The name of the scene to switch to
-     */
-    function switchScene(sceneName) {
-        console.log(`Switching to scene: ${sceneName}`);
-        
-        try {
-            // Get the current active scene
-            const game = window.game;
-            if (!game) {
-                console.error("Game instance not found");
-                return;
-            }
-            
-            // Get current active scene
-            const activeScene = game.scene.getScenes(true)[0];
-            if (activeScene) {
-                const activeSceneName = activeScene.scene.key;
-                console.log(`Current active scene: ${activeSceneName}`);
-                
-                // Make sure we're not already in the target scene
-                if (activeSceneName === sceneName) {
-                    console.log(`Already in ${sceneName} scene`);
-                    return;
-                }
-                
-                // Properly shutdown the current scene
-                activeScene.scene.stop();
-                console.log(`Stopped scene: ${activeSceneName}`);
-            }
-            
-            // Start the new scene
-            game.scene.start(sceneName);
-            console.log(`Started scene: ${sceneName}`);
-            
-            // Update UI visibility based on scene
-            updateUIForScene(sceneName);
-            
-        } catch (error) {
-            console.error(`Error switching to scene ${sceneName}:`, error);
-            showErrorNotification(`Failed to switch to ${sceneName} scene`);
-        }
+    // Set current scene
+    window.currentScene = scene;
+    
+    // Hide all scenes
+    document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
+    
+    // Show the appropriate UI element
+    const sceneElement = document.getElementById(`${scene}-ui`);
+    if (sceneElement) {
+        sceneElement.classList.remove('hidden');
+        console.log(`UI updated for scene: ${scene}`);
+    } else {
+        console.warn(`Scene element not found: ${scene}-ui`);
     }
     
-    /**
-     * Updates UI element visibility based on the current scene
-     * @param {string} sceneName - The name of the current scene
-     */
-    function updateUIForScene(sceneName) {
-        try {
-            // Map HTML UI elements
-            const mainMenu = document.getElementById('main-menu');
-            const ranchUI = document.getElementById('ranch-ui');
-            const saloonUI = document.getElementById('saloon-ui');
-            const nightUI = document.getElementById('night-ui');
-            const profileUI = document.getElementById('profile-ui');
-            
-            // Hide all UIs first
-            const allUIs = [mainMenu, ranchUI, saloonUI, nightUI, profileUI];
-            allUIs.forEach(ui => {
-                if (ui) ui.classList.add('hidden');
-            });
-            
-            // Show specific UI based on scene
-            switch (sceneName) {
-                case 'MainMenuScene':
-                    if (mainMenu) mainMenu.classList.remove('hidden');
-                    break;
-                case 'RanchScene':
-                    if (ranchUI) ranchUI.classList.remove('hidden');
-                    break;
-                case 'SaloonScene':
-                    if (saloonUI) saloonUI.classList.remove('hidden');
-                    break;
-                case 'NightScene':
-                    if (nightUI) nightUI.classList.remove('hidden');
-                    break;
-                case 'ProfileScene':
-                    if (profileUI) profileUI.classList.remove('hidden');
-                    break;
-                default:
-                    console.warn(`Unknown scene: ${sceneName}`);
-            }
-            
-            console.log(`UI updated for scene: ${sceneName}`);
-        } catch (error) {
-            console.error(`Error updating UI for scene ${sceneName}:`, error);
+    // Initialize Phaser scenes
+    initializeScenes();
+}
+
+// Function to initialize or restart scenes
+function initializeScenes() {
+    if (window.game && window.game.scene) {
+        // Stop all scenes to avoid duplicates
+        window.game.scene.stop('MainMenuScene');
+        window.game.scene.stop('RanchScene');
+        window.game.scene.stop('SaloonScene');
+        window.game.scene.stop('NightScene');
+
+        // Start the appropriate scene based on currentScene
+        switch (window.currentScene) {
+            case 'ranch':
+                window.game.scene.start('RanchScene');
+                initRanchGrid();
+                break;
+            case 'night':
+                window.game.scene.start('NightScene');
+                initNightGrid();
+                break;
+            case 'saloon':
+                window.game.scene.start('SaloonScene');
+                break;
+            default:
+                window.game.scene.start('MainMenuScene');
         }
+
+        // Reattach event listeners
+        attachButtonListeners();
     }
-    
-    /**
-     * Shows an error notification to the user
-     * @param {string} message - The error message to display
-     */
-    function showErrorNotification(message) {
-        console.error(message);
-        
-        try {
-            // Create notification if the function exists
-            if (typeof showNotification === 'function') {
-                showNotification(message, 'error');
-            } else {
-                // Fallback if the notification system isn't loaded
-                alert(`Error: ${message}`);
+}
+
+// Initialize Ranch Grid
+function initRanchGrid() {
+    const ranchScene = window.game.scene.getScene('RanchScene');
+    if (ranchScene && ranchScene.initPhaserGrid) {
+        ranchScene.initPhaserGrid();
+        ranchScene.updateAllCells(); // Force grid render
+    }
+}
+
+// Initialize Night Grid (Ether Range)
+function initNightGrid() {
+    const nightScene = window.game.scene.getScene('NightScene');
+    if (nightScene && nightScene.initPhaserGrid) {
+        nightScene.initPhaserGrid();
+        nightScene.updateAllCells(); // Force grid render
+    }
+}
+
+// Attach button listeners
+function attachButtonListeners() {
+    // Ranch buttons
+    const harvestAllBtn = document.getElementById('harvest-all');
+    if (harvestAllBtn) {
+        harvestAllBtn.onclick = () => {
+            if (typeof window.harvestAllRanchCells === 'function') {
+                window.harvestAllRanchCells();
             }
-        } catch (error) {
-            console.error("Failed to show notification:", error);
-        }
+        };
     }
-    
-    // Expose functions to global scope
-    window.switchScene = switchScene;
-    window.updateUIForScene = updateUIForScene;
-    window.showErrorNotification = showErrorNotification;
-    
-})();
+
+    // Night buttons
+    const distillAllBtn = document.getElementById('distill-all');
+    if (distillAllBtn) {
+        distillAllBtn.onclick = () => {
+            if (typeof window.distillAllShadowCells === 'function') {
+                window.distillAllShadowCells();
+            }
+        };
+    }
+
+    // Travel buttons
+    document.querySelectorAll('.travel-button').forEach(btn => {
+        btn.onclick = () => {
+            window.currentScene = btn.dataset.scene;
+            initializeScenes();
+            window.switchScene(window.currentScene);
+        };
+    });
+}
+
+// Make sure scene management functions are available globally
+window.initializeScenes = initializeScenes;
+window.initRanchGrid = initRanchGrid;
+window.initNightGrid = initNightGrid;
+window.attachButtonListeners = attachButtonListeners;
+
+console.log("Scene management module loaded");

@@ -1,0 +1,15 @@
+function switchScene(scene) {
+    console.log(`Switching to scene: ${scene}`);
+    
+    // Set current scene
+    currentScene = scene;
+    
+    // Hide all scenes
+    document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
+    
+    // Show the appropriate UI element
+    document.getElementById(`${scene}-ui`).classList.remove('hidden');
+    
+    // Initialize Phaser scenes
+    initializeScenes();
+}
