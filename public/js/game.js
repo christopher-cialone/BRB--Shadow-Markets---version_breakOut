@@ -4778,22 +4778,8 @@ function initShadowGrid() {
     updateShadowResourceDisplay();
     updateButtonStates();
     
-    // Start the Phaser scene for the night market grid
-    if (game && game.scene) {
-        // Stop other scenes first
-        game.scene.stop('RanchScene');
-        game.scene.stop('SaloonScene');
-        
-        // Check if the scene is already running
-        const nightScene = game.scene.getScene('NightScene');
-        if (nightScene && game.scene.isActive('NightScene')) {
-            // Update the cells if it's already running
-            nightScene.updateAllCells();
-        } else {
-            // Start the scene if it's not running
-            game.scene.start('NightScene');
-        }
-    }
+    // Use centralized scene management
+    initializeScenes();
     
     // Log initialization
     console.log("Shadow Market Grid initialized with Phaser implementation");
@@ -6180,6 +6166,12 @@ function setupBettingSliders() {
         });
     }
 }
+
+    // Initialize scenes if the function is available
+    if (typeof initializeScenes === 'function') {
+        console.log('Initializing scenes from DOMContentLoaded');
+        initializeScenes();
+    }
 
 // End of document.addEventListener DOMContentLoaded
 });
