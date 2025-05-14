@@ -35,9 +35,19 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background-image: url('/images/bg-day-night.jpg');
+      background-image: url('/images/hero-bg.jpeg');
       background-size: cover;
       background-position: center;
+      z-index: -1;
+    }
+    
+    .bg-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.85); /* 15% translucency (85% black overlay) */
       z-index: -1;
     }
     
@@ -53,18 +63,19 @@
     }
     
     .game-title {
-      font-size: 4rem;
+      font-size: 5rem;
       color: #00ffff;
-      text-shadow: 0 0 20px #00ffff;
+      text-shadow: 0 0 30px #00ffff, 0 0 10px rgba(0, 255, 255, 0.8), 0 0 2px rgba(255, 255, 255, 0.9);
       margin-bottom: 0;
       letter-spacing: 3px;
+      font-weight: bold;
     }
     
     .game-subtitle {
-      font-size: 2.5rem;
+      font-size: 3rem;
       color: #00ffff;
       margin-top: 10px;
-      text-shadow: 0 0 10px #00ffff;
+      text-shadow: 0 0 20px #00ffff, 0 0 5px rgba(0, 255, 255, 0.8);
       letter-spacing: 2px;
     }
     
@@ -322,6 +333,7 @@
   <div id="react-root">
     <div class="splash-container">
       <div class="bg-image"></div>
+      <div class="bg-overlay"></div>
       
       <div class="logo-container">
         <div class="game-title">BRB</div>
@@ -331,6 +343,10 @@
       <div class="game-buttons">
         <button class="start-button" id="start-game-button">START GAME</button>
         <button class="login-button" id="login-button">Login / Register</button>
+        <div id="user-info-container" style="display: none; margin-top: 15px; color: white; text-align: center;">
+          <div>Logged in as: <span id="username-display"></span></div>
+          <button class="login-button" id="logout-button" style="margin-top: 10px;">Logout</button>
+        </div>
       </div>
       
       <div class="version-info">v0.1.0 Alpha</div>
@@ -443,11 +459,17 @@
             clientId = message.data.clientId;
           } else if (message.type === 'auth_success') {
             currentUser = message.user;
+            // Store user in localStorage for persisting login across sessions
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            // Update the UI to show logged in state
+            updateLoginUI();
             hideAuthModal();
             showLoadingScreen();
             setTimeout(() => {
               window.location.href = '/ranch';
             }, 1500);
+          } else if (message.type === 'auth_error') {
+            alert(message.message || 'Authentication failed. Please try again.');
           }
         } catch (error) {
           console.error('Error parsing WebSocket message:', error);
@@ -556,11 +578,49 @@
     function startGame() {
       if (currentUser) {
         showLoadingScreen();
+        // Store user in localStorage for persisting login across sessions
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
         setTimeout(() => {
           window.location.href = '/ranch';
         }, 1500);
       } else {
-        showAuthModal();
+        // Check if user is already stored in localStorage
+        const storedUser = localStorage.getItem('currentUser');
+        if (storedUser) {
+          currentUser = JSON.parse(storedUser);
+          showLoadingScreen();
+          setTimeout(() => {
+            window.location.href = '/ranch';
+          }, 1500);
+        } else {
+          showAuthModal();
+        }
+      }
+    }
+    
+    function handleLogout() {
+      // Clear user data from localStorage
+      localStorage.removeItem('currentUser');
+      currentUser = null;
+      
+      // Update UI
+      document.getElementById('user-info-container').style.display = 'none';
+      document.getElementById('login-button').style.display = 'block';
+      
+      // Reload the page
+      window.location.reload();
+    }
+    
+    function updateLoginUI() {
+      if (currentUser) {
+        // Show user info if logged in
+        document.getElementById('user-info-container').style.display = 'block';
+        document.getElementById('username-display').textContent = currentUser.username;
+        document.getElementById('login-button').style.display = 'none';
+      } else {
+        // Show login button if not logged in
+        document.getElementById('user-info-container').style.display = 'none';
+        document.getElementById('login-button').style.display = 'block';
       }
     }
     
@@ -573,6 +633,7 @@
       document.getElementById('start-game-button').addEventListener('click', startGame);
       document.getElementById('login-button').addEventListener('click', showAuthModal);
       document.getElementById('auth-close').addEventListener('click', hideAuthModal);
+      document.getElementById('logout-button').addEventListener('click', handleLogout);
       
       document.getElementById('login-tab').addEventListener('click', showLoginForm);
       document.getElementById('register-tab').addEventListener('click', showRegisterForm);
@@ -589,11 +650,14 @@
         });
       });
       
-      // Check for mock auth (this would be replaced with a real token check)
-      const mockUser = localStorage.getItem('mockUser');
-      if (mockUser) {
-        currentUser = JSON.parse(mockUser);
+      // Check for stored user
+      const storedUser = localStorage.getItem('currentUser');
+      if (storedUser) {
+        currentUser = JSON.parse(storedUser);
       }
+      
+      // Update UI based on login status
+      updateLoginUI();
     }
   </script>
 </body>
